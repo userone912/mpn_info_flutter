@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/map_model.dart';
 import 'database_service.dart';
 
-/// Service for managing MAP (Mapping) reference data
+/// Service for managing MAP (Mata Anggaran Penerimaan) reference data
 class MapService {
   
   /// Get all MAP records

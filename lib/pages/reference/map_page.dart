@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/services/map_service.dart';
+import '../../data/services/reference_data_service.dart';
+import '../../data/models/map_model.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -13,12 +14,58 @@ class _MapPageState extends ConsumerState<MapPage> {
   final TextEditingController _searchController = TextEditingController();
   int? _selectedSektor;
   String? _selectedKdbayar;
-  bool _isSearching = false;
+  List<MapModel> _filteredData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateFilteredData();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _updateFilteredData() {
+    final service = ref.read(referenceDataServiceProvider);
+    setState(() {
+      _filteredData = service.filterMapData(
+        searchQuery: _searchController.text,
+        sektor: _selectedSektor,
+        kdbayar: _selectedKdbayar,
+      );
+    });
+  }
+
+  void _onSearchChanged() {
+    _updateFilteredData();
+  }
+
+  void _onSektorChanged(int? sektor) {
+    setState(() {
+      _selectedSektor = sektor;
+      // Don't clear kdbayar - allow both filters to work together
+    });
+    _updateFilteredData();
+  }
+
+  void _onKdbayarChanged(String? kdbayar) {
+    setState(() {
+      _selectedKdbayar = kdbayar;
+      // Don't clear sektor - allow both filters to work together
+    });
+    _updateFilteredData();
+  }
+
+  void _clearFilter() {
+    _searchController.clear();
+    setState(() {
+      _selectedSektor = null;
+      _selectedKdbayar = null;
+    });
+    _updateFilteredData();
   }
 
   String _getSektorDisplay(int sektor) {
@@ -34,61 +81,10 @@ class _MapPageState extends ConsumerState<MapPage> {
     }
   }
 
-  void _performSearch() {
-    final query = _searchController.text.trim();
-    if (query.isNotEmpty) {
-      ref.read(mapListProvider.notifier).searchMap(query);
-      setState(() {
-        _isSearching = true;
-        _selectedSektor = null;
-        _selectedKdbayar = null;
-      });
-    } else {
-      _clearSearch();
-    }
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    ref.read(mapListProvider.notifier).loadAllMap();
-    setState(() {
-      _isSearching = false;
-      _selectedSektor = null;
-      _selectedKdbayar = null;
-    });
-  }
-
-  void _filterBySektor(int? sektor) {
-    if (sektor != null) {
-      ref.read(mapListProvider.notifier).filterBySektor(sektor);
-      setState(() {
-        _selectedSektor = sektor;
-        _selectedKdbayar = null;
-        _isSearching = false;
-      });
-      _searchController.clear();
-    } else {
-      _clearSearch();
-    }
-  }
-
-  void _filterByKdbayar(String? kdbayar) {
-    if (kdbayar != null && kdbayar.isNotEmpty) {
-      ref.read(mapListProvider.notifier).filterByKdbayar(kdbayar);
-      setState(() {
-        _selectedKdbayar = kdbayar;
-        _selectedSektor = null;
-        _isSearching = false;
-      });
-      _searchController.clear();
-    } else {
-      _clearSearch();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final mapListAsync = ref.watch(mapListProvider);
+    final service = ref.read(referenceDataServiceProvider);
+    final refDataState = ref.watch(referenceDataProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -98,7 +94,7 @@ class _MapPageState extends ConsumerState<MapPage> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Modal Header
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -106,15 +102,11 @@ class _MapPageState extends ConsumerState<MapPage> {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.map,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                const Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    'MAP - Mapping Reference',
+                    'MAP - Mata Anggaran Penerimaan',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -125,7 +117,8 @@ class _MapPageState extends ConsumerState<MapPage> {
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
                   onPressed: () {
-                    ref.read(mapListProvider.notifier).refresh();
+                    ref.read(referenceDataProvider.notifier).refresh();
+                    _updateFilteredData();
                   },
                   tooltip: 'Refresh Data',
                   padding: const EdgeInsets.all(4),
@@ -141,6 +134,7 @@ class _MapPageState extends ConsumerState<MapPage> {
               ],
             ),
           ),
+
           // Search and Filter Section
           Container(
             padding: const EdgeInsets.all(12),
@@ -164,7 +158,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: _clearSearch,
+                                  onPressed: _clearFilter,
                                 )
                               : null,
                           border: OutlineInputBorder(
@@ -176,21 +170,22 @@ class _MapPageState extends ConsumerState<MapPage> {
                           ),
                           isDense: true,
                         ),
-                        onSubmitted: (_) => _performSearch(),
+                        onChanged: (_) => _onSearchChanged(),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: _performSearch,
-                      icon: const Icon(Icons.search, size: 16),
-                      label: const Text('Cari', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        minimumSize: const Size(60, 32),
+                    if (_searchController.text.isNotEmpty || _selectedSektor != null || _selectedKdbayar != null)
+                      ElevatedButton.icon(
+                        onPressed: _clearFilter,
+                        icon: const Icon(Icons.clear, size: 16),
+                        label: const Text('Clear', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: const Size(60, 32),
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -199,304 +194,269 @@ class _MapPageState extends ConsumerState<MapPage> {
                   children: [
                     // Sektor Filter
                     Expanded(
-                      child: FutureBuilder<Map<int, String>>(
-                        future: ref.read(mapServiceProvider).getUniqueSektorsWithDisplay(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final sektorMap = snapshot.data!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Filter by Sektor:', style: TextStyle(fontSize: 12)),
-                              const SizedBox(height: 4),
-                              DropdownButtonFormField<int>(
-                                value: _selectedSektor,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  isDense: true,
-                                ),
-                                hint: const Text('Pilih Sektor', style: TextStyle(fontSize: 12)),
-                                items: [
-                                  const DropdownMenuItem<int>(
-                                    value: null,
-                                    child: Text('Semua Sektor', style: TextStyle(fontSize: 12)),
-                                  ),
-                                  ...sektorMap.entries.map((entry) => DropdownMenuItem<int>(
-                                        value: entry.key,
-                                        child: Text(entry.value, style: const TextStyle(fontSize: 12)),
-                                      )),
-                                ],
-                                onChanged: _filterBySektor,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Filter by Sektor:', style: TextStyle(fontSize: 12)),
+                          const SizedBox(height: 4),
+                          DropdownButtonFormField<int>(
+                            initialValue: _selectedSektor,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              isDense: true,
+                            ),
+                            hint: const Text('Pilih Sektor', style: TextStyle(fontSize: 12)),
+                            items: [
+                              const DropdownMenuItem<int>(
+                                value: null,
+                                child: Text('Semua Sektor', style: TextStyle(fontSize: 12)),
+                              ),
+                              ...service.getMapSektors().entries.map((entry) => DropdownMenuItem<int>(
+                                    value: entry.key,
+                                    child: Text(entry.value, style: const TextStyle(fontSize: 12)),
+                                  )),
                             ],
-                          );
-                        },
+                            onChanged: _onSektorChanged,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 16),
                     // Kdbayar Filter
                     Expanded(
-                      child: FutureBuilder<List<String>>(
-                        future: ref.read(mapServiceProvider).getUniqueKdbayar(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final kdbayars = snapshot.data!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Filter by Kdbayar:', style: TextStyle(fontSize: 12)),
-                              const SizedBox(height: 4),
-                              DropdownButtonFormField<String>(
-                                value: _selectedKdbayar,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  isDense: true,
-                                ),
-                                hint: const Text('Pilih Kdbayar', style: TextStyle(fontSize: 12)),
-                                items: [
-                                  const DropdownMenuItem(
-                                    value: null,
-                                    child: Text('Semua Kdbayar', style: TextStyle(fontSize: 12)),
-                                  ),
-                                  ...kdbayars.map((kdbayar) => DropdownMenuItem(
-                                        value: kdbayar,
-                                        child: Text(kdbayar, style: const TextStyle(fontSize: 12)),
-                                      )),
-                                ],
-                                onChanged: _filterByKdbayar,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Filter by Kdbayar:', style: TextStyle(fontSize: 12)),
+                          const SizedBox(height: 4),
+                          DropdownButtonFormField<String>(
+                            initialValue: _selectedKdbayar,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              isDense: true,
+                            ),
+                            hint: const Text('Pilih Kdbayar', style: TextStyle(fontSize: 12)),
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('Semua Kdbayar', style: TextStyle(fontSize: 12)),
+                              ),
+                              ...service.getMapKdbayars().map((kdbayar) => DropdownMenuItem(
+                                    value: kdbayar,
+                                    child: Text(kdbayar, style: const TextStyle(fontSize: 12)),
+                                  )),
                             ],
-                          );
-                        },
+                            onChanged: _onKdbayarChanged,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                // Status indicator
-                if (_isSearching || _selectedSektor != null || _selectedKdbayar != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _isSearching ? Icons.search : Icons.filter_alt,
-                          size: 16,
-                          color: Colors.green.shade600,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _isSearching
-                              ? 'Hasil pencarian: "${_searchController.text}"'
-                              : _selectedSektor != null
-                                  ? 'Filter Sektor: ${_getSektorDisplay(_selectedSektor!)}'
-                                  : 'Filter Kdbayar: $_selectedKdbayar',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green.shade600,
-                          ),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: _clearSearch,
-                          child: const Text('Clear'),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
-          // Data Table
+
+          // Data Display
           Expanded(
-            child: mapListAsync.when(
+            child: refDataState.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading reference data...'),
+                  ],
+                ),
               ),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
                     const SizedBox(height: 16),
-                    Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
+                    Text('Error: $error', style: const TextStyle(color: Colors.red)),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => ref.read(mapListProvider.notifier).refresh(),
+                      onPressed: () => ref.read(referenceDataProvider.notifier).refresh(),
                       child: const Text('Retry'),
                     ),
                   ],
                 ),
               ),
-              data: (mapList) {
-                if (mapList.isEmpty) {
+              data: (_) {
+                if (_filteredData.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
+                        const Icon(Icons.search_off, size: 64, color: Colors.grey),
                         const SizedBox(height: 16),
                         Text(
-                          _isSearching || _selectedSektor != null || _selectedKdbayar != null
+                          _searchController.text.isNotEmpty || _selectedSektor != null || _selectedKdbayar != null
                               ? 'Tidak ada data yang sesuai dengan kriteria pencarian'
-                              : 'Tidak ada data MAP',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
+                              : 'Tidak ada data Mata Anggaran Penerimaan',
+                          style: const TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                        if (_isSearching || _selectedSektor != null || _selectedKdbayar != null) ...[
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _clearSearch,
-                            child: const Text('Tampilkan Semua Data'),
-                          ),
-                        ],
                       ],
                     ),
                   );
                 }
 
-                return SingleChildScrollView(
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        // Header
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
+                return Column(
+                  children: [
+                    // Results count
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.account_balance_wallet, color: Colors.green, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Mata Anggaran Penerimaan (${_filteredData.length} of ${service.getMapCount()} records)',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.map, color: Colors.green),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Data MAP (${mapList.length} records)',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        ],
+                      ),
+                    ),
+                    // Fast ListView
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _filteredData.length,
+                        itemBuilder: (context, index) {
+                          final map = _filteredData[index];
+                          return Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Colors.grey.shade200),
                               ),
-                            ],
-                          ),
-                        ),
-                        // Table
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(
-                                label: Text(
-                                  'Kdmap',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                            ),
+                            child: ExpansionTile(
+                              dense: true,
+                              tilePadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
                               ),
-                              DataColumn(
-                                label: Text(
-                                  'Kdbayar',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                              childrenPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
                               ),
-                              DataColumn(
-                                label: Text(
-                                  'Sektor',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                              leading: Container(
+                                width: 50,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Uraian',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                              ),
-                            ],
-                            rows: mapList.map((map) {
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    SelectableText(
-                                      map.kdmap,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                                child: Text(
+                                  map.kdmap,
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                    color: Colors.blue.shade800,
                                   ),
-                                  DataCell(
-                                    SelectableText(
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
                                       map.kdbayar,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SelectableText(
-                                      map.sektorDisplay,
                                       style: TextStyle(
-                                        color: Colors.green.shade700,
-                                        fontWeight: FontWeight.w500,
+                                        fontFamily: 'monospace',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange.shade800,
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 400,
-                                      child: SelectableText(
-                                        map.uraian,
-                                        style: const TextStyle(),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      map.uraian,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  _getSektorDisplay(map.sektor),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ),
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    map.uraian,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
+                  ],
                 );
               },
             ),

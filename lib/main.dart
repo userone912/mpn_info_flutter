@@ -5,6 +5,7 @@ import 'core/constants/app_constants.dart';
 import 'data/services/database_helper.dart';
 import 'data/services/settings_service.dart';
 import 'data/services/database_service.dart';
+import 'data/services/reference_data_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

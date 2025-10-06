@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/services/klu_service.dart';
+import '../../data/services/reference_data_service.dart';
+import '../../data/models/klu_model.dart';
 
 class KluPage extends ConsumerStatefulWidget {
   const KluPage({super.key});
@@ -12,7 +13,13 @@ class KluPage extends ConsumerStatefulWidget {
 class _KluPageState extends ConsumerState<KluPage> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedSektor;
-  bool _isSearching = false;
+  List<KluModel> _filteredData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateFilteredData();
+  }
 
   @override
   void dispose() {
@@ -20,44 +27,39 @@ class _KluPageState extends ConsumerState<KluPage> {
     super.dispose();
   }
 
-  void _performSearch() {
-    final query = _searchController.text.trim();
-    if (query.isNotEmpty) {
-      ref.read(kluListProvider.notifier).searchKlu(query);
-      setState(() {
-        _isSearching = true;
-        _selectedSektor = null;
-      });
-    } else {
-      _clearSearch();
-    }
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    ref.read(kluListProvider.notifier).loadAllKlu();
+  void _updateFilteredData() {
+    final service = ref.read(referenceDataServiceProvider);
     setState(() {
-      _isSearching = false;
-      _selectedSektor = null;
+      _filteredData = service.filterKluData(
+        searchQuery: _searchController.text,
+        sektor: _selectedSektor,
+      );
     });
   }
 
-  void _filterBySektor(String? sektor) {
-    if (sektor != null && sektor.isNotEmpty) {
-      ref.read(kluListProvider.notifier).filterBySektor(sektor);
-      setState(() {
-        _selectedSektor = sektor;
-        _isSearching = false;
-      });
-      _searchController.clear();
-    } else {
-      _clearSearch();
-    }
+  void _onSearchChanged() {
+    _updateFilteredData();
+  }
+
+  void _onSektorChanged(String? sektor) {
+    setState(() {
+      _selectedSektor = sektor;
+    });
+    _updateFilteredData();
+  }
+
+  void _clearFilter() {
+    _searchController.clear();
+    setState(() {
+      _selectedSektor = null;
+    });
+    _updateFilteredData();
   }
 
   @override
   Widget build(BuildContext context) {
-    final kluListAsync = ref.watch(kluListProvider);
+    final service = ref.read(referenceDataServiceProvider);
+    final refDataState = ref.watch(referenceDataProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -67,7 +69,7 @@ class _KluPageState extends ConsumerState<KluPage> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Modal Header
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -75,11 +77,7 @@ class _KluPageState extends ConsumerState<KluPage> {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.category,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                const Icon(Icons.category, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -94,7 +92,8 @@ class _KluPageState extends ConsumerState<KluPage> {
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
                   onPressed: () {
-                    ref.read(kluListProvider.notifier).refresh();
+                    ref.read(referenceDataProvider.notifier).refresh();
+                    _updateFilteredData();
                   },
                   tooltip: 'Refresh Data',
                   padding: const EdgeInsets.all(4),
@@ -110,6 +109,7 @@ class _KluPageState extends ConsumerState<KluPage> {
               ],
             ),
           ),
+
           // Search and Filter Section
           Container(
             padding: const EdgeInsets.all(12),
@@ -133,7 +133,7 @@ class _KluPageState extends ConsumerState<KluPage> {
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: _clearSearch,
+                                  onPressed: _clearFilter,
                                 )
                               : null,
                           border: OutlineInputBorder(
@@ -145,258 +145,202 @@ class _KluPageState extends ConsumerState<KluPage> {
                           ),
                           isDense: true,
                         ),
-                        onSubmitted: (_) => _performSearch(),
+                        onChanged: (_) => _onSearchChanged(),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: _performSearch,
-                      icon: const Icon(Icons.search, size: 16),
-                      label: const Text('Cari', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        minimumSize: const Size(60, 32),
+                    if (_searchController.text.isNotEmpty || _selectedSektor != null)
+                      ElevatedButton.icon(
+                        onPressed: _clearFilter,
+                        icon: const Icon(Icons.clear, size: 16),
+                        label: const Text('Clear', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: const Size(60, 32),
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 // Sektor Filter
-                FutureBuilder<List<String>>(
-                  future: ref.read(kluServiceProvider).getUniqueSektors(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final sektors = snapshot.data!;
-                    return Row(
-                      children: [
-                        const Text('Filter by Sektor: ', style: TextStyle(fontSize: 12)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedSektor,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              isDense: true,
-                            ),
-                            hint: const Text('Pilih Sektor', style: TextStyle(fontSize: 12)),
-                            items: [
-                              const DropdownMenuItem(
-                                value: null,
-                                child: Text('Semua Sektor', style: TextStyle(fontSize: 12)),
-                              ),
-                              ...sektors.map((sektor) => DropdownMenuItem(
-                                    value: sektor,
-                                    child: Text(sektor, style: const TextStyle(fontSize: 12)),
-                                  )),
-                            ],
-                            onChanged: _filterBySektor,
+                Row(
+                  children: [
+                    const Text('Filter by Sektor: ', style: TextStyle(fontSize: 12)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedSektor,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                // Status indicator
-                if (_isSearching || _selectedSektor != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _isSearching ? Icons.search : Icons.filter_alt,
-                          size: 16,
-                          color: Colors.blue.shade600,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _isSearching
-                              ? 'Hasil pencarian: "${_searchController.text}"'
-                              : 'Filter: $_selectedSektor',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue.shade600,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
+                          isDense: true,
                         ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: _clearSearch,
-                          child: const Text('Clear'),
-                        ),
-                      ],
+                        hint: const Text('Pilih Sektor', style: TextStyle(fontSize: 12)),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Semua Sektor', style: TextStyle(fontSize: 12)),
+                          ),
+                          ...service.getKluSektors().map((sektor) => DropdownMenuItem(
+                                value: sektor,
+                                child: Text(sektor, style: const TextStyle(fontSize: 12)),
+                              )),
+                        ],
+                        onChanged: _onSektorChanged,
+                      ),
                     ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
-          // Data Table
+
+          // Data Display
           Expanded(
-            child: kluListAsync.when(
+            child: refDataState.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading reference data...'),
+                  ],
+                ),
               ),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
                     const SizedBox(height: 16),
-                    Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
+                    Text('Error: $error', style: const TextStyle(color: Colors.red)),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => ref.read(kluListProvider.notifier).refresh(),
+                      onPressed: () => ref.read(referenceDataProvider.notifier).refresh(),
                       child: const Text('Retry'),
                     ),
                   ],
                 ),
               ),
-              data: (kluList) {
-                if (kluList.isEmpty) {
+              data: (_) {
+                if (_filteredData.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
+                        const Icon(Icons.search_off, size: 64, color: Colors.grey),
                         const SizedBox(height: 16),
                         Text(
-                          _isSearching || _selectedSektor != null
+                          _searchController.text.isNotEmpty || _selectedSektor != null
                               ? 'Tidak ada data yang sesuai dengan kriteria pencarian'
                               : 'Tidak ada data KLU',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                        if (_isSearching || _selectedSektor != null) ...[
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _clearSearch,
-                            child: const Text('Tampilkan Semua Data'),
-                          ),
-                        ],
                       ],
                     ),
                   );
                 }
 
-                return SingleChildScrollView(
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        // Header
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
+                return Column(
+                  children: [
+                    // Results count
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.business, color: Colors.blue, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Data KLU (${_filteredData.length} of ${service.getKluCount()} records)',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.business, color: Colors.blue),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Data KLU (${kluList.length} records)',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Table
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(
-                                label: Text(
-                                  'Kode',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Nama',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Sektor',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                            rows: kluList.map((klu) {
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    SelectableText(
-                                      klu.kode,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 300,
-                                      child: SelectableText(
-                                        klu.nama,
-                                        style: const TextStyle(),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SelectableText(
-                                      klu.sektor,
-                                      style: TextStyle(
-                                        color: Colors.blue.shade700,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    // Fast ListView
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _filteredData.length,
+                        itemBuilder: (context, index) {
+                          final klu = _filteredData[index];
+                          return Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Colors.grey.shade200),
+                              ),
+                            ),
+                            child: ListTile(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              leading: Container(
+                                width: 60,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  klu.kode,
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                    color: Colors.blue.shade800,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              title: Text(
+                                klu.nama,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  klu.sektor,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

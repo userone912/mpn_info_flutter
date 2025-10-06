@@ -10,13 +10,28 @@ import '../shared/dialogs/about_dialog.dart' as app_about;
 import 'login_page.dart';
 import 'reference/klu_page.dart';
 import 'reference/map_page.dart';
+import '../data/services/reference_data_service.dart';
 
 /// Main dashboard page after login
-class DashboardPage extends ConsumerWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends ConsumerState<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize reference data when dashboard loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(referenceDataProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     
     return Scaffold(
@@ -84,9 +99,9 @@ class DashboardPage extends ConsumerWidget {
             ]),
             _buildAppBarMenu(context, 'Referensi', [
               _buildMenuItem('KLU', Icons.category, () => _navigateToKlu(context)),
-              _buildMenuItem('Maps', Icons.map, () => _navigateToMap(context)),
+              _buildMenuItem('MAP', Icons.account_balance_wallet, () => _navigateToMap(context)),
               _buildMenuItem('Import KLU', Icons.import_export, () => _showComingSoon(context, 'Import KLU')),
-              _buildMenuItem('Import Maps', Icons.import_export, () => _showComingSoon(context, 'Import Maps')),
+              _buildMenuItem('Import MAP', Icons.import_export, () => _showComingSoon(context, 'Import MAP')),
             ]),
             _buildAppBarMenu(context, 'Pengaturan', [
               _buildMenuItem('Manage Seksi', Icons.apartment, () => _showComingSoon(context, 'Manage Seksi')),
@@ -197,7 +212,7 @@ class DashboardPage extends ConsumerWidget {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: 'KPP Pratama Denpasar Barat',
+                    initialValue: 'KPP Pratama Denpasar Barat',
                     decoration: const InputDecoration(
                       labelText: 'Kantor',
                       border: OutlineInputBorder(),
@@ -218,7 +233,7 @@ class DashboardPage extends ConsumerWidget {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: '2025',
+                    initialValue: '2025',
                     decoration: const InputDecoration(
                       labelText: 'Tahun Pembayaran',
                       border: OutlineInputBorder(),

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_enums.dart';
 
 /// Settings service to manage application configuration
@@ -25,15 +24,14 @@ class SettingsService {
 
   /// Initialize settings service
   static Future<void> initialize() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final appDirectory = Directory(join(documentsDirectory.path, 'MPN-Info'));
+    // Get the directory where the executable is located
+    final executablePath = Platform.resolvedExecutable;
+    final executableDirectory = Directory(dirname(executablePath));
     
-    // Create app directory if it doesn't exist
-    if (!await appDirectory.exists()) {
-      await appDirectory.create(recursive: true);
-    }
+    // Use the executable directory for settings.ini (like Qt legacy)
+    _settingsPath = join(executableDirectory.path, _settingsFileName);
     
-    _settingsPath = join(appDirectory.path, _settingsFileName);
+    print('Settings path: $_settingsPath');
     
     // Initialize encryption for database passwords
     _initializeEncryption();

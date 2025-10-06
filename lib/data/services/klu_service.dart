@@ -195,49 +195,83 @@ class KluService {
 /// KLU service provider
 final kluServiceProvider = Provider<KluService>((ref) => KluService());
 
-/// KLU list state notifier
+/// KLU list state notifier with pagination
 class KluListNotifier extends StateNotifier<AsyncValue<List<KluModel>>> {
   final KluService _kluService;
+  
+  // Pagination state
+  List<KluModel> _allData = [];
+  String _currentSearchQuery = '';
+  String? _currentSektor;
+  bool _isLoading = false;
 
   KluListNotifier(this._kluService) : super(const AsyncValue.loading()) {
     loadAllKlu();
   }
 
-  /// Load all KLU records
+  /// Load all KLU records with caching
   Future<void> loadAllKlu() async {
+    if (_isLoading) return;
+    
+    _isLoading = true;
     state = const AsyncValue.loading();
+    
     try {
       final kluList = await _kluService.getAllKlu();
+      _allData = kluList;
+      _currentSearchQuery = '';
+      _currentSektor = null;
       state = AsyncValue.data(kluList);
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
+    } finally {
+      _isLoading = false;
     }
   }
 
-  /// Search KLU records
+  /// Search KLU records with local filtering for better performance
   Future<void> searchKlu(String query) async {
-    state = const AsyncValue.loading();
-    try {
-      final kluList = await _kluService.searchKlu(query);
-      state = AsyncValue.data(kluList);
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
+    if (_isLoading) return;
+    
+    _currentSearchQuery = query.toLowerCase();
+    _currentSektor = null;
+    
+    _filterLocalData();
   }
 
-  /// Filter by sektor
+  /// Filter by sektor with local filtering
   Future<void> filterBySektor(String sektor) async {
-    state = const AsyncValue.loading();
-    try {
-      final kluList = await _kluService.getKluBySektor(sektor);
-      state = AsyncValue.data(kluList);
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
+    if (_isLoading) return;
+    
+    _currentSektor = sektor;
+    _currentSearchQuery = '';
+    
+    _filterLocalData();
   }
 
-  /// Refresh data
+  /// Apply local filtering to cached data
+  void _filterLocalData() {
+    List<KluModel> filteredData = _allData;
+
+    // Apply search filter
+    if (_currentSearchQuery.isNotEmpty) {
+      filteredData = filteredData.where((klu) {
+        return klu.kode.toLowerCase().contains(_currentSearchQuery) ||
+               klu.nama.toLowerCase().contains(_currentSearchQuery);
+      }).toList();
+    }
+
+    // Apply sektor filter
+    if (_currentSektor != null && _currentSektor!.isNotEmpty) {
+      filteredData = filteredData.where((klu) => klu.sektor == _currentSektor).toList();
+    }
+
+    state = AsyncValue.data(filteredData);
+  }
+
+  /// Refresh data and clear cache
   Future<void> refresh() async {
+    KluService.clearCache();
     await loadAllKlu();
   }
 }
