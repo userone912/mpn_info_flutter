@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/login_page.dart';
 import 'core/constants/app_constants.dart';
 import 'data/services/database_helper.dart';
-import 'data/services/settings_service.dart';
-import 'data/services/database_service.dart';
-import 'data/services/reference_data_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,17 +10,8 @@ void main() async {
   // Initialize database factory for desktop platforms
   DatabaseHelper.initialize();
   
-  // Initialize settings service
-  await SettingsService.initialize();
-  
-  // Try to initialize database from existing settings
-  try {
-    await DatabaseService.initializeFromSettings();
-    print('Database initialized from settings');
-  } catch (e) {
-    print('Database not yet configured: $e');
-    // This is fine, user will configure it through the login page
-  }
+  // DO NOT auto-initialize settings service - let the login page handle this
+  // This prevents automatic creation of settings.ini and data.db files
   
   runApp(const ProviderScope(child: MyApp()));
 }

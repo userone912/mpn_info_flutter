@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as path;
 import '../../data/services/settings_service.dart';
 import '../../data/services/database_service.dart';
 import '../../data/services/database_migration_service.dart';
@@ -57,6 +59,20 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
       _passwordController.text = '';
       _useSsl = config.useSsl;
     });
+  }
+
+  /// Check if SQLite database file exists in executable directory
+  Future<bool> _checkSqliteFileExists() async {
+    try {
+      final executablePath = Platform.resolvedExecutable;
+      final executableDirectory = Directory(path.dirname(executablePath));
+      final dbPath = path.join(executableDirectory.path, 'data.db');
+      final dbFile = File(dbPath);
+      return await dbFile.exists();
+    } catch (e) {
+      print('Error checking SQLite file: $e');
+      return false;
+    }
   }
 
   Future<void> _testConnection() async {
@@ -224,14 +240,14 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
                       if (value == DatabaseType.sqlite) {
                         _hostController.text = 'localhost';
                         _portController.text = '0';
-                        _nameController.text = 'mpn_info.db';
+                        _nameController.text = 'data.db';
                         _usernameController.text = '';
                         _passwordController.text = '';
                       } else {
                         _hostController.text = 'localhost';
                         _portController.text = '3306';
-                        _nameController.text = 'mpn_info';
-                        _usernameController.text = 'mpn_user';
+                        _nameController.text = 'mpninfo';
+                        _usernameController.text = 'mpninfo';
                       }
                     });
                   },
@@ -346,39 +362,65 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
                 ] else ...[
-                  // SQLite Info
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
+                  // SQLite Info with file existence check
+                  FutureBuilder<bool>(
+                    future: _checkSqliteFileExists(),
+                    builder: (context, snapshot) {
+                      final fileExists = snapshot.data ?? false;
+                      final isLoading = !snapshot.hasData;
+                      
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: fileExists ? Colors.green.shade50 : Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: fileExists ? Colors.green.shade200 : Colors.orange.shade200,
+                          ),
+                        ),
+                        child: Column(
                           children: [
-                            Icon(Icons.info, color: Colors.blue.shade700),
-                            const SizedBox(width: 8),
+                            Row(
+                              children: [
+                                if (isLoading)
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    fileExists ? Icons.check_circle : Icons.warning,
+                                    color: fileExists ? Colors.green.shade700 : Colors.orange.shade700,
+                                  ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Database Lokal (SQLite)',
+                                  style: TextStyle(
+                                    color: fileExists ? Colors.green.shade700 : Colors.orange.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             Text(
-                              'Database Lokal (SQLite)',
+                              fileExists
+                                  ? 'File data.db ditemukan di direktori aplikasi. Aplikasi siap digunakan.'
+                                  : 'File data.db tidak ditemukan di direktori aplikasi. '
+                                    'Pastikan file data.db sudah tersedia dengan struktur database yang sesuai.',
                               style: TextStyle(
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.bold,
+                                color: fileExists ? Colors.green.shade700 : Colors.orange.shade700,
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Database SQLite akan dibuat secara otomatis di direktori aplikasi. Tidak perlu konfigurasi tambahan.',
-                          style: TextStyle(
-                            color: Colors.blue.shade700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ],

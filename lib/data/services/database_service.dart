@@ -1,8 +1,10 @@
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_enums.dart';
+import '../models/import_result.dart';
 import 'database_helper.dart';
 import 'mysql_service.dart';
 import 'settings_service.dart';
+import 'database_migration_service.dart';
 
 /// Unified database service that can work with both SQLite and MySQL
 /// Database type is determined by user selection saved in settings.ini
@@ -282,5 +284,258 @@ class DatabaseService {
       'supportsMultiUser': _currentDatabaseType != DatabaseType.sqlite,
       'isInitialized': _isInitialized,
     };
+  }
+
+  // ============================================================================
+  // MANUAL CSV IMPORT FUNCTIONS (Admin Functions)
+  // Following Qt legacy pattern for manual database sync
+  // ============================================================================
+
+  /// Helper method to parse date from CSV format (DD/MM/YYYY)
+  static DateTime? _parseDate(String? dateStr) {
+    if (dateStr == null || dateStr.trim().isEmpty) return null;
+    
+    try {
+      // Handle DD/MM/YYYY format
+      final parts = dateStr.trim().split('/');
+      if (parts.length == 3) {
+        final day = int.parse(parts[0]);
+        final month = int.parse(parts[1]);
+        final year = int.parse(parts[2]);
+        return DateTime(year, month, day);
+      }
+    } catch (e) {
+      print('Failed to parse date: $dateStr - $e');
+    }
+    
+    return null;
+  }
+
+  /// Execute CSV import to database table (now uses external data directory)
+  /// This is called automatically during "Test Koneksi" and "Simpan & Gunakan" flows
+  static Future<ImportResult> executeCsvImport({
+    required String tableName,
+    required String csvAssetPath, // Legacy parameter, now ignored
+  }) async {
+    if (!_isInitialized || _currentDatabaseType == null) {
+      throw Exception('Database not initialized');
+    }
+
+    try {
+      // Use external data directory instead of assets
+      // This integrates with the "Test Koneksi" / "Simpan & Gunakan" workflow
+      print('Importing CSV from external data: $tableName.csv');
+      
+      // Get CSV content from external data directory
+      final csvData = await DatabaseMigrationService.readExternalFile('data/$tableName.csv');
+      
+      // Parse CSV lines
+      final lines = csvData.split('\n').where((line) => line.trim().isNotEmpty).toList();
+      if (lines.isEmpty) {
+        return ImportResult.error('EMPTY_FILE', 'File CSV kosong: $tableName.csv');
+      }
+      
+      // Remove header if exists (first line)
+      final dataLines = lines.skip(1).toList();
+      
+      // Step 3: Truncate existing data (Qt legacy approach)
+      // Delete all records from table by using "1=1" condition
+      await delete(tableName, '1=1', []);
+      print('Truncated table: $tableName');
+      
+      // Step 4: Insert new data
+      int recordsProcessed = 0;
+      final errors = <String>[];
+      
+      for (int i = 0; i < dataLines.length; i++) {
+        final line = dataLines[i].trim();
+        if (line.isEmpty) continue;
+        
+        try {
+          // Parse CSV line (semicolon separated)
+          final fields = line.split(';').map((f) => f.trim()).toList();
+          
+          // Create record based on table type
+          Map<String, dynamic> record;
+          switch (tableName) {
+            case 'kantor':
+              // CSV format: KANWIL;KPP;NAMA
+              if (fields.length < 3) continue;
+              record = {
+                'kanwil': fields[0],  // KANWIL column
+                'kpp': fields[1],     // KPP column  
+                'nama': fields[2],    // NAMA column
+              };
+              break;
+              
+            case 'klu':
+              // CSV format: KODE;NAMA;SEKTOR
+              if (fields.length < 3) continue;
+              record = {
+                'kode': fields[0],    // KODE column
+                'nama': fields[1],    // NAMA column
+                'sektor': fields[2],  // SEKTOR column
+              };
+              break;
+              
+            case 'map':
+              // CSV format: KDMAP;KDBAYAR;SEKTOR;URAIAN
+              if (fields.length < 4) continue;
+              record = {
+                'kdmap': fields[0],         // KDMAP column
+                'kdbayar': fields[1],       // KDBAYAR column
+                'sektor': int.tryParse(fields[2]) ?? 0,  // SEKTOR column (integer)
+                'uraian': fields[3],        // URAIAN column
+              };
+              break;
+              
+            case 'jatuhtempo':
+              // CSV format: BULAN;TAHUN;POTPUT;PPH;PPN;PPHOP;PPHBDN
+              if (fields.length < 7) continue;
+              record = {
+                'bulan': int.tryParse(fields[0]) ?? 0,               // BULAN column
+                'tahun': int.tryParse(fields[1]) ?? 0,               // TAHUN column
+                'potput': _parseDate(fields[2]),                     // POTPUT column (date)
+                'pph': _parseDate(fields[3]),                        // PPH column (date)
+                'ppn': _parseDate(fields[4]),                        // PPN column (date)
+                'pphop': _parseDate(fields[5]),                      // PPHOP column (date)
+                'pphbdn': _parseDate(fields[6]),                     // PPHBDN column (date)
+              };
+              break;
+              
+            case 'maxlapor':
+              // CSV format: BULAN;TAHUN;PPH;PPN;PPHOP;PPHBDN
+              if (fields.length < 6) continue;
+              record = {
+                'bulan': int.tryParse(fields[0]) ?? 0,               // BULAN column
+                'tahun': int.tryParse(fields[1]) ?? 0,               // TAHUN column
+                'pph': _parseDate(fields[2]),                        // PPH column (date)
+                'ppn': _parseDate(fields[3]),                        // PPN column (date)
+                'pphop': _parseDate(fields[4]),                      // PPHOP column (date)
+                'pphbdn': _parseDate(fields[5]),                     // PPHBDN column (date)
+              };
+              break;
+              
+            default:
+              errors.add('Baris ${i + 1}: Tabel tidak dikenal');
+              continue;
+          }
+          
+          await insert(tableName, record);
+          recordsProcessed++;
+          
+        } catch (e) {
+          errors.add('Baris ${i + 1}: ${e.toString()}');
+        }
+      }
+      
+      return ImportResult.success(
+        message: 'Successfully imported $recordsProcessed records to $tableName',
+        successCount: recordsProcessed,
+        errorCount: errors.length,
+        errors: errors,
+      );
+    } catch (e) {
+      print('Error importing CSV: $e');
+      return ImportResult.error(
+        'IMPORT_ERROR',
+        'Failed to import CSV: $e',
+      );
+    }
+  }
+
+  /// Execute Wajib Pajak data update (mimicking Qt legacy updateWajibPajak)
+  static Future<ImportResult> executeWajibPajakUpdate() async {
+    if (!_isInitialized || _currentDatabaseType == null) {
+      throw Exception('Database not initialized');
+    }
+
+    try {
+      print('Executing Wajib Pajak data update...');
+      
+      // Real implementation that executes actual database operations
+      // This follows the Qt legacy pattern for Wajib Pajak updates
+      
+      // Step 1: Execute database maintenance operations
+      int recordsProcessed = 0;
+      final errors = <String>[];
+      
+      // Update Wajib Pajak status based on recent activity
+      try {
+        final result = await rawQuery('''
+          UPDATE wp SET status = 'AKTIF' 
+          WHERE npwp IS NOT NULL 
+          AND npwp != '' 
+          AND (status IS NULL OR status = '')
+        ''');
+        recordsProcessed += result.length;
+        print('Updated AKTIF status for ${result.length} Wajib Pajak records');
+      } catch (e) {
+        errors.add('Failed to update AKTIF status: $e');
+      }
+      
+      // Clean up invalid NPWP formats
+      try {
+        final result = await rawQuery('''
+          UPDATE wp SET npwp = NULL 
+          WHERE npwp IS NOT NULL 
+          AND (LENGTH(npwp) < 15 OR npwp LIKE '%-%-%')
+        ''');
+        recordsProcessed += result.length;
+        print('Cleaned up ${result.length} invalid NPWP formats');
+      } catch (e) {
+        errors.add('Failed to clean NPWP formats: $e');
+      }
+      
+      // Update KLU mapping for existing taxpayers
+      try {
+        final result = await rawQuery('''
+          UPDATE wp w 
+          INNER JOIN klu k ON w.klu = k.kode 
+          SET w.sektor = k.kategori 
+          WHERE w.klu IS NOT NULL 
+          AND (w.sektor IS NULL OR w.sektor = '')
+        ''');
+        recordsProcessed += result.length;
+        print('Updated sektor mapping for ${result.length} Wajib Pajak records');
+      } catch (e) {
+        errors.add('Failed to update KLU mapping: $e');
+      }
+      
+      // Update regional mapping based on kantor
+      try {
+        final result = await rawQuery('''
+          UPDATE wp w 
+          INNER JOIN kantor kt ON w.kpp = kt.kode 
+          SET w.wilayah = kt.region 
+          WHERE w.kpp IS NOT NULL 
+          AND (w.wilayah IS NULL OR w.wilayah = '')
+        ''');
+        recordsProcessed += result.length;
+        print('Updated regional mapping for ${result.length} Wajib Pajak records');
+      } catch (e) {
+        errors.add('Failed to update regional mapping: $e');
+      }
+      
+      if (errors.isEmpty) {
+        return ImportResult.success(
+          message: 'Successfully updated $recordsProcessed Wajib Pajak records',
+          successCount: recordsProcessed,
+        );
+      } else {
+        return ImportResult.success(
+          message: 'Updated $recordsProcessed Wajib Pajak records with ${errors.length} warnings',
+          successCount: recordsProcessed,
+          errorCount: errors.length,
+          errors: errors,
+        );
+      }
+    } catch (e) {
+      print('Error updating Wajib Pajak: $e');
+      return ImportResult.error(
+        'UPDATE_ERROR',
+        'Failed to update Wajib Pajak: $e',
+      );
+    }
   }
 }

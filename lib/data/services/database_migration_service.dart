@@ -1,19 +1,66 @@
-import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as path;
 import 'database_service.dart';
+import '../../core/constants/app_enums.dart';
 
 /// Database Migration Service
 /// Handles schema synchronization from assets/data files
 class DatabaseMigrationService {
   
-  /// Check and update database schema from assets or external files
+  /// Check and update database schema from external data files
   static Future<bool> migrateDatabase() async {
     try {
       print('Starting database migration...');
       
+      // Check database type
+      final dbType = DatabaseService.databaseType;
+      
+      if (dbType == DatabaseType.sqlite) {
+        // For SQLite, the database is already created with schema in DatabaseHelper
+        // Just run CSV updates if needed
+        return await _migrateSQLiteDatabase();
+      } else {
+        // MySQL migration logic
+        return await _migrateMySQLDatabase();
+      }
+      
+    } catch (e) {
+      print('Database migration failed: $e');
+      return false;
+    }
+  }
+
+  /// Handle SQLite database migration (mainly CSV updates)
+  static Future<bool> _migrateSQLiteDatabase() async {
+    try {
+      print('Running SQLite database migration...');
+      
+      // Check if basic tables exist, if not they should be created by DatabaseHelper
+      try {
+        await DatabaseService.query('users', limit: 1);
+      } catch (e) {
+        // Tables don't exist yet, this is expected for new database
+        print('Database tables not yet created, will be handled by DatabaseHelper');
+        return true;
+      }
+      
+      // Update CSV data if update files exist
+      await _updateCsvDataFromFiles();
+      
+      print('SQLite database migration completed successfully');
+      return true;
+      
+    } catch (e) {
+      print('SQLite migration error: $e');
+      return false;
+    }
+  }
+
+  /// Handle MySQL database migration (original logic)
+  static Future<bool> _migrateMySQLDatabase() async {
+    try {
       // Check if we can connect to the database
       try {
         await DatabaseService.query('info', limit: 1);
@@ -37,21 +84,10 @@ class DatabaseMigrationService {
         // If it's just "table doesn't exist", that's expected for fresh database
       }
       
-      // Try to read from external files first, then fall back to assets
-      String structData;
-      String valueData;
-      
-      try {
-        // Try external files (production deployment)
-        structData = await _readExternalFile('data/db-struct');
-        valueData = await _readExternalFile('data/db-value');
-        print('Using external data files');
-      } catch (e) {
-        // Fall back to bundled assets (development)
-        structData = await rootBundle.loadString('assets/data/db-struct');
-        valueData = await rootBundle.loadString('assets/data/db-value');
-        print('Using bundled assets');
-      }
+      // Read from external data directory
+      final structData = await _readExternalFile('data/db-struct');
+      final valueData = await _readExternalFile('data/db-value');
+      print('Loading database files');
       
       // Parse structure and value files
       final structCommands = _parseStructFile(structData);
@@ -248,35 +284,6 @@ class DatabaseMigrationService {
     }
   }
   
-  /// Set database version
-  static Future<void> _setDatabaseVersion(String version) async {
-    try {
-      // Check if version record exists
-      final existing = await DatabaseService.query(
-        'info',
-        where: '`key` = ?',
-        whereArgs: ['db.version'],
-        limit: 1,
-      );
-      
-      if (existing.isNotEmpty) {
-        // Use raw query to avoid automatic timestamp columns
-        await DatabaseService.rawQuery(
-          'UPDATE `info` SET `value` = ? WHERE `key` = ?',
-          [version, 'db.version'],
-        );
-      } else {
-        // Use raw query to avoid automatic timestamp columns
-        await DatabaseService.rawQuery(
-          'INSERT INTO `info` (`key`, `value`) VALUES (?, ?)',
-          ['db.version', version],
-        );
-      }
-    } catch (e) {
-      print('Could not set database version: $e');
-    }
-  }
-  
   /// Compare version strings (simple semantic versioning)
   static int _compareVersions(String v1, String v2) {
     final parts1 = v1.split('.').map(int.tryParse).where((e) => e != null).cast<int>().toList();
@@ -364,7 +371,7 @@ class DatabaseMigrationService {
           print('Failed to execute value SQL: ${command.sql}\nError: $e');
         }
       } else if (command.type == CommandType.csvUpdate) {
-        await _loadSpecificCsvData(command.csvType);
+        await loadSpecificCsvData(command.csvType);
       }
     }
   }
@@ -416,30 +423,30 @@ class DatabaseMigrationService {
     return '0.0'; // Default version if not found
   }
   
+  /// Update CSV data from external update files
+  static Future<void> _updateCsvDataFromFiles() async {
+    try {
+      await _loadCsvData();
+    } catch (e) {
+      print('Error updating CSV data: $e');
+    }
+  }
+  
   /// Load CSV data from assets
   static Future<void> _loadCsvData() async {
     final csvFiles = ['kantor', 'klu', 'map', 'jatuhtempo', 'maxlapor'];
     
     for (final csvFile in csvFiles) {
-      await _loadSpecificCsvData('update$csvFile');
+      await loadSpecificCsvData('update$csvFile');
     }
   }
   
-  /// Load specific CSV data from external files or assets
-  static Future<void> _loadSpecificCsvData(String csvType) async {
+  /// Load specific CSV data from external files and return actual record count
+  static Future<int> loadSpecificCsvData(String csvType) async {
     try {
       final csvFileName = csvType.replaceFirst('update', '');
-      String csvData;
-      
-      try {
-        // Try external file first
-        csvData = await _readExternalFile('data/$csvFileName.csv');
-        print('Loading CSV from external file: data/$csvFileName.csv');
-      } catch (e) {
-        // Fall back to bundled assets
-        csvData = await rootBundle.loadString('assets/data/$csvFileName.csv');
-        print('Loading CSV from assets: assets/data/$csvFileName.csv');
-      }
+      final csvData = await _readExternalFile('data/$csvFileName.csv');
+      print('Loading CSV from external file: data/$csvFileName.csv');
       
       // Parse CSV - detect delimiter automatically
       String delimiter = ';'; // Default
@@ -468,7 +475,7 @@ class DatabaseMigrationService {
         eol: '\n',
       ).convert(csvData);
       
-      if (csvTable.isEmpty) return;
+      if (csvTable.isEmpty) return 0;
       
       // First row is header
       final headers = csvTable[0].map((e) => e.toString().trim()).toList();
@@ -477,6 +484,7 @@ class DatabaseMigrationService {
       await DatabaseService.rawQuery('DELETE FROM `$csvFileName`');
       
       // Insert new data
+      int recordsInserted = 0;
       for (int i = 1; i < csvTable.length; i++) {
         final row = csvTable[i];
         if (row.isEmpty) continue;
@@ -494,9 +502,11 @@ class DatabaseMigrationService {
           'INSERT INTO `$csvFileName` ($fields) VALUES ($placeholders)',
           data.values.toList(),
         );
+        recordsInserted++;
       }
       
-      print('Loaded ${csvTable.length - 1} records into $csvFileName table');
+      print('Loaded $recordsInserted records into $csvFileName table');
+      return recordsInserted;
       
     } catch (e) {
       print('Failed to load CSV data for $csvType: $e');
@@ -510,10 +520,16 @@ class DatabaseMigrationService {
         rethrow; // Stop the migration process
       }
       // Continue for non-critical errors (like missing CSV files)
+      return 0; // Return 0 records for failed CSV loads
     }
   }
 
   /// Read file from external data directory (for production deployment)
+  /// Read external file (public wrapper for CSV import integration)
+  static Future<String> readExternalFile(String relativePath) async {
+    return await _readExternalFile(relativePath);
+  }
+
   static Future<String> _readExternalFile(String relativePath) async {
     // Get executable directory
     final executablePath = Platform.resolvedExecutable;
@@ -528,10 +544,30 @@ class DatabaseMigrationService {
     return await file.readAsString(encoding: utf8);
   }
 
-  /// Get executable directory path for external files
+  /// Get data directory path for external files
+  /// During development: looks in project root/data
+  /// During production: looks next to executable/data
   static String getDataDirectory() {
     final executablePath = Platform.resolvedExecutable;
     final executableDir = path.dirname(executablePath);
+    
+    // Check if we're in development mode (executable is in build directory)
+    if (executablePath.contains('build\\windows\\x64\\runner\\Debug') || 
+        executablePath.contains('build\\windows\\x64\\runner\\Release') ||
+        executablePath.contains('build/windows/x64/runner/Debug') ||
+        executablePath.contains('build/windows/x64/runner/Release')) {
+      
+      // Development mode: go up to project root and look for data directory
+      final projectRoot = executableDir
+          .replaceAll('\\build\\windows\\x64\\runner\\Debug', '')
+          .replaceAll('\\build\\windows\\x64\\runner\\Release', '')
+          .replaceAll('/build/windows/x64/runner/Debug', '')
+          .replaceAll('/build/windows/x64/runner/Release', '');
+      
+      return path.join(projectRoot, 'data');
+    }
+    
+    // Production mode: look next to executable
     return path.join(executableDir, 'data');
   }
 
@@ -541,51 +577,15 @@ class DatabaseMigrationService {
     final executableDir = path.dirname(executablePath);
     return path.join(executableDir, 'images');
   }
-
-  /// Check if external data files exist
-  static Future<bool> hasExternalDataFiles() async {
-    try {
-      final dataDir = getDataDirectory();
-      final structFile = File(path.join(dataDir, 'db-struct'));
-      final valueFile = File(path.join(dataDir, 'db-value'));
-      
-      return await structFile.exists() && await valueFile.exists();
-    } catch (e) {
-      return false;
-    }
-  }
   
-  /// Get list of available update file versions
-  static Future<List<String>> _getAvailableUpdateFiles() async {
-    final versions = <String>[];
-    
-    // Check for known update files in assets (complete list)
-    final knownVersions = [
-      '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9',
-      '2.0', '2.0.1', '2.1', '2.1.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8', '2.8.1', '2.9',
-      '3.0', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9',
-      '4.0', '4.1', '4.2', '4.3', '4.4', '4.5', '4.6'
-    ];
-    for (final version in knownVersions) {
-      try {
-        final content = await rootBundle.loadString('assets/data/update-$version');
-        if (content.isNotEmpty) {
-          versions.add(version);
-        }
-      } catch (e) {
-        // File doesn't exist, skip
-      }
-    }
-    
-    return versions;
-  }
-  
-  /// Read content of update file
+  /// Read content of update file from external data directory
   static Future<String?> _readUpdateFile(String version) async {
     try {
-      return await rootBundle.loadString('assets/data/update-$version');
+      final content = await _readExternalFile('data/update-$version');
+      print('Loading update-$version from external data directory');
+      return content;
     } catch (e) {
-      print('Could not read update-$version: $e');
+      print('Could not read update-$version from data directory: $e');
       return null;
     }
   }
@@ -608,7 +608,7 @@ class DatabaseMigrationService {
           break;
           
         case CommandType.csvUpdate:
-          await _loadSpecificCsvData(command.csvType);
+          await loadSpecificCsvData(command.csvType);
           break;
       }
     }

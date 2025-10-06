@@ -3,22 +3,23 @@
 
 class AppConstants {
     // Database Configuration
-  static const String databaseName = 'mpn_info.db';
+  static const String databaseName = 'data.db';
   static const int databaseVersion = 1;
-  static const String databasePassword = 'mpn_info_2024';
+  static const String databasePassword = 'mpninfo';
 
-  // Database Tables
+  // Database Table Names
   static const String tableUsers = 'users';
   static const String tableSeksi = 'seksi';
   static const String tablePegawai = 'pegawai';
   static const String tableSpmkp = 'spmkp';
   static const String tableWp = 'wp';
   static const String tableMpn = 'mpn';
+  static const String tableSettings = 'settings';
 
   // Application Information
   static const String appName = 'MPN-Info';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Modern tax revenue processing application for Indonesian tax offices';
+  static const String appDescription = '';
   
   // Database Configuration
   static const String defaultDatabaseName = 'mpninfo';
@@ -118,16 +119,17 @@ class AppConstants {
 
   // CSV Import Headers (from Qt application)
   static const String seksiHeaderFormat = 'ID;KANTOR;TIPE;NAMA;KODE;TELP';
-  static const String pegawaiHeaderFormat = 'KANTOR;NIP;NIP2;NAMA;PANGKAT;SEKSI;JABATAN;TAHUN';
+  static const String pegawaiHeaderFormat = 'KANTOR;NIP;NIP2;NAMA;SEKSI;PANGKAT;JABATAN;TAHUN';
   static const String userHeaderFormat = 'ID;USERNAME;PASSWORD;FULLNAME;GROUP';
-  static const String spmkpHeaderFormat = 'ID;NPWP;KPP;CABANG;KDMAP;BULAN;TAHUN;NOMINAL';
+  static const String spmkpHeaderFormat = 'NPWP;KPP;CABANG;KDMAP;BULAN;TAHUN;NOMINAL';
   static const String renpenHeaderFormat = 'KPP;NIP;KDMAP;BULAN;TAHUN;TARGET';
   static const String assignKluHeaderFormat = 'NPWP;KPP;CABANG;KLU';
   static const String assignPjHeaderFormat = 'NPWP;KPP;CABANG;NIP';
 
-  // File name patterns
+  // File name patterns (STRICT: Exact format for folder scanning)
   static const String seksiFilePattern = 'SEKSI-{KODE_KANTOR}.csv';
   static const String pegawaiFilePattern = 'PEGAWAI-{KODE_KANTOR}.csv';
+  static const String userFilePattern = 'USER-{KODE_KANTOR}.csv';
   static const String spmkpFilePattern = 'SPMKP-{KODE_KANTOR}-{TAHUN}.csv';
   static const String renpenFilePattern = 'RENPEN-{KODE_KPP}-{TAHUN}.csv';
   static const String assignKluFilePattern = 'ASSIGNKLU-{KODE_KPP}.csv';
@@ -138,5 +140,6 @@ class AppConstants {
   static const String importErrorHeader = 'Nama header tidak sesuai dengan format yang diharapkan';
   static const String importErrorFilename = 'Nama file tidak sesuai dengan format yang diharapkan';
   static const String importErrorContent = 'Data dalam file tidak valid';
+  static const String importErrorOfficeCode = 'Kode kantor tidak sesuai';
   static const String importSuccess = 'File berhasil diimport';
 }

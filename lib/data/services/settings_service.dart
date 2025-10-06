@@ -70,12 +70,13 @@ class SettingsService {
         _parseIniContent(content);
         print('Settings loaded from: $_settingsPath');
       } else {
-        // Create default settings file
-        await _createDefaultSettings();
+        // Do NOT create default settings file automatically
+        // This allows the login page to detect missing settings.ini
+        print('Settings file not found at: $_settingsPath');
       }
     } catch (e) {
       print('Error loading settings: $e');
-      await _createDefaultSettings();
+      // Do NOT create default settings on error
     }
   }
 

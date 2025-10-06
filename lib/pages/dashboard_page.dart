@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/services/auth_service.dart';
 import '../data/services/csv_import_service.dart';
+import '../data/services/database_import_service.dart';
+import '../data/services/menu_service.dart';
 import '../data/models/user_model.dart';
 import '../data/models/import_result.dart';
+import '../data/models/menu_models.dart';
 import '../core/constants/app_constants.dart';
 import '../shared/widgets/app_logo.dart';
 import '../shared/dialogs/about_dialog.dart' as app_about;
+import '../shared/utils/menu_icon_helper.dart';
 import 'login_page.dart';
 import 'reference/klu_page.dart';
 import 'reference/map_page.dart';
@@ -33,6 +37,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final menuConfig = ref.watch(userMenuProvider);
     
     return Scaffold(
       appBar: AppBar(
@@ -46,80 +51,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
-          // Menu bar similar to original Qt app
-          if (authState.isAdmin) ...[
-            _buildAppBarMenu(context, 'Sistem', [
-              _buildMenuItem('Logout', Icons.logout, () => _handleLogout(context, ref)),
-              _buildMenuItem('Exit', Icons.exit_to_app, () => Navigator.of(context).pop()),
-            ]),
-            _buildAppBarMenu(context, 'Database', [
-              _buildMenuItem('Import Seksi', Icons.business, () => _importSeksi(context)),
-              _buildMenuItem('Import Pegawai', Icons.person, () => _importPegawai(context)),
-              _buildMenuItem('Import User', Icons.group, () => _importUser(context)),
-              _buildMenuItem('Import SPMKP', Icons.description, () => _importSpmkp(context)),
-              _buildMenuItem('Import Rencana Penerimaan', Icons.schedule, () => _showComingSoon(context, 'Import Rencana Penerimaan')),
-              _buildMenuItem('Import MPN', Icons.receipt, () => _showComingSoon(context, 'Import MPN')),
-              _buildMenuItem('Import SPM', Icons.description, () => _showComingSoon(context, 'Import SPM')),
-              _buildMenuItem('Import PKPM', Icons.document_scanner, () => _showComingSoon(context, 'Import PKPM')),
-              _buildMenuItem('Import PBK', Icons.folder, () => _showComingSoon(context, 'Import PBK')),
-              const PopupMenuDivider(),
-              _buildMenuItem('Import Masterfile', Icons.storage, () => _showComingSoon(context, 'Import Masterfile')),
-              _buildMenuItem('Import Master SPT', Icons.storage, () => _showComingSoon(context, 'Import Master SPT')),
-              _buildMenuItem('Import Assign KLU', Icons.assignment, () => _showComingSoon(context, 'Import Assign KLU')),
-              _buildMenuItem('Import Wajib Pajak Besar', Icons.business_center, () => _showComingSoon(context, 'Import Wajib Pajak Besar')),
-              _buildMenuItem('Assign Wajib Pajak >', Icons.assignment_ind, () => _showComingSoon(context, 'Assign Wajib Pajak Menu')),
-              const PopupMenuDivider(),
-              _buildMenuItem('Import Dari Database Lokal >', Icons.storage, () => _showComingSoon(context, 'Import Database Lokal Menu')),
-              _buildMenuItem('Import Data AppPortal >', Icons.cloud_download, () => _showComingSoon(context, 'Import AppPortal Menu')),
-              const PopupMenuDivider(),
-              _buildMenuItem('Export Database', Icons.upload, () => _showComingSoon(context, 'Export Database')),
-              _buildMenuItem('Backup Settings', Icons.backup, () => _showComingSoon(context, 'Backup Settings')),
-            ]),
-            _buildAppBarMenu(context, 'AppPortal', [
-              _buildMenuItem('Login AppPortal', Icons.login, () => _showComingSoon(context, 'Login AppPortal')),
-              _buildMenuItem('Download MPN', Icons.download, () => _showComingSoon(context, 'Download MPN')),
-              _buildMenuItem('Download SPM', Icons.download, () => _showComingSoon(context, 'Download SPM')),
-              _buildMenuItem('Download SPMKP', Icons.download, () => _showComingSoon(context, 'Download SPMKP')),
-              _buildMenuItem('Download SPMPP', Icons.download, () => _showComingSoon(context, 'Download SPMPP')),
-            ]),
-            _buildAppBarMenu(context, 'Eksternal', [
-              _buildMenuItem('DTH/RTH', Icons.integration_instructions, () => _showComingSoon(context, 'DTH/RTH')),
-              _buildMenuItem('Import DTH', Icons.import_export, () => _showComingSoon(context, 'Import DTH')),
-            ]),
-            _buildAppBarMenu(context, 'Sikka', [
-              _buildMenuItem('Login Sikka', Icons.login, () => _showComingSoon(context, 'Login Sikka')),
-              _buildMenuItem('Download Pegawai', Icons.download, () => _showComingSoon(context, 'Download Pegawai')),
-            ]),
-            _buildAppBarMenu(context, 'Data', [
-              _buildMenuItem('SPMKP', Icons.description, () => _showComingSoon(context, 'SPMKP')),
-              _buildMenuItem('SPMPP', Icons.description, () => _showComingSoon(context, 'SPMPP')),
-              _buildMenuItem('PBK', Icons.description, () => _showComingSoon(context, 'PBK')),
-              _buildMenuItem('Manage SPMKP', Icons.edit, () => _showComingSoon(context, 'Manage SPMKP')),
-              _buildMenuItem('Manage SPMPP', Icons.edit, () => _showComingSoon(context, 'Manage SPMPP')),
-            ]),
-            _buildAppBarMenu(context, 'Referensi', [
-              _buildMenuItem('KLU', Icons.category, () => _navigateToKlu(context)),
-              _buildMenuItem('MAP', Icons.account_balance_wallet, () => _navigateToMap(context)),
-              _buildMenuItem('Import KLU', Icons.import_export, () => _showComingSoon(context, 'Import KLU')),
-              _buildMenuItem('Import MAP', Icons.import_export, () => _showComingSoon(context, 'Import MAP')),
-            ]),
-            _buildAppBarMenu(context, 'Pengaturan', [
-              _buildMenuItem('Manage Seksi', Icons.apartment, () => _showComingSoon(context, 'Manage Seksi')),
-              _buildMenuItem('Manage Pegawai', Icons.people, () => _showComingSoon(context, 'Manage Pegawai')),
-              _buildMenuItem('Manage Users', Icons.group, () => _showComingSoon(context, 'Manage Users')),
-              _buildMenuItem('Settings', Icons.settings, () => _showComingSoon(context, 'Settings')),
-            ]),
-            _buildAppBarMenu(context, 'Tools', [
-              _buildMenuItem('WP Favorit', Icons.star, () => _showComingSoon(context, 'WP Favorit')),
-              _buildMenuItem('Execute SQL', Icons.code, () => _showComingSoon(context, 'Execute SQL')),
-              _buildMenuItem('Web Automation', Icons.auto_awesome, () => _showComingSoon(context, 'Web Automation')),
-              _buildMenuItem('Change Password', Icons.lock, () => _showComingSoon(context, 'Change Password')),
-            ]),
-          ],
-          _buildAppBarMenu(context, 'Bantuan', [
-            _buildMenuItem('Manual', Icons.help, () => _showComingSoon(context, 'Manual')),
-            _buildMenuItem('Tentang', Icons.info, () => app_about.AboutDialog.show(context)),
-          ]),
+          // Dynamic menu bar based on user role (now synchronous)
+          _buildDynamicMenuBar(context, menuConfig),
           const SizedBox(width: 16),
           // User profile section
           PopupMenuButton<String>(
@@ -581,6 +514,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     await _performImport(context, 'Import SPMKP', CsvImportService.importSpmkp);
   }
 
+  /// Update all database files from selected directory
+  /// Scans for CSV files and imports them automatically with office validation
+  Future<void> _updateAllDatabaseFiles(BuildContext context) async {
+    await _performImport(context, 'Update Database', DatabaseImportService.importAllDatabaseFiles);
+  }
+
   // Reference data navigation methods
   void _navigateToKlu(BuildContext context) {
     showDialog(
@@ -786,5 +725,158 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         backgroundColor: Colors.blue,
       ),
     );
+  }
+
+  // ============================================================================
+  // UNIFIED REFERENCE DATA UPDATE FUNCTIONS
+  // Replaces 6 separate manual sync functions with one comprehensive update
+  // ============================================================================
+
+  /// Unified Update All Reference Data (replaces 6 separate functions)
+  Future<void> _updateAllReferenceData(BuildContext context) async {
+    await _performDatabaseSync(
+      context, 
+      'Update Semua Data Referensi', 
+      () => ReferenceDataService.updateAllReferenceData(),
+    );
+  }
+
+  /// Generic method to perform database sync operations
+  Future<void> _performDatabaseSync(
+    BuildContext context,
+    String operationName,
+    Future<SyncResult> Function() syncFunction,
+  ) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Menjalankan $operationName...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final result = await syncFunction();
+      
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        
+        if (result.success) {
+          _showSuccessDialog(context, operationName, result.message);
+        } else {
+          _showErrorDialog(context, '$operationName Gagal', result.message);
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        _showErrorDialog(context, '$operationName Error', e.toString());
+      }
+    }
+  }
+
+  /// Show success dialog
+  void _showSuccessDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 8),
+            Text('$title Berhasil'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build dynamic menu bar from JSON configuration
+  Widget _buildDynamicMenuBar(BuildContext context, MenuConfig menuConfig) {
+    return Row(
+      children: menuConfig.menus.map((section) {
+        return _buildAppBarMenu(
+          context,
+          section.title,
+          _buildMenuItems(context, section.items),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Build menu items from JSON configuration
+  List<PopupMenuEntry<VoidCallback>> _buildMenuItems(BuildContext context, List<MenuItem> items) {
+    return items.map<PopupMenuEntry<VoidCallback>>((item) {
+      if (item.isDivider) {
+        return const PopupMenuDivider();
+      } else {
+        return _buildMenuItem(
+          item.title ?? '',
+          MenuIconHelper.getIcon(item.icon),
+          () => _handleMenuAction(context, item.action),
+        );
+      }
+    }).toList();
+  }
+
+  /// Handle menu actions from JSON configuration
+  void _handleMenuAction(BuildContext context, String? actionString) {
+    final menuService = ref.read(menuServiceProvider);
+    final action = menuService.getMenuAction(actionString);
+
+    switch (action) {
+      case MenuAction.logout:
+        _handleLogout(context, ref);
+        break;
+      case MenuAction.exit:
+        Navigator.of(context).pop();
+        break;
+      case MenuAction.importSeksi:
+        _importSeksi(context);
+        break;
+      case MenuAction.importPegawai:
+        _importPegawai(context);
+        break;
+      case MenuAction.importUser:
+        _importUser(context);
+        break;
+      case MenuAction.importSpmkp:
+        _importSpmkp(context);
+        break;
+      case MenuAction.updateDatabase:
+        _updateAllDatabaseFiles(context);
+        break;
+      case MenuAction.navigateKlu:
+        _navigateToKlu(context);
+        break;
+      case MenuAction.navigateMap:
+        _navigateToMap(context);
+        break;
+      case MenuAction.updateReferenceData:
+        _updateAllReferenceData(context);
+        break;
+      case MenuAction.aboutDialog:
+        app_about.AboutDialog.show(context);
+        break;
+      case MenuAction.comingSoon:
+      default:
+        _showComingSoon(context, actionString ?? 'Unknown Action');
+        break;
+    }
   }
 }

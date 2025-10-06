@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../models/user_model.dart';
+import 'database_migration_service.dart';
 
 /// Database helper for local SQLite database
 /// Provides database initialization, migration, and basic operations
@@ -30,16 +30,37 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, AppConstants.databaseName);
+    // Use the directory where the executable is located (same as settings.ini)
+    final executablePath = Platform.resolvedExecutable;
+    final executableDirectory = Directory(dirname(executablePath));
+    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
     
-    return await openDatabase(
-      path,
-      version: AppConstants.databaseVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-      onConfigure: _onConfigure,
-    );
+    print('SQLite database path: $path');
+    
+    // Check if database file already exists
+    final dbFile = File(path);
+    final dbExists = await dbFile.exists();
+    
+    if (dbExists) {
+      print('Existing database file found: $path');
+      // Open existing database without running onCreate
+      return await openDatabase(
+        path,
+        version: AppConstants.databaseVersion,
+        onUpgrade: _onUpgrade,
+        onConfigure: _onConfigure,
+      );
+    } else {
+      print('No existing database file found, creating new one: $path');
+      // Create new database with full schema from migration files
+      return await openDatabase(
+        path,
+        version: AppConstants.databaseVersion,
+        onCreate: _onCreateWithMigration,
+        onUpgrade: _onUpgrade,
+        onConfigure: _onConfigure,
+      );
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -47,7 +68,211 @@ class DatabaseHelper {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
-  Future<void> _onCreate(Database db, int version) async {
+  Future<void> _onCreateWithMigration(Database db, int version) async {
+    print('Creating SQLite database with full schema from migration files...');
+    
+    try {
+      // Read and execute schema from db-struct file
+      await _createSchemaFromStructFile(db);
+      
+      // Load initial data from db-value file
+      await _loadInitialDataFromValueFile(db);
+      
+      // Load CSV data from external files
+      await _loadCsvDataFiles(db);
+      
+      print('SQLite database created successfully with full schema and data');
+    } catch (e) {
+      print('Error creating SQLite database with migration: $e');
+      // Fall back to basic schema creation
+      await _createBasicSchema(db);
+    }
+  }
+
+  /// Create database schema from db-struct file
+  Future<void> _createSchemaFromStructFile(Database db) async {
+    try {
+      final structData = await DatabaseMigrationService.readExternalFile('data/db-struct');
+      final lines = structData.split('\n');
+      
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('!') || trimmed.startsWith('title;') || trimmed.startsWith('message;')) {
+          continue;
+        }
+        
+        if (trimmed.startsWith('sql;')) {
+          final parts = trimmed.split(';');
+          if (parts.length >= 3) {
+            final dbType = int.tryParse(parts[1]) ?? 0;
+            final sql = parts.sublist(2).join(';');
+            
+            // Execute SQL for SQLite (dbType 1) or universal (dbType 0)
+            if (dbType == 0 || dbType == 1) {
+              // Convert MySQL syntax to SQLite syntax
+              final sqliteSQL = _convertMySQLToSQLite(sql);
+              if (sqliteSQL.isNotEmpty) {
+                print('Executing SQLite schema: ${sqliteSQL.substring(0, sqliteSQL.length > 100 ? 100 : sqliteSQL.length)}...');
+                await db.execute(sqliteSQL);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Error reading db-struct file: $e');
+      rethrow;
+    }
+  }
+
+  /// Load initial data from db-value file
+  Future<void> _loadInitialDataFromValueFile(Database db) async {
+    try {
+      final valueData = await DatabaseMigrationService.readExternalFile('data/db-value');
+      final lines = valueData.split('\n');
+      
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('!') || trimmed.startsWith('message;')) {
+          continue;
+        }
+        
+        if (trimmed.startsWith('sql;')) {
+          final parts = trimmed.split(';');
+          if (parts.length >= 3) {
+            final dbType = int.tryParse(parts[1]) ?? 0;
+            final sql = parts.sublist(2).join(';');
+            
+            // Execute SQL for SQLite (dbType 1) or universal (dbType 0)
+            if (dbType == 0 || dbType == 1) {
+              // Convert MySQL syntax to SQLite syntax
+              final sqliteSQL = _convertMySQLToSQLite(sql);
+              if (sqliteSQL.isNotEmpty) {
+                print('Executing SQLite data: ${sqliteSQL.substring(0, sqliteSQL.length > 100 ? 100 : sqliteSQL.length)}...');
+                await db.execute(sqliteSQL);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Error reading db-value file: $e');
+      // This is not critical, continue without initial data
+    }
+  }
+
+  /// Load CSV data files (kantor, klu, map, etc.)
+  Future<void> _loadCsvDataFiles(Database db) async {
+    try {
+      final csvFiles = ['kantor', 'klu', 'map', 'jatuhtempo', 'maxlapor'];
+      
+      for (final csvFile in csvFiles) {
+        await _loadCsvFile(db, csvFile);
+      }
+    } catch (e) {
+      print('Error loading CSV files: $e');
+      // Continue without CSV data
+    }
+  }
+
+  /// Load a specific CSV file into the database
+  Future<void> _loadCsvFile(Database db, String csvFileName) async {
+    try {
+      final csvData = await DatabaseMigrationService.readExternalFile('data/$csvFileName.csv');
+      
+      // Parse CSV - detect delimiter automatically
+      String delimiter = ';'; // Default
+      
+      final firstLines = csvData.split('\n').take(3).toList();
+      int semicolonCount = 0;
+      int commaCount = 0;
+      
+      for (final line in firstLines) {
+        semicolonCount += ';'.allMatches(line).length;
+        commaCount += ','.allMatches(line).length;
+      }
+      
+      if (commaCount > semicolonCount) {
+        delimiter = ',';
+      }
+      
+      final csvTable = csvData.split('\n').map((line) => line.split(delimiter)).toList();
+      
+      if (csvTable.isEmpty) return;
+      
+      // First row is header
+      final headers = csvTable[0].map((e) => e.toString().trim()).toList();
+      
+      // Insert data
+      int recordsInserted = 0;
+      for (int i = 1; i < csvTable.length; i++) {
+        final row = csvTable[i];
+        if (row.isEmpty || row.every((cell) => cell.trim().isEmpty)) continue;
+        
+        final data = <String, dynamic>{};
+        for (int j = 0; j < headers.length && j < row.length; j++) {
+          data[headers[j]] = row[j].toString().trim();
+        }
+        
+        // Insert into SQLite
+        final fields = data.keys.map((key) => '`$key`').join(', ');
+        final placeholders = List.filled(data.length, '?').join(', ');
+        await db.rawInsert(
+          'INSERT INTO `$csvFileName` ($fields) VALUES ($placeholders)',
+          data.values.toList(),
+        );
+        recordsInserted++;
+      }
+      
+      print('Loaded $recordsInserted records into $csvFileName table');
+    } catch (e) {
+      print('Error loading CSV file $csvFileName: $e');
+      // Continue with other files
+    }
+  }
+
+  /// Convert MySQL SQL syntax to SQLite syntax
+  String _convertMySQLToSQLite(String sql) {
+    String result = sql;
+    
+    // Skip non-essential SQL commands for SQLite
+    if (result.toUpperCase().contains('SET ') || 
+        result.toUpperCase().contains('LOCK TABLES') ||
+        result.toUpperCase().contains('UNLOCK TABLES') ||
+        result.toUpperCase().contains('/*!')) {
+      return '';
+    }
+    
+    // Convert MySQL types to SQLite types
+    result = result.replaceAllMapped(RegExp(r'INT\(\d+\)', caseSensitive: false), (match) => 'INTEGER');
+    result = result.replaceAllMapped(RegExp(r'VARCHAR\(\d+\)', caseSensitive: false), (match) => 'TEXT');
+    result = result.replaceAllMapped(RegExp(r'CHAR\(\d+\)', caseSensitive: false), (match) => 'TEXT');
+    result = result.replaceAll(RegExp(r'LONGTEXT', caseSensitive: false), 'TEXT');
+    result = result.replaceAll(RegExp(r'MEDIUMTEXT', caseSensitive: false), 'TEXT');
+    result = result.replaceAll(RegExp(r'TINYTEXT', caseSensitive: false), 'TEXT');
+    result = result.replaceAll(RegExp(r'DECIMAL\([^)]+\)', caseSensitive: false), 'REAL');
+    result = result.replaceAll(RegExp(r'DOUBLE', caseSensitive: false), 'REAL');
+    result = result.replaceAll(RegExp(r'FLOAT', caseSensitive: false), 'REAL');
+    result = result.replaceAll(RegExp(r'TINYINT\(\d+\)', caseSensitive: false), 'INTEGER');
+    result = result.replaceAll(RegExp(r'BIGINT\(\d+\)', caseSensitive: false), 'INTEGER');
+    
+    // Remove MySQL-specific clauses
+    result = result.replaceAll(RegExp(r'ENGINE=\w+', caseSensitive: false), '');
+    result = result.replaceAll(RegExp(r'DEFAULT CHARSET=\w+', caseSensitive: false), '');
+    result = result.replaceAll(RegExp(r'COLLATE=\w+', caseSensitive: false), '');
+    result = result.replaceAll(RegExp(r'AUTO_INCREMENT=\d+', caseSensitive: false), '');
+    
+    // Convert AUTO_INCREMENT to SQLite AUTOINCREMENT
+    result = result.replaceAll(RegExp(r'AUTO_INCREMENT', caseSensitive: false), 'AUTOINCREMENT');
+    
+    // Clean up extra spaces and semicolons
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+    
+    return result;
+  }
+
+  /// Fallback basic schema creation if migration files are not available
+  Future<void> _createBasicSchema(Database db) async {
     // Create users table
     await db.execute('''
       CREATE TABLE users (
@@ -226,8 +451,9 @@ class DatabaseHelper {
 
   /// Delete database file
   Future<void> deleteDatabase() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, AppConstants.databaseName);
+    final executablePath = Platform.resolvedExecutable;
+    final executableDirectory = Directory(dirname(executablePath));
+    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
     final file = File(path);
     if (await file.exists()) {
       await file.delete();
@@ -237,8 +463,9 @@ class DatabaseHelper {
 
   /// Get database file size
   Future<int> getDatabaseSize() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, AppConstants.databaseName);
+    final executablePath = Platform.resolvedExecutable;
+    final executableDirectory = Directory(dirname(executablePath));
+    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
     final file = File(path);
     if (await file.exists()) {
       return await file.length();
@@ -249,8 +476,9 @@ class DatabaseHelper {
   /// Backup database to specified path
   Future<bool> backup(String backupPath) async {
     try {
-      final documentsDirectory = await getApplicationDocumentsDirectory();
-      final sourcePath = join(documentsDirectory.path, AppConstants.databaseName);
+      final executablePath = Platform.resolvedExecutable;
+      final executableDirectory = Directory(dirname(executablePath));
+      final sourcePath = join(executableDirectory.path, AppConstants.sqliteFileName);
       final sourceFile = File(sourcePath);
       
       if (await sourceFile.exists()) {
@@ -276,8 +504,9 @@ class DatabaseHelper {
       await close();
 
       // Copy backup file to database location
-      final documentsDirectory = await getApplicationDocumentsDirectory();
-      final targetPath = join(documentsDirectory.path, AppConstants.databaseName);
+      final executablePath = Platform.resolvedExecutable;
+      final executableDirectory = Directory(dirname(executablePath));
+      final targetPath = join(executableDirectory.path, AppConstants.sqliteFileName);
       await backupFile.copy(targetPath);
 
       // Reinitialize database

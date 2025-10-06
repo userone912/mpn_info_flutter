@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as path;
 import '../data/services/auth_service.dart';
-import '../data/services/database_service.dart';
-import '../core/constants/app_constants.dart';
+import '../data/services/settings_service.dart';
 import '../shared/widgets/app_logo.dart';
 import 'dashboard_page.dart';
 import 'database_config_dialog.dart';
@@ -28,6 +29,48 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Check if settings.ini exists, if not show database config dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSettingsAndShowConfig();
+    });
+  }
+
+  /// Check if settings.ini exists and show config dialog if not
+  Future<void> _checkSettingsAndShowConfig() async {
+    try {
+      // Initialize settings service to check for file existence
+      await SettingsService.initialize();
+      
+      // Check if settings.ini file exists
+      final settingsExists = await _checkSettingsFileExists();
+      
+      if (!settingsExists && mounted) {
+        // Show database configuration dialog automatically
+        await _showDatabaseConfig();
+      }
+    } catch (e) {
+      print('Error checking settings file: $e');
+    }
+  }
+
+  /// Check if settings.ini file exists
+  Future<bool> _checkSettingsFileExists() async {
+    try {
+      // We need to import dart:io and path for this
+      final executablePath = Platform.resolvedExecutable;
+      final executableDirectory = Directory(path.dirname(executablePath));
+      final settingsPath = path.join(executableDirectory.path, 'settings.ini');
+      final settingsFile = File(settingsPath);
+      return await settingsFile.exists();
+    } catch (e) {
+      print('Error checking settings file existence: $e');
+      return false;
+    }
+  }
+
   Future<void> _showDatabaseConfig() async {
     final result = await showDialog<bool>(
       context: context,
@@ -48,18 +91,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Check if database is initialized
-    final dbInfo = DatabaseService.getDatabaseInfo();
-    if (!dbInfo['isInitialized']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Database belum dikonfigurasi. Silakan konfigurasi database terlebih dahulu.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
     final authNotifier = ref.read(authProvider.notifier);
     final success = await authNotifier.login(
       _usernameController.text.trim(),
@@ -76,7 +107,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final dbInfo = DatabaseService.getDatabaseInfo();
 
     return Scaffold(
       body: Container(
@@ -166,37 +196,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               onFieldSubmitted: (_) => _handleLogin(),
                             ),
                             const SizedBox(height: 16), // Reduced spacing
-
-                            // Database Status Indicator (more compact)
-                            if (!dbInfo['isInitialized'])
-                              Container(
-                                padding: const EdgeInsets.all(8), // Reduced padding
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.warning,
-                                      color: Colors.orange.shade700,
-                                      size: 16, // Smaller icon
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Database belum dikonfigurasi',
-                                      style: TextStyle(
-                                        color: Colors.orange.shade700,
-                                        fontSize: 12, // Smaller text
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                            if (!dbInfo['isInitialized']) const SizedBox(height: 12),
 
                             // Error Message
                             if (authState.error != null)

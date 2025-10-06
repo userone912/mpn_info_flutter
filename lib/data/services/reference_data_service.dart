@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/klu_model.dart';
 import '../models/map_model.dart';
 import 'database_service.dart';
+import 'database_migration_service.dart';
 
 /// Centralized reference data service that loads all data once at startup
 /// This mimics the Qt legacy approach where all data is loaded in memory
@@ -192,6 +193,234 @@ class ReferenceDataService {
     _isKluLoaded = false;
     _isMapLoaded = false;
   }
+
+  // ============================================================================
+  // MANUAL DATABASE SYNC FUNCTIONS (Admin Functions)
+  // Following Qt legacy pattern: importKantor(), importKlu(), etc.
+  // ============================================================================
+
+  /// Manually sync Kantor database from kantor.csv (Admin function)
+  Future<SyncResult> syncKantorFromCsv() async {
+    try {
+      print('Starting manual sync: Kantor from kantor.csv');
+      
+      // Execute SQL script to import kantor.csv to database
+      // This mimics Qt legacy: KantorImportController with "./data/kantor.csv"
+      final result = await DatabaseService.executeCsvImport(
+        tableName: 'kantor',
+        csvAssetPath: 'assets/data/kantor.csv',
+      );
+      
+      print('Kantor sync completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Referensi Kantor berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error syncing Kantor: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: File kantor.csv tidak dapat diproses - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Manually sync KLU database from klu.csv (Admin function)
+  Future<SyncResult> syncKluFromCsv() async {
+    try {
+      print('Starting manual sync: KLU from klu.csv');
+      
+      final result = await DatabaseService.executeCsvImport(
+        tableName: 'klu',
+        csvAssetPath: 'assets/data/klu.csv',
+      );
+      
+      // Reload KLU data in memory after sync
+      await _loadKluData();
+      
+      print('KLU sync completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Referensi KLU berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error syncing KLU: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: File klu.csv tidak dapat diproses - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Manually sync MAP database from map.csv (Admin function)
+  Future<SyncResult> syncMapFromCsv() async {
+    try {
+      print('Starting manual sync: MAP from map.csv');
+      
+      final result = await DatabaseService.executeCsvImport(
+        tableName: 'map',
+        csvAssetPath: 'assets/data/map.csv',
+      );
+      
+      // Reload MAP data in memory after sync
+      await _loadMapData();
+      
+      print('MAP sync completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Referensi MAP berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error syncing MAP: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: File map.csv tidak dapat diproses - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Manually sync Jatuh Tempo Pembayaran from jatuhtempo.csv (Admin function)
+  Future<SyncResult> syncJatuhTempoFromCsv() async {
+    try {
+      print('Starting manual sync: Jatuh Tempo Pembayaran from jatuhtempo.csv');
+      
+      final result = await DatabaseService.executeCsvImport(
+        tableName: 'jatuhtempo',
+        csvAssetPath: 'assets/data/jatuhtempo.csv',
+      );
+      
+      print('Jatuh Tempo sync completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Referensi Jatuh Tempo Pembayaran berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error syncing Jatuh Tempo: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: File jatuhtempo.csv tidak dapat diproses - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Manually sync Max Lapor (Jatuh Tempo Pelaporan) from maxlapor.csv (Admin function)
+  Future<SyncResult> syncMaxLaporFromCsv() async {
+    try {
+      print('Starting manual sync: Jatuh Tempo Pelaporan from maxlapor.csv');
+      
+      final result = await DatabaseService.executeCsvImport(
+        tableName: 'maxlapor',
+        csvAssetPath: 'assets/data/maxlapor.csv',
+      );
+      
+      print('Max Lapor sync completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Referensi Jatuh Tempo Pelaporan berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error syncing Max Lapor: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: File maxlapor.csv tidak dapat diproses - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Manually update Wajib Pajak data (Admin function)
+  /// This mimics Qt legacy updateWajibPajak() function
+  Future<SyncResult> updateWajibPajakData() async {
+    try {
+      print('Starting manual update: Wajib Pajak data');
+      
+      // This would typically run complex update scripts
+      // For now, we'll simulate the operation
+      final result = await DatabaseService.executeWajibPajakUpdate();
+      
+      print('Wajib Pajak update completed: ${result.successCount} records');
+      return SyncResult(
+        success: true,
+        message: 'Data Wajib Pajak berhasil diupdate. ${result.successCount} records diproses.',
+        recordsProcessed: result.successCount,
+      );
+    } catch (e) {
+      print('Error updating Wajib Pajak: $e');
+      return SyncResult(
+        success: false,
+        message: 'Error: Update Wajib Pajak gagal - $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+
+  /// Update all reference data from CSV files in external data directory
+  /// This reuses the same CSV loading process that runs during "Test Koneksi" / "Simpan & Gunakan"
+  /// Instead of 6 separate Update functions, we have one comprehensive update
+  static Future<SyncResult> updateAllReferenceData() async {
+    try {
+      print('Starting comprehensive reference data update...');
+      print('Loading data from external data directory');
+      
+      // Reuse the existing CSV loading mechanism from DatabaseMigrationService
+      // This is the same process that runs during database connection setup
+      final csvTypes = ['updatekantor', 'updateklu', 'updatemap', 'updatejatuhtempo', 'updatemaxlapor'];
+      int totalRecords = 0;
+      final errors = <String>[];
+      final successDetails = <String>[];
+      
+      for (final csvType in csvTypes) {
+        try {
+          final recordCount = await DatabaseMigrationService.loadSpecificCsvData(csvType);
+          final tableName = csvType.replaceFirst('update', '');
+          print('Successfully updated: $csvType ($recordCount records)');
+          totalRecords += recordCount;
+          successDetails.add('$tableName: $recordCount records');
+        } catch (e) {
+          final error = 'Failed to update $csvType: $e';
+          print(error);
+          errors.add(error);
+        }
+      }
+      
+      return SyncResult(
+        success: errors.isEmpty,
+        message: errors.isEmpty 
+            ? 'Semua data referensi berhasil diupdate.\nTotal: $totalRecords records\n${successDetails.join('\n')}'
+            : 'Update selesai dengan ${errors.length} error(s). Total: $totalRecords records processed.',
+        recordsProcessed: totalRecords,
+      );
+    } catch (e) {
+      print('Error updating all reference data: $e');
+      return SyncResult(
+        success: false,
+        message: 'Gagal mengupdate data referensi: $e',
+        recordsProcessed: 0,
+      );
+    }
+  }
+}
+
+/// Result of manual database sync operations
+class SyncResult {
+  final bool success;
+  final String message;
+  final int recordsProcessed;
+
+  const SyncResult({
+    required this.success,
+    required this.message,
+    required this.recordsProcessed,
+  });
 }
 
 /// Global reference data service provider

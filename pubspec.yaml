@@ -28,7 +28,7 @@ dependencies:
   # HTTP & Networking
   dio: ^5.3.4
   retrofit: ^4.0.3
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
   
   # Charts & Data Visualization
   fl_chart: ^0.66.2
@@ -96,7 +96,6 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - assets/data/
     - assets/maps/
 
   # Custom fonts will be added later
