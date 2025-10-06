@@ -1,0 +1,8 @@
+!4.7
+title;Updating Database;
+message;Adding PPM/PKM table for business operation analysis;
+
+sql;0;CREATE TABLE `ppmpkmbo` ( `KD_KANWIL` VARCHAR(3), `KPPADM` VARCHAR(3), `NPWP` VARCHAR(15), `NO_PBK` VARCHAR(40), `NTPN` VARCHAR(30), `TGL_SETOR` DATE, `THN_SETOR` INT, `BLN_SETOR` INT, `THN_PAJAK` INT, `MASA_PAJAK` VARCHAR(10), `JML_SETOR` DECIMAL(38,2), `KD_MAP` VARCHAR(6), `KD_SETOR` VARCHAR(3), `ID_SBR_DATA` INT, `VOLUNTARY` CHAR(1), `FLAG_PKPM` VARCHAR(3), `FLAG_BO` VARCHAR(12), `SOURCE` VARCHAR(80) )
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.8' WHERE `key`='db.version';

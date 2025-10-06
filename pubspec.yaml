@@ -95,8 +95,6 @@ flutter:
   # Assets
   assets:
     - assets/images/
-    - assets/icons/
-    - assets/maps/
 
   # Custom fonts will be added later
   # fonts:

@@ -1,0 +1,8 @@
+!4.8
+title;Update ppmpkmbo schema for file hash tracking;
+message;Add FILE_HASH column to ppmpkmbo;
+
+sql;0;ALTER TABLE `ppmpkmbo` ADD COLUMN `FILE_HASH` VARCHAR(64);
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.9' WHERE `key`='db.version';
