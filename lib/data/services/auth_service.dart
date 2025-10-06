@@ -226,6 +226,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
+      // Initialize database from settings before attempting login
+      await DatabaseService.initializeFromSettings();
+      
       final user = await _authService.login(username, password);
       if (user != null) {
         state = state.copyWith(user: user, isLoading: false);

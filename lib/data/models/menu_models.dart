@@ -83,6 +83,7 @@ enum MenuAction {
   importPegawai,
   importUser,
   importSpmkp,
+  importRencanaPenerimaan,
   updateDatabase,
   navigateKlu,
   navigateMap,
@@ -106,6 +107,8 @@ extension MenuActionExtension on MenuAction {
         return MenuAction.importUser;
       case 'import_spmkp':
         return MenuAction.importSpmkp;
+      case 'import_rencana':
+        return MenuAction.importRencanaPenerimaan;
       case 'update_database':
         return MenuAction.updateDatabase;
       case 'navigate_klu':

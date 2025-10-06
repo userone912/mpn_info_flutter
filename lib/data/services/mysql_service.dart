@@ -57,15 +57,15 @@ class MySqlService {
   static Future<int> insert(String table, Map<String, dynamic> data) async {
     final conn = await connection;
     
-    // Automatically add timestamps for audit trail
-    data['created_at'] = DateTime.now();
-    data['updated_at'] = DateTime.now();
+    // Don't automatically add timestamps for legacy tables
+    // The existing MySQL database schema doesn't have created_at/updated_at columns
+    // Only add timestamps for tables that actually have these columns
     
-    final fields = data.keys.join(', ');
+    final fields = data.keys.map((key) => '`$key`').join(', '); // Escape field names
     final placeholders = List.filled(data.length, '?').join(', ');
     
     final result = await conn.query(
-      'INSERT INTO $table ($fields) VALUES ($placeholders)',
+      'INSERT INTO `$table` ($fields) VALUES ($placeholders)',
       data.values.toList(),
     );
     
@@ -76,13 +76,12 @@ class MySqlService {
   static Future<int> update(String table, Map<String, dynamic> data, String whereClause, List<dynamic> whereArgs) async {
     final conn = await connection;
     
-    // Automatically add updated timestamp for audit trail
-    data['updated_at'] = DateTime.now();
+    // Don't automatically add updated timestamp for legacy tables
     
-    final setClause = data.keys.map((key) => '$key = ?').join(', ');
+    final setClause = data.keys.map((key) => '`$key` = ?').join(', ');
     
     final result = await conn.query(
-      'UPDATE $table SET $setClause WHERE $whereClause',
+      'UPDATE `$table` SET $setClause WHERE $whereClause',
       [...data.values.toList(), ...whereArgs],
     );
     
@@ -94,7 +93,7 @@ class MySqlService {
     final conn = await connection;
     
     final result = await conn.query(
-      'DELETE FROM $table WHERE $whereClause',
+      'DELETE FROM `$table` WHERE $whereClause',
       whereArgs,
     );
     
@@ -113,13 +112,15 @@ class MySqlService {
   }) async {
     final conn = await connection;
     
+    // Escape table name with backticks
+    final escapedTable = '`$table`';
     final columnsList = columns?.join(', ') ?? '*';
     final whereClause = where != null ? 'WHERE $where' : '';
     final orderClause = orderBy != null ? 'ORDER BY $orderBy' : '';
     final limitClause = limit != null ? 'LIMIT $limit' : '';
     final offsetClause = offset != null ? 'OFFSET $offset' : '';
     
-    final sql = 'SELECT $columnsList FROM $table $whereClause $orderClause $limitClause $offsetClause';
+    final sql = 'SELECT $columnsList FROM $escapedTable $whereClause $orderClause $limitClause $offsetClause';
     
     final result = await conn.query(sql, whereArgs ?? []);
     

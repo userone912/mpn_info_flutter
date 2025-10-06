@@ -161,7 +161,7 @@ class DatabaseImportService {
     try {
       final result = await DatabaseService.query(
         AppConstants.tableSettings,
-        where: 'key = ?',
+        where: '`key` = ?',  // Escape the key column name with backticks
         whereArgs: ['kantor.kode'],
         limit: 1,
       );
@@ -438,25 +438,29 @@ class DatabaseImportService {
 
           if (existing.isNotEmpty) {
             // UPDATE existing user (Qt legacy behavior)
+            // Use correct column name based on database type
+            final groupColumnName = await _getGroupColumnName();
             await DatabaseService.update(
               AppConstants.tableUsers,
               {
                 'username': username,
                 'password': password,
                 'fullname': fullname,
-                'group_type': groupType,
+                groupColumnName: groupType,
               },
               'id = ?',
               [userId],
             );
           } else {
             // INSERT new user
+            // Use correct column name based on database type
+            final groupColumnName = await _getGroupColumnName();
             await DatabaseService.insert(AppConstants.tableUsers, {
               'id': userId,
               'username': username,
               'password': password,
               'fullname': fullname,
-              'group_type': groupType,
+              groupColumnName: groupType,
             });
           }
 
@@ -582,5 +586,18 @@ class DatabaseImportService {
     result.add(buffer.toString().trim());
     
     return result;
+  }
+
+  /// Get the correct group column name based on database schema
+  /// Legacy MySQL databases use 'group', new SQLite databases use 'group_type'
+  static Future<String> _getGroupColumnName() async {
+    try {
+      // Try to query with 'group' column first (legacy MySQL)
+      await DatabaseService.rawQuery('SELECT `group` FROM ${AppConstants.tableUsers} LIMIT 1');
+      return 'group';
+    } catch (e) {
+      // If 'group' column doesn't exist, use 'group_type' (new SQLite)
+      return 'group_type';
+    }
   }
 }

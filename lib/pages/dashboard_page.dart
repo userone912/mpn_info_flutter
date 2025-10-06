@@ -514,6 +514,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     await _performImport(context, 'Import SPMKP', CsvImportService.importSpmkp);
   }
 
+  Future<void> _importRencanaPenerimaan(BuildContext context) async {
+    await _performImport(context, 'Import Rencana Penerimaan', CsvImportService.importRencanaPenerimaan);
+  }
+
   /// Update all database files from selected directory
   /// Scans for CSV files and imports them automatically with office validation
   Future<void> _updateAllDatabaseFiles(BuildContext context) async {
@@ -596,13 +600,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text('$title sedang berlangsung...'),
-          ],
+        contentPadding: const EdgeInsets.all(24),
+        content: SizedBox(
+          width: 240, // Compact width
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '$title...',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -633,64 +650,126 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  result.isSuccess ? Icons.check_circle : 
-                  result.isCancelled ? Icons.cancel : Icons.error,
-                  color: result.isSuccess ? Colors.green : 
-                         result.isCancelled ? Colors.orange : Colors.red,
-                  size: 24,
+        contentPadding: const EdgeInsets.all(20),
+        content: SizedBox(
+          width: 320, // Compact fixed width
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title with icon
+              Row(
+                children: [
+                  Icon(
+                    result.isSuccess ? Icons.check_circle : 
+                    result.isCancelled ? Icons.cancel : Icons.error,
+                    color: result.isSuccess ? Colors.green : 
+                           result.isCancelled ? Colors.orange : Colors.red,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Result summary
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: result.isSuccess ? Colors.green.shade50 : 
+                         result.isCancelled ? Colors.orange.shade50 : Colors.red.shade50,
+                  border: Border.all(
+                    color: result.isSuccess ? Colors.green.shade200 : 
+                           result.isCancelled ? Colors.orange.shade200 : Colors.red.shade200,
+                  ),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    result.summary,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                child: Text(
+                  result.summary,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: result.isSuccess ? Colors.green.shade800 : 
+                           result.isCancelled ? Colors.orange.shade800 : Colors.red.shade800,
                   ),
                 ),
-              ],
-            ),
-            if (result.hasErrors && result.errors.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Detail Error:',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
               ),
-              const SizedBox(height: 8),
-              Container(
-                height: 200,
-                width: double.maxFinite,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
+              
+              // Error details (compact)
+              if (result.hasErrors && result.errors.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
                   child: Text(
-                    result.errors.join('\n'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
+                    'Errors (${result.errors.length}):',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red,
                     ),
                   ),
                 ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 100, // Compact height
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      result.errors.take(10).join('\n'), // Show max 10 errors
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+                if (result.errors.length > 10)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '+${result.errors.length - 10} more errors...',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+              ],
+              
+              const SizedBox(height: 16),
+              
+              // Action button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: result.isSuccess ? Colors.green : Colors.grey,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('OK'),
+                ),
               ),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -700,20 +779,66 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.red),
-            const SizedBox(width: 8),
-            Text(title),
-          ],
-        ),
-        content: Text(error),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+        contentPadding: const EdgeInsets.all(20),
+        content: SizedBox(
+          width: 320, // Compact fixed width
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title with error icon
+              Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Error message
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  border: Border.all(color: Colors.red.shade200),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  error,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Action button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('OK'),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -857,6 +982,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         break;
       case MenuAction.importSpmkp:
         _importSpmkp(context);
+        break;
+      case MenuAction.importRencanaPenerimaan:
+        _importRencanaPenerimaan(context);
         break;
       case MenuAction.updateDatabase:
         _updateAllDatabaseFiles(context);

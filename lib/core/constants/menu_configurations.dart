@@ -79,7 +79,7 @@ class MenuConfigurations {
             id: 'import_rencana',
             title: 'Import Rencana Penerimaan',
             icon: 'schedule',
-            action: 'coming_soon',
+            action: 'import_rencana',
             enabled: true,
           ),
           MenuItem(

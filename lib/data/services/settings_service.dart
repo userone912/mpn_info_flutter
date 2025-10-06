@@ -28,8 +28,33 @@ class SettingsService {
     final executablePath = Platform.resolvedExecutable;
     final executableDirectory = Directory(dirname(executablePath));
     
-    // Use the executable directory for settings.ini (like Qt legacy)
-    _settingsPath = join(executableDirectory.path, _settingsFileName);
+    // Check if we're running in debug mode (build directory)
+    final isDebugMode = executablePath.contains('build\\windows\\x64\\runner\\Debug') || 
+                       executablePath.contains('build/windows/x64/runner/Debug');
+    
+    if (isDebugMode) {
+      // For debug mode, use Documents folder to persist settings across rebuilds
+      final documentsPath = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
+      if (documentsPath != null) {
+        final documentsDir = Directory(join(documentsPath, 'Documents', 'MPN-Info'));
+        
+        // Create directory if it doesn't exist
+        if (!await documentsDir.exists()) {
+          await documentsDir.create(recursive: true);
+        }
+        
+        _settingsPath = join(documentsDir.path, _settingsFileName);
+        print('Debug mode detected. Using Documents folder for settings: $_settingsPath');
+      } else {
+        // Fallback to executable directory if can't find Documents
+        _settingsPath = join(executableDirectory.path, _settingsFileName);
+        print('Debug mode fallback. Using executable directory for settings: $_settingsPath');
+      }
+    } else {
+      // For release mode, use the executable directory (like Qt legacy)
+      _settingsPath = join(executableDirectory.path, _settingsFileName);
+      print('Release mode. Using executable directory for settings: $_settingsPath');
+    }
     
     print('Settings path: $_settingsPath');
     

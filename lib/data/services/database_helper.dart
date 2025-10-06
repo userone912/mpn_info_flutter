@@ -30,31 +30,29 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    // Use the directory where the executable is located (same as settings.ini)
-    final executablePath = Platform.resolvedExecutable;
-    final executableDirectory = Directory(dirname(executablePath));
-    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
+    // Use the same directory logic as settings.ini
+    final dbPath = await _getDatabasePath();
     
-    print('SQLite database path: $path');
+    print('SQLite database path: $dbPath');
     
     // Check if database file already exists
-    final dbFile = File(path);
+    final dbFile = File(dbPath);
     final dbExists = await dbFile.exists();
     
     if (dbExists) {
-      print('Existing database file found: $path');
+      print('Existing database file found: $dbPath');
       // Open existing database without running onCreate
       return await openDatabase(
-        path,
+        dbPath,
         version: AppConstants.databaseVersion,
         onUpgrade: _onUpgrade,
         onConfigure: _onConfigure,
       );
     } else {
-      print('No existing database file found, creating new one: $path');
+      print('No existing database file found, creating new one: $dbPath');
       // Create new database with full schema from migration files
       return await openDatabase(
-        path,
+        dbPath,
         version: AppConstants.databaseVersion,
         onCreate: _onCreateWithMigration,
         onUpgrade: _onUpgrade,
@@ -352,6 +350,22 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create renpen (rencana penerimaan) table
+    await db.execute('''
+      CREATE TABLE renpen (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        kpp TEXT NOT NULL,
+        nip TEXT NOT NULL,
+        kdmap TEXT NOT NULL,
+        bulan INTEGER NOT NULL,
+        tahun INTEGER NOT NULL,
+        target REAL NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        FOREIGN KEY (nip) REFERENCES pegawai (nip)
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_users_username ON users(username)');
     await db.execute('CREATE INDEX idx_pegawai_nip ON pegawai(nip)');
@@ -440,6 +454,37 @@ class DatabaseHelper {
     await db.execute(sql, arguments);
   }
 
+  /// Get the database file path (same logic as settings.ini)
+  static Future<String> _getDatabasePath() async {
+    final executablePath = Platform.resolvedExecutable;
+    final executableDirectory = Directory(dirname(executablePath));
+    
+    // Check if we're running in debug mode (build directory)
+    final isDebugMode = executablePath.contains('build\\windows\\x64\\runner\\Debug') || 
+                       executablePath.contains('build/windows/x64/runner/Debug');
+    
+    if (isDebugMode) {
+      // For debug mode, use Documents folder to persist database across rebuilds
+      final documentsPath = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
+      if (documentsPath != null) {
+        final documentsDir = Directory(join(documentsPath, 'Documents', 'MPN-Info'));
+        
+        // Create directory if it doesn't exist
+        if (!await documentsDir.exists()) {
+          await documentsDir.create(recursive: true);
+        }
+        
+        return join(documentsDir.path, AppConstants.sqliteFileName);
+      } else {
+        // Fallback to executable directory if can't find Documents
+        return join(executableDirectory.path, AppConstants.sqliteFileName);
+      }
+    } else {
+      // For release mode, use the executable directory (like Qt legacy)
+      return join(executableDirectory.path, AppConstants.sqliteFileName);
+    }
+  }
+
   /// Close database connection
   Future<void> close() async {
     final db = _database;
@@ -451,9 +496,7 @@ class DatabaseHelper {
 
   /// Delete database file
   Future<void> deleteDatabase() async {
-    final executablePath = Platform.resolvedExecutable;
-    final executableDirectory = Directory(dirname(executablePath));
-    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
+    final path = await _getDatabasePath();
     final file = File(path);
     if (await file.exists()) {
       await file.delete();
@@ -463,9 +506,7 @@ class DatabaseHelper {
 
   /// Get database file size
   Future<int> getDatabaseSize() async {
-    final executablePath = Platform.resolvedExecutable;
-    final executableDirectory = Directory(dirname(executablePath));
-    final path = join(executableDirectory.path, AppConstants.sqliteFileName);
+    final path = await _getDatabasePath();
     final file = File(path);
     if (await file.exists()) {
       return await file.length();
@@ -476,9 +517,7 @@ class DatabaseHelper {
   /// Backup database to specified path
   Future<bool> backup(String backupPath) async {
     try {
-      final executablePath = Platform.resolvedExecutable;
-      final executableDirectory = Directory(dirname(executablePath));
-      final sourcePath = join(executableDirectory.path, AppConstants.sqliteFileName);
+      final sourcePath = await _getDatabasePath();
       final sourceFile = File(sourcePath);
       
       if (await sourceFile.exists()) {
@@ -504,9 +543,7 @@ class DatabaseHelper {
       await close();
 
       // Copy backup file to database location
-      final executablePath = Platform.resolvedExecutable;
-      final executableDirectory = Directory(dirname(executablePath));
-      final targetPath = join(executableDirectory.path, AppConstants.sqliteFileName);
+      final targetPath = await _getDatabasePath();
       await backupFile.copy(targetPath);
 
       // Reinitialize database

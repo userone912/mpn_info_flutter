@@ -319,25 +319,29 @@ class CsvImportService {
 
           if (existing.isNotEmpty) {
             // UPDATE existing user (Qt legacy behavior)
+            // Use correct column name based on database type
+            final groupColumnName = await _getGroupColumnName();
             await DatabaseService.update(
               AppConstants.tableUsers,
               {
                 'username': username,
                 'password': password,
                 'fullname': fullname,
-                'group_type': groupType,
+                groupColumnName: groupType,
               },
               'id = ?',
               [userId],
             );
           } else {
             // INSERT new user
+            // Use correct column name based on database type
+            final groupColumnName = await _getGroupColumnName();
             await DatabaseService.insert(AppConstants.tableUsers, {
               'id': userId,
               'username': username,
               'password': password,
               'fullname': fullname,
-              'group_type': groupType,
+              groupColumnName: groupType,
             });
           }
 
@@ -462,6 +466,126 @@ class CsvImportService {
     }
   }
 
+  /// Import Rencana Penerimaan data from CSV file
+  /// File format: RENPEN-{KODE_KANTOR}-{TAHUN}.csv
+  /// Header: KPP;NIP;KDMAP;BULAN;TAHUN;TARGET
+  static Future<ImportResult> importRencanaPenerimaan() async {
+    final result = await _pickFile('Import Rencana Penerimaan');
+    if (result == null) return ImportResult.cancelled();
+
+    try {
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      final lines = content.split('\n');
+      
+      if (lines.isEmpty) {
+        return ImportResult.error(AppConstants.importErrorContent, 'File kosong');
+      }
+
+      // Validate header
+      final header = lines[0].trim();
+      if (header != 'KPP;NIP;KDMAP;BULAN;TAHUN;TARGET') {
+        return ImportResult.error(
+          AppConstants.importErrorHeader, 
+          'Header harus: KPP;NIP;KDMAP;BULAN;TAHUN;TARGET'
+        );
+      }
+
+      // Validate filename format (STRICT: Exact pattern for function detection)
+      final fileName = result.files.single.name;
+      if (!RegExp(r'^RENPEN-\w{3}-\d{4}\.csv$').hasMatch(fileName)) {
+        return ImportResult.error(
+          AppConstants.importErrorFilename,
+          'Format nama file: RENPEN-{KODE_KANTOR}-{TAHUN}.csv'
+        );
+      }
+
+      // Extract office code and year from filename (STRICT: Position-based)
+      final parts = fileName.split('-');
+      final kodeKantor = parts[1];
+      final tahun = int.tryParse(parts[2].split('.')[0]) ?? DateTime.now().year;
+
+      // Validate office code against current office settings (database-based)
+      final kantorKode = await _getOfficeCodeFromDatabase();
+      if (kantorKode.isEmpty || kantorKode.length != 3) {
+        return ImportResult.error(
+          AppConstants.importErrorOfficeCode,
+          'Kode kantor tidak valid di settings. Silakan atur kode kantor 3 digit di menu Konfigurasi.'
+        );
+      }
+      
+      if (kantorKode != kodeKantor) {
+        return ImportResult.error(
+          AppConstants.importErrorOfficeCode,
+          'File untuk kantor $kodeKantor, saat ini kantor $kantorKode'
+        );
+      }
+
+      // Delete existing Rencana Penerimaan data for this office and year (Qt legacy behavior)
+      await DatabaseService.delete(
+        AppConstants.tableRenpen, 
+        'kpp = ? AND tahun = ?', 
+        [kodeKantor, tahun]
+      );
+
+      // Process data lines
+      int successCount = 0;
+      int errorCount = 0;
+      final errors = <String>[];
+
+      for (int i = 1; i < lines.length; i++) {
+        final line = lines[i].trim();
+        if (line.isEmpty) continue;
+
+        try {
+          final data = _parseCsvLine(line);
+          if (data.length < 6) {
+            errors.add('Baris ${i + 1}: Kolom tidak lengkap');
+            errorCount++;
+            continue;
+          }
+
+          // Validate NIP exists in PEGAWAI table (business rule)
+          final nipExists = await DatabaseService.query(
+            AppConstants.tablePegawai,
+            where: 'nip = ?',
+            whereArgs: [data[1]]
+          );
+          if (nipExists.isEmpty) {
+            errors.add('Baris ${i + 1}: NIP ${data[1]} tidak ditemukan dalam tabel pegawai');
+            errorCount++;
+            continue;
+          }
+
+          // Insert into database
+          await DatabaseService.insert(AppConstants.tableRenpen, {
+            'kpp': data[0],                               // KPP field
+            'nip': data[1],                               // NIP field
+            'kdmap': data[2],                             // KDMAP field
+            'bulan': int.tryParse(data[3]) ?? 1,          // BULAN field
+            'tahun': int.tryParse(data[4]) ?? tahun,      // TAHUN field
+            'target': double.tryParse(data[5]) ?? 0.0,    // TARGET field
+          });
+
+          successCount++;
+        } catch (e) {
+          errors.add('Baris ${i + 1}: ${e.toString()}');
+          errorCount++;
+        }
+      }
+
+      return ImportResult.success(
+        message: '$successCount data berhasil diimport, $errorCount error',
+        successCount: successCount,
+        errorCount: errorCount,
+        errors: errors,
+      );
+
+    } catch (e) {
+      return ImportResult.error(AppConstants.importErrorOpenFile, e.toString());
+    }
+  }
+
   /// Pick a CSV file using file picker
   static Future<FilePickerResult?> _pickFile(String title) async {
     return await FilePicker.platform.pickFiles(
@@ -501,7 +625,7 @@ class CsvImportService {
     try {
       final result = await DatabaseService.query(
         AppConstants.tableSettings,
-        where: 'key = ?',
+        where: '`key` = ?',  // Escape the key column name with backticks
         whereArgs: ['kantor.kode'],
         limit: 1,
       );
@@ -513,6 +637,19 @@ class CsvImportService {
     } catch (e) {
       // If settings table doesn't exist or query fails, return empty
       return '';
+    }
+  }
+
+  /// Get the correct group column name based on database schema
+  /// Legacy MySQL databases use 'group', new SQLite databases use 'group_type'
+  static Future<String> _getGroupColumnName() async {
+    try {
+      // Try to query with 'group' column first (legacy MySQL)
+      await DatabaseService.rawQuery('SELECT `group` FROM ${AppConstants.tableUsers} LIMIT 1');
+      return 'group';
+    } catch (e) {
+      // If 'group' column doesn't exist, use 'group_type' (new SQLite)
+      return 'group_type';
     }
   }
 }

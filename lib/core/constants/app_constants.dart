@@ -12,6 +12,7 @@ class AppConstants {
   static const String tableSeksi = 'seksi';
   static const String tablePegawai = 'pegawai';
   static const String tableSpmkp = 'spmkp';
+  static const String tableRenpen = 'renpen';
   static const String tableWp = 'wp';
   static const String tableMpn = 'mpn';
   static const String tableSettings = 'settings';
