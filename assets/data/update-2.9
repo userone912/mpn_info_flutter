@@ -1,0 +1,11 @@
+!2.9
+title;Updating Database;
+message;Update Data;
+
+sql;1;CREATE TABLE `document` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `group` integer NOT NULL, `nomor` text NOT NULL, `hal` text NOT NULL, `filename` text NOT NULL, `catatan` text NULL );
+sql;2;CREATE TABLE `document` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `group` integer NOT NULL, `nomor` text NOT NULL, `hal` text NOT NULL, `filename` text NOT NULL, `catatan` text NULL );
+sql;1;CREATE TABLE `documentgroup` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL );
+sql;2;CREATE TABLE `documentgroup` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.0' WHERE `key`='db.version';

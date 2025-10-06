@@ -1,0 +1,16 @@
+!2.7
+title;Updating Database;
+message;Update Data;
+
+sql;0;DROP TABLE `wp`;
+sql;0;CREATE TABLE `wp` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `sektor` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `masterfile` integer NULL, `wpbesar` integer NULL, `bayar` integer NULL, `lapor` integer NULL, `eksten` integer NULL, `assign` integer NULL, `nippj` text NULL, `nipar` text NULL, `nipeks` text NULL, `nipjs` text NULL );
+sql;0;DROP TABLE `masterfile`;
+sql;0;CREATE TABLE `masterfile` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nipar` text NULL, `nipeks` text NULL, `nipjs` text NULL );
+sql;0;UPDATE `seksi` SET `tipe`=`tipe`+1 WHERE `tipe`>=6;
+sql;0;UPDATE `pegawai` SET `jabatan`=`jabatan`+1 WHERE `jabatan`>=5;
+sql;0;DROP TABLE `assignar`;
+sql;0;CREATE TABLE `assignpj` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+sql;0;CREATE TABLE `assignjs` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.8' WHERE `key`='db.version';

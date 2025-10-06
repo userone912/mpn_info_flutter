@@ -1,0 +1,9 @@
+!2.6
+title;Updating Database;
+message;Update Data;
+
+sql;1;ALTER TABLE `mpn` ADD COLUMN `extra` text AFTER `source`;
+sql;2;ALTER TABLE `mpn` ADD COLUMN `extra` text;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.7' WHERE `key`='db.version';

@@ -1,0 +1,12 @@
+!2.0.1
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `masterspt` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nomor` text NULL, `jenis` text NULL, `masa` integer NULL, `tahun` integer NULL, `pembetulan` integer NULL, `tanggalspt` integer NULL, `matauang` text NULL, `status` text NULL, `nominal` double NULL, `caralapor` text NULL, `nip` text NULL, `tanggalterima` DATE NULL, `tanggalbayar` DATE NULL, `media` text NULL );
+sql;0;CREATE TABLE `maxlapor` ( `bulan` integer NOT NULL, `tahun` integer NOT NULL, `pph` date NULL, `ppn` date NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.1' WHERE `key`='db.version';
+
+updatejatuhtempo;
+updatemaxlapor;

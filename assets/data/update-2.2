@@ -1,0 +1,13 @@
+!2.2
+title;Updating Database;
+message;Update Data;
+
+sql;0;DROP TABLE `notify`;
+sql;1;CREATE TABLE `notify` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `nip` varchar(9) NOT NULL, `tipe` integer NOT NULL, `args` text NULL );
+sql;2;CREATE TABLE `notify` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `nip` varchar(9) NOT NULL, `tipe` integer NOT NULL, `args` text NULL );
+sql;1;ALTER TABLE `mpn` MODIFY COLUMN `nospm` VARCHAR(15);
+sql;2;DROP TABLE `mpn`;
+sql;2;CREATE TABLE `mpn` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `kdmap` varchar(6) NULL, `kdbayar` varchar(3) NULL, `masa` integer NULL, `tahun` integer NULL, `tanggalbayar` integer NOT NULL, `bulanbayar` integer NOT NULL, `tahunbayar` integer NOT NULL, `datebayar` date NOT NULL, `nominal` double NULL, `ntpn` varchar(16) NULL, `bank` text NULL, `nosk` varchar(15) NULL, `nospm` varchar(15) NULL, `tipe` integer NOT NULL, `source` integer NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.3' WHERE `key`='db.version';

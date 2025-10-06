@@ -1,0 +1,17 @@
+!2.8.1
+title;Updating Database;
+message;Update Data;
+
+sql;0;DROP TABLE `maxlapor`;
+sql;0;DROP TABLE `jatuhtempo`;
+sql;0;CREATE TABLE `jatuhtempo` ( `bulan` integer NOT NULL, `tahun` integer NOT NULL, `potput` date NULL, `pph` date NULL, `ppn` date NULL, `pphop` date NULL, `pphbdn` date NULL );
+sql;0;CREATE TABLE `maxlapor` ( `bulan` integer NOT NULL, `tahun` integer NOT NULL, `pph` date NULL, `ppn` date NULL, `pphop` date NULL, `pphbdn` date NULL );
+sql;0;CREATE TABLE `appportal_eq_omzetppn_log` ( `kpp` text NOT NULL, `tahun` integer NOT NULL, `lastupdate` date NULL  );
+sql;0;CREATE TABLE `appportal_pkpm` ( `npwp` varchar(15) NOT NULL, `tipe` integer NOT NULL, `tahun` integer NOT NULL, `nofaktur` text NULL, `tanggalfaktur` date NULL, `masasendiri` text NULL, `masalawan` text NULL, `npwplawan` varchar(15) NOT NULL, `namalawan` text NULL, `nominalsendiri` double NULL, `nominallawan` double NULL, `suspect` integer NULL );
+sql;0;CREATE TABLE `appportal_pkpm_log` ( `npwp` varchar(15) NOT NULL, `tipe` integer NOT NULL, `tahun` integer NOT NULL, `lastupdate` date NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.9' WHERE `key`='db.version';
+
+updatejatuhtempo;
+updatemaxlapor;

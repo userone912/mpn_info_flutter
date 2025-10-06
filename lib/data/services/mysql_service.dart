@@ -1,5 +1,4 @@
 import 'package:mysql1/mysql1.dart';
-import '../models/user_model.dart';
 import 'settings_service.dart';
 
 /// MySQL database service for production use
@@ -47,160 +46,18 @@ class MySqlService {
     }
   }
 
-  /// Initialize database schema (create tables if not exist)
+  /// Initialize database schema (tables will be created by migration system)
   static Future<void> initializeSchema() async {
-    final conn = await connection;
-    
-    // Create users table
-    await conn.query('''
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        fullname VARCHAR(100) NOT NULL,
-        group_type INT NOT NULL DEFAULT 2,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    ''');
-
-    // Create pegawai table
-    await conn.query('''
-      CREATE TABLE IF NOT EXISTS pegawai (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nip VARCHAR(20) UNIQUE,
-        nama VARCHAR(100),
-        username VARCHAR(50),
-        password VARCHAR(255),
-        jabatan INT,
-        seksi INT,
-        email VARCHAR(100),
-        telepon VARCHAR(20),
-        alamat TEXT,
-        tanggal_lahir DATE,
-        tempat_lahir VARCHAR(50),
-        status INT DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    ''');
-
-    // Create wp (wajib pajak) table
-    await conn.query('''
-      CREATE TABLE IF NOT EXISTS wp (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        npwp VARCHAR(15) UNIQUE,
-        nama VARCHAR(200),
-        alamat TEXT,
-        kelurahan VARCHAR(50),
-        kecamatan VARCHAR(50),
-        kabupaten VARCHAR(50),
-        provinsi VARCHAR(50),
-        kode_pos VARCHAR(10),
-        telepon VARCHAR(20),
-        email VARCHAR(100),
-        jenis_wp INT,
-        status_wp INT DEFAULT 1,
-        keterangan TEXT,
-        user_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    ''');
-
-    // Create mpn table
-    await conn.query('''
-      CREATE TABLE IF NOT EXISTS mpn (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        kd_mpn VARCHAR(20),
-        nomor VARCHAR(50),
-        tanggal DATE,
-        nilai DECIMAL(15,2),
-        kd_kpp INT,
-        npwp VARCHAR(15),
-        nama VARCHAR(200),
-        kd_map INT,
-        uraian TEXT,
-        keterangan TEXT,
-        user_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    ''');
-
-    // Create indexes for better performance
-    await _createIndexIfNotExists(conn, 'idx_users_username', 'users', 'username');
-    await _createIndexIfNotExists(conn, 'idx_pegawai_nip', 'pegawai', 'nip');
-    await _createIndexIfNotExists(conn, 'idx_wp_npwp', 'wp', 'npwp');
-    await _createIndexIfNotExists(conn, 'idx_mpn_npwp', 'mpn', 'npwp');
-    await _createIndexIfNotExists(conn, 'idx_mpn_tanggal', 'mpn', 'tanggal');
-
-    // Insert default admin user if not exists
-    await _insertDefaultUser();
-  }
-
-  /// Helper method to create index only if it doesn't exist
-  static Future<void> _createIndexIfNotExists(
-    MySqlConnection conn,
-    String indexName,
-    String tableName,
-    String columnName,
-  ) async {
-    try {
-      // Check if index exists
-      final result = await conn.query('''
-        SELECT COUNT(*) as count 
-        FROM information_schema.statistics 
-        WHERE table_schema = DATABASE() 
-        AND table_name = ? 
-        AND index_name = ?
-      ''', [tableName, indexName]);
-      
-      final count = result.first['count'] as int;
-      if (count == 0) {
-        // Index doesn't exist, create it
-        await conn.query('CREATE INDEX $indexName ON $tableName($columnName)');
-        print('Created index: $indexName on $tableName($columnName)');
-      } else {
-        print('Index $indexName already exists on $tableName($columnName)');
-      }
-    } catch (e) {
-      print('Error creating index $indexName: $e');
-    }
-  }
-
-  static Future<void> _insertDefaultUser() async {
-    final conn = await connection;
-    
-    // Check if admin user exists
-    final result = await conn.query(
-      'SELECT COUNT(*) as count FROM users WHERE username = ?',
-      ['admin']
-    );
-    
-    final count = result.first['count'] as int;
-    if (count == 0) {
-      // Insert default admin user
-      await conn.query('''
-        INSERT INTO users (username, password, fullname, group_type)
-        VALUES (?, ?, ?, ?)
-      ''', [
-        'admin',
-        '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // SHA-256 of 'admin123'
-        'Administrator',
-        UserGroupType.administrator.value,
-      ]);
-      
-      print('Default admin user created in MySQL');
-    }
+    // Schema initialization is handled by the database migration system
+    // This ensures consistency with db-struct, db-value, and update-* files
+    print('MySQL schema initialization deferred to migration system');
   }
 
   /// Generic insert method for MySQL
   static Future<int> insert(String table, Map<String, dynamic> data) async {
     final conn = await connection;
     
+    // Automatically add timestamps for audit trail
     data['created_at'] = DateTime.now();
     data['updated_at'] = DateTime.now();
     
@@ -219,6 +76,7 @@ class MySqlService {
   static Future<int> update(String table, Map<String, dynamic> data, String whereClause, List<dynamic> whereArgs) async {
     final conn = await connection;
     
+    // Automatically add updated timestamp for audit trail
     data['updated_at'] = DateTime.now();
     
     final setClause = data.keys.map((key) => '$key = ?').join(', ');

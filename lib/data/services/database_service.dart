@@ -11,19 +11,46 @@ class DatabaseService {
   static bool _isInitialized = false;
   
   /// Initialize database from settings
+  /// Now automatically decrypts stored passwords for seamless connection
   static Future<void> initializeFromSettings() async {
     if (_isInitialized) return;
     
     // Load settings first
     await SettingsService.initialize();
     
-    // Get database configuration from settings
-    final config = SettingsService.getDatabaseConfig();
+    // Get database configuration with decrypted password
+    final config = SettingsService.getDatabaseConfigWithDecryptedPassword();
     _currentDatabaseType = config.type;
     
-    await _initializeDatabase(config);
-    _isInitialized = true;
+    try {
+      await _initializeDatabase(config);
+      _isInitialized = true;
+    } catch (e) {
+      print('Failed to initialize database from settings: $e');
+      // If connection fails, don't mark as initialized so user can try manual config
+      _isInitialized = false;
+    }
   }
+
+  /// Authenticate with password and establish database connection
+  static Future<bool> authenticateAndConnect(String password) async {
+    final config = SettingsService.getDatabaseConfigWithPassword(password);
+    if (config == null) {
+      return false; // Authentication failed
+    }
+    
+    try {
+      await _initializeDatabase(config);
+      _isInitialized = true;
+      return true;
+    } catch (e) {
+      print('Database connection failed: $e');
+      return false;
+    }
+  }
+
+  /// Check if database connection is established
+  static bool get isConnected => _isInitialized;
   
   /// Initialize database with specific configuration
   static Future<void> initializeWithConfig(DatabaseConfig config) async {

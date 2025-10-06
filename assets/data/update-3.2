@@ -1,0 +1,13 @@
+!3.2
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `pbk` ( `tahun` integer NOT NULL, `admin` text NOT NULL, `nopbk` text NOT NULL, `tanggaldoc` date NOT NULL, `tanggalberlaku` date NOT NULL, `nominal` double NOT NULL, `currency` text NOT NULL, `tipe` integer NOT NULL, `status` text NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL, `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(3) NOT NULL, `masapajak` integer NOT NULL, `tahunpajak` integer NOT NULL, `npwp2` varchar(9) NOT NULL, `kpp2` varchar(3) NOT NULL, `cabang2` varchar(3) NOT NULL, `nama2` text NOT NULL, `kdmap2` varchar(6) NOT NULL, `kdbayar2` varchar(3) NOT NULL, `masapajak2` integer NOT NULL, `tahunpajak2` integer NOT NULL  );
+sql;0;CREATE TABLE `appportal_bupot` ( `npwp` varchar(15) NOT NULL, `npwplawan` varchar(15) NOT NULL, `namalawan` text NULL, `tahun` integer NOT NULL, `klu` text NOT NULL, `lembar` integer NOT NULL, `objek` double NULL, `jenis` text NULL );
+sql;0;CREATE TABLE `appportal_bupot_log` ( `npwp` varchar(15) NOT NULL, `lastupdate` date NULL );
+sql;0;CREATE TABLE `appportal_nsfp_sebelum` ( `tahun` integer NOT NULL, `admin` text NOT NULL, `npwp` varchar(15) NOT NULL, `nama` text NOT NULL, `masa` integer NOT NULL, `pembetulan` integer NOT NULL, `nofaktur` text NOT NULL, `tanggalfaktur` date NOT NULL, `dpp` double NOT NULL, `ppn` double NOT NULL, `nopemberitahuan` text NOT NULL, `tanggalpemberitahuan` text NOT NULL, `nsfpawal` text NOT NULL, `nsfpakhir` text NOT NULL );
+sql;0;CREATE TABLE `appportal_nsfp_bukan` ( `tahun` integer NOT NULL, `admin` text NOT NULL, `npwp` varchar(15) NOT NULL, `nama` text NOT NULL, `masa` integer NOT NULL, `pembetulan` integer NOT NULL, `nofaktur` text NOT NULL, `tanggalfaktur` date NOT NULL, `dpp` double NOT NULL, `ppn` double NOT NULL );
+sql;0;CREATE TABLE `appportal_nsfp_log` ( `tahun` integer NOT NULL, `admin` text NOT NULL, `lastupdate` date NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.3' WHERE `key`='db.version';

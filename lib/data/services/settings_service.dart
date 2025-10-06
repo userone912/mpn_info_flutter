@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
+import 'package:encrypt/encrypt.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_enums.dart';
@@ -13,6 +17,11 @@ class SettingsService {
   static const String _settingsFileName = 'settings.ini';
   static String? _settingsPath;
   static Map<String, String> _settings = {};
+  
+  // Encryption for database passwords
+  static late final Encrypter _encrypter;
+  static late final IV _iv;
+  static bool _encryptionInitialized = false;
 
   /// Initialize settings service
   static Future<void> initialize() async {
@@ -25,7 +34,33 @@ class SettingsService {
     }
     
     _settingsPath = join(appDirectory.path, _settingsFileName);
+    
+    // Initialize encryption for database passwords
+    _initializeEncryption();
+    
     await _loadSettings();
+  }
+
+  /// Initialize encryption for database passwords
+  static void _initializeEncryption() {
+    if (_encryptionInitialized) return;
+    
+    try {
+      // Create a machine-specific key based on executable path and hostname
+      final machineInfo = '${Platform.resolvedExecutable}${Platform.localHostname}MPN-Info-Secret';
+      final keyBytes = sha256.convert(utf8.encode(machineInfo)).bytes;
+      final key = Key(Uint8List.fromList(keyBytes));
+      _encrypter = Encrypter(AES(key));
+      _iv = IV.fromSecureRandom(16);
+      _encryptionInitialized = true;
+    } catch (e) {
+      print('Failed to initialize encryption: $e');
+      // Fallback: create a simple key if machine-specific approach fails
+      final fallbackKey = Key.fromSecureRandom(32);
+      _encrypter = Encrypter(AES(fallbackKey));
+      _iv = IV.fromSecureRandom(16);
+      _encryptionInitialized = true;
+    }
   }
 
   /// Load settings from settings.ini file
@@ -174,6 +209,7 @@ remember_size=true
   }
 
   /// Get database configuration
+  /// Note: password field contains the hashed password, not plain text
   static DatabaseConfig getDatabaseConfig() {
     return DatabaseConfig(
       type: _getDatabaseTypeFromString(getSetting('Database.type', 'sqlite')),
@@ -181,9 +217,46 @@ remember_size=true
       port: int.tryParse(getSetting('Database.port', '3306')) ?? 3306,
       name: getSetting('Database.name', 'mpn_info'),
       username: getSetting('Database.username', 'mpn_user'),
-      password: getSetting('Database.password', ''),
+      password: getSetting('Database.password', ''), // This returns the hashed password
       useSsl: getSetting('Database.use_ssl', 'false').toLowerCase() == 'true',
     );
+  }
+
+  /// Verify database password and return config with plain text password for connection
+  /// Returns null if the provided password doesn't match the stored hash
+  static DatabaseConfig? getDatabaseConfigWithPassword(String plainTextPassword) {
+    final config = getDatabaseConfig();
+    
+    // If no password is stored, allow empty password
+    if (config.password.isEmpty && plainTextPassword.isEmpty) {
+      return config.copyWith(password: plainTextPassword);
+    }
+    
+    // Verify the provided password against stored hash
+    if (verifyPassword(plainTextPassword, config.password)) {
+      return config.copyWith(password: plainTextPassword);
+    }
+    
+    return null; // Password verification failed
+  }
+
+  /// Check if database configuration requires authentication
+  static bool requiresDatabasePassword() {
+    final config = getDatabaseConfig();
+    return config.password.isNotEmpty;
+  }
+
+  /// Get database configuration with decrypted password for actual connections
+  static DatabaseConfig getDatabaseConfigWithDecryptedPassword() {
+    final config = getDatabaseConfig();
+    
+    // Decrypt the password if it's encrypted
+    String decryptedPassword = config.password;
+    if (config.password.isNotEmpty) {
+      decryptedPassword = _decryptPassword(config.password);
+    }
+    
+    return config.copyWith(password: decryptedPassword);
   }
 
   /// Save database configuration
@@ -193,7 +266,21 @@ remember_size=true
     await setSetting('Database.port', config.port.toString());
     await setSetting('Database.name', config.name);
     await setSetting('Database.username', config.username);
-    await setSetting('Database.password', config.password);
+    
+    // Handle password encryption
+    String passwordToSave;
+    if (config.password.isEmpty) {
+      // If password is empty, keep the existing stored password (don't overwrite)
+      passwordToSave = getSetting('Database.password', '');
+    } else if (_isPasswordEncrypted(config.password)) {
+      // If it's already encrypted, save as-is
+      passwordToSave = config.password;
+    } else {
+      // Encrypt the new plain text password
+      passwordToSave = _encryptPassword(config.password);
+    }
+    
+    await setSetting('Database.password', passwordToSave);
     await setSetting('Database.use_ssl', config.useSsl.toString());
   }
 
@@ -230,6 +317,71 @@ remember_size=true
 
   /// Get settings file path
   static String? getSettingsFilePath() => _settingsPath;
+
+  /// Encrypt password for secure storage
+  static String _encryptPassword(String password) {
+    if (password.isEmpty) return '';
+    if (!_encryptionInitialized) _initializeEncryption();
+    
+    try {
+      final encrypted = _encrypter.encrypt(password, iv: _iv);
+      // Store IV + encrypted data as base64
+      return base64.encode(_iv.bytes + encrypted.bytes);
+    } catch (e) {
+      print('Failed to encrypt password: $e');
+      // If encryption fails, return original (fallback for development)
+      return password;
+    }
+  }
+
+  /// Decrypt password for database connections
+  static String _decryptPassword(String encryptedPassword) {
+    if (encryptedPassword.isEmpty) return '';
+    if (!_encryptionInitialized) _initializeEncryption();
+    
+    try {
+      final combined = base64.decode(encryptedPassword);
+      if (combined.length < 16) {
+        // Too short to be encrypted, assume plain text
+        return encryptedPassword;
+      }
+      
+      final iv = IV(combined.sublist(0, 16));
+      final encryptedBytes = combined.sublist(16);
+      final encrypted = Encrypted(encryptedBytes);
+      return _encrypter.decrypt(encrypted, iv: iv);
+    } catch (e) {
+      print('Failed to decrypt password, assuming plain text: $e');
+      // If decryption fails, assume it's plain text (backwards compatibility)
+      return encryptedPassword;
+    }
+  }
+
+  /// Check if a password string appears to be encrypted
+  static bool _isPasswordEncrypted(String password) {
+    if (password.isEmpty || password.length < 20) return false;
+    try {
+      base64.decode(password);
+      return true; // If it's valid base64 and long enough, assume encrypted
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Verify a plain text password against stored encrypted password
+  static bool verifyPassword(String plainTextPassword, String storedPassword) {
+    // If stored password is empty, only allow empty plain text
+    if (storedPassword.isEmpty) return plainTextPassword.isEmpty;
+    
+    // If stored password appears encrypted, decrypt and compare
+    if (_isPasswordEncrypted(storedPassword)) {
+      final decryptedStored = _decryptPassword(storedPassword);
+      return decryptedStored == plainTextPassword;
+    }
+    
+    // Otherwise, compare directly (plain text fallback)
+    return plainTextPassword == storedPassword;
+  }
 }
 
 /// Database configuration data class

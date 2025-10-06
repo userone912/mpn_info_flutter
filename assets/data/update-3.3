@@ -1,0 +1,86 @@
+!3.3
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `seksi` ADD COLUMN `kode` varchar(2) NULL;
+sql;0;ALTER TABLE `pegawai` ADD COLUMN `plh` varchar(9) NULL;
+sql;0;CREATE TABLE `nothitstppelaporan` ( `nothitstp` integer NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `tanggalterima` date NULL, `denda` double NOT NULL, `tipe` integer NOT NULL );
+
+sql;1;ALTER TABLE `mpn` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `mpn` MODIFY COLUMN `nospm` varchar(18) NULL;
+sql;1;ALTER TABLE `spmkp` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `spmpp` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `masterfile` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `masterspt` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `assignpj` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `assignjs` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `assignklu` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `wpbesar` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_spttahunan` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_sptppn` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_sptppn_detail` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_nsfp_sebelum` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_nsfp_bukan` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_nsfp_log` ADD COLUMN `admin` varchar(3) NOT NULL FIRST;
+sql;1;ALTER TABLE `appportal_eq_omzetppn_log` CHANGE COLUMN `kpp` `admin` varchar(3) NOT NULL;
+
+sql;1;UPDATE `mpn` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `spmkp` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `spmpp` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `masterfile` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `masterspt` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `assignpj` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `assignklu` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `wpbesar` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_spttahunan` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_sptppn` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_sptppn_detail` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_nsfp_sebelum` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_nsfp_bukan` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_nsfp_log` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `appportal_eq_omzetppn_log` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+
+sql;2;DROP TABLE `mpn`;
+sql;2;DROP TABLE `spmkp`;
+sql;2;DROP TABLE `spmpp`;
+sql;2;DROP TABLE `masterfile`;
+sql;2;DROP TABLE `masterspt`;
+sql;2;DROP TABLE `assignpj`;
+sql;2;DROP TABLE `assignjs`;
+sql;2;DROP TABLE `assignklu`;
+sql;2;DROP TABLE `wpbesar`;
+sql;2;DROP TABLE `appportal_spttahunan`;
+sql;2;DROP TABLE `appportal_sptppn`;
+sql;2;DROP TABLE `appportal_sptppn_detail`;
+sql;2;DROP TABLE `appportal_eq_omzetppn_log`;
+
+sql;2;CREATE TABLE `mpn` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `kdmap` varchar(6) NULL, `kdbayar` varchar(3) NULL, `masa` integer NULL, `tahun` integer NULL, `tanggalbayar` integer NOT NULL, `bulanbayar` integer NOT NULL, `tahunbayar` integer NOT NULL, `datebayar` date NOT NULL, `nominal` double NULL, `ntpn` varchar(16) NULL, `bank` text NULL, `nosk` varchar(15) NULL, `nospm` varchar(18) NULL, `tipe` integer NOT NULL, `source` integer NOT NULL, `extra` text NULL );
+sql;2;CREATE TABLE `spmkp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `nominal` double NOT NULL );
+sql;2;CREATE TABLE `spmpp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `nominal` double NOT NULL );
+sql;2;CREATE TABLE `masterfile` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nik` text NULL, `telp` text NULL, `nipar` text NULL, `nipeks` text NULL, `nipjs` text NULL );
+sql;2;CREATE TABLE `masterspt` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nomor` text NULL, `jenis` text NULL, `masa` integer NULL, `tahun` integer NULL, `pembetulan` integer NULL, `tanggalspt` date NULL, `matauang` text NULL, `status` text NULL, `nominal` double NULL, `caralapor` text NULL, `nip` text NULL, `tanggalterima` DATE NULL, `tanggalbayar` DATE NULL, `media` text NULL );
+sql;2;CREATE TABLE `assignpj` ( `admin` varchar(3) NOT NULL,`npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+sql;2;CREATE TABLE `assignjs` ( `admin` varchar(3) NOT NULL,`npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+sql;2;CREATE TABLE `assignklu` ( `admin` varchar(3) NOT NULL,`npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `klu` varchar(5) NOT NULL );
+sql;2;CREATE TABLE `wpbesar` ( `admin` varchar(3) NOT NULL, `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL );
+sql;2;CREATE TABLE `appportal_spttahunan` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `tahun` integer NOT NULL, `omzet` double NULL, `phlain` double NULL, `phfinal` double NULL, `phnotax` double NULL );
+sql;2;CREATE TABLE `appportal_sptppn` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `tahun` integer NOT NULL, `jumlahspt` integer NULL, `ekspor` double NULL, `dppdn` double NULL, `jumlahpk` integer NULL, `dpppk` double NULL );
+sql;2;CREATE TABLE `appportal_sptppn_detail` ( `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `ekspor` double NULL, `dppdn` double NULL );
+sql;2;CREATE TABLE `appportal_eq_omzetppn_log` ( `admin` text NOT NULL, `tahun` integer NOT NULL, `lastupdate` date NULL  );
+
+sql;0;DROP TABLE `wp`;
+sql;0;CREATE TABLE `wp` ( `admin` varchar(3) NOT NULL, `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `sektor` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nik` text NULL, `telp` text NULL, `masterfile` integer NULL, `wpbesar` integer NULL, `bayar` integer NULL, `lapor` integer NULL, `eksten` integer NULL, `assign` integer NULL, `nippj` text NULL, `nipar` text NULL, `nipeks` text NULL, `nipjs` text NULL );
+sql;0;DROP TABLE `appportal_nsfp_sebelum`;
+sql;0;DROP TABLE `appportal_nsfp_bukan`;
+sql;0;DROP TABLE `appportal_nsfp_log`;
+sql;0;CREATE TABLE `appportal_nsfp_sebelum` ( `admin` varchar(3) NOT NULL, `tahun` integer NOT NULL, `npwp` varchar(15) NOT NULL, `nama` text NOT NULL, `masa` integer NOT NULL, `pembetulan` integer NOT NULL, `nofaktur` text NOT NULL, `tanggalfaktur` date NOT NULL, `dpp` double NOT NULL, `ppn` double NOT NULL, `nopemberitahuan` text NOT NULL, `tanggalpemberitahuan` text NOT NULL, `nsfpawal` text NOT NULL, `nsfpakhir` text NOT NULL );
+sql;0;CREATE TABLE `appportal_nsfp_bukan` ( `admin` varchar(3) NOT NULL, `tahun` integer NOT NULL, `npwp` varchar(15) NOT NULL, `nama` text NOT NULL, `masa` integer NOT NULL, `pembetulan` integer NOT NULL, `nofaktur` text NOT NULL, `tanggalfaktur` date NOT NULL, `dpp` double NOT NULL, `ppn` double NOT NULL );
+sql;0;CREATE TABLE `appportal_nsfp_log` ( `admin` text NOT NULL, `tahun` integer NOT NULL, `lastupdate` date NULL );
+
+sql;0;DROP TABLE `pbk`;
+sql;0;CREATE TABLE `pbk` ( `admin` text NOT NULL, `tahun` integer NOT NULL, `nopbk` text NOT NULL, `tanggaldoc` date NOT NULL, `tanggalberlaku` date NOT NULL, `nominal` double NOT NULL, `currency` text NOT NULL, `tipe` integer NOT NULL, `status` text NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL, `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(3) NOT NULL, `masapajak` integer NOT NULL, `tahunpajak` integer NOT NULL, `npwp2` varchar(9) NOT NULL, `kpp2` varchar(3) NOT NULL, `cabang2` varchar(3) NOT NULL, `nama2` text NOT NULL, `kdmap2` varchar(6) NOT NULL, `kdbayar2` varchar(3) NOT NULL, `masapajak2` integer NOT NULL, `tahunpajak2` integer NOT NULL  );
+
+updatewp;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.4' WHERE `key`='db.version';

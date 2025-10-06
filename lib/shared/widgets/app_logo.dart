@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../../core/constants/app_constants.dart';
+import '../../data/services/asset_path_service.dart';
 
 /// Reusable widget for displaying the app logo
 /// Provides consistent logo display across the application
@@ -53,18 +55,61 @@ class AppLogo extends StatelessWidget {
     final logoHeight = height ?? logoSize;
     final iconColor = fallbackIconColor ?? Theme.of(context).primaryColor;
 
-    return Image.asset(
-      AppConstants.logoMediumIcon,
-      width: logoWidth,
-      height: logoHeight,
-      fit: fit,
-      errorBuilder: (context, error, stackTrace) {
-        // Fallback to material icon if image fails to load
-        return Icon(
-          Icons.account_balance,
-          size: logoSize,
-          color: iconColor,
-        );
+    return FutureBuilder<String>(
+      future: AssetPathService.getImagePath('logo-medium.png'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading spinner while resolving path
+          return SizedBox(
+            width: logoWidth,
+            height: logoHeight,
+            child: const CircularProgressIndicator(),
+          );
+        }
+        
+        if (snapshot.hasError || !snapshot.hasData) {
+          // Fallback to icon if path resolution fails
+          return Icon(
+            Icons.account_balance,
+            size: logoSize,
+            color: iconColor,
+          );
+        }
+        
+        final imagePath = snapshot.data!;
+        
+        // Check if it's an external file or asset
+        if (imagePath.startsWith('assets/')) {
+          // Use AssetImage for bundled assets
+          return Image.asset(
+            imagePath,
+            width: logoWidth,
+            height: logoHeight,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.account_balance,
+                size: logoSize,
+                color: iconColor,
+              );
+            },
+          );
+        } else {
+          // Use FileImage for external files
+          return Image.file(
+            File(imagePath),
+            width: logoWidth,
+            height: logoHeight,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.account_balance,
+                size: logoSize,
+                color: iconColor,
+              );
+            },
+          );
+        }
       },
     );
   }

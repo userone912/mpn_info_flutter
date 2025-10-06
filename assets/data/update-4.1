@@ -1,0 +1,8 @@
+!4.1
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `spt` ( `npwp` VARCHAR(9) NOT NULL, `kpp` VARCHAR(3) NOT NULL, `cabang` VARCHAR(3) NOT NULL, `masa` INTEGER NOT NULL, `tahun` INTEGER NOT NULL, `pembetulan` INTEGER NOT NULL, `jenis` varchar(32) NOT NULL, `tanggal` DATE NOT NULL, `data` TEXT NOT NULL )
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.2' WHERE `key`='db.version';

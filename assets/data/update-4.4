@@ -1,0 +1,14 @@
+!4.4
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `nothitstppembayaran` ADD COLUMN `rate` DOUBLE NOT NULL DEFAULT 2.0;
+sql;0;DROP TABLE `pbk`;
+sql;0;CREATE TABLE `pbk` ( `admin` text NOT NULL, `tahun` integer NOT NULL, `nopbk` text NOT NULL, `tanggaldoc` date NOT NULL, `tanggalberlaku` date NOT NULL, `nominal` double NOT NULL, `currency` text NOT NULL, `tipe` text NOT NULL, `status` text NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL, `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(3) NOT NULL, `masapajak` integer NOT NULL, `tahunpajak` integer NOT NULL, `kpp_admin` text NOT NULL, `npwp2` varchar(9) NOT NULL, `kpp2` varchar(3) NOT NULL, `cabang2` varchar(3) NOT NULL, `nama2` text NOT NULL, `kdmap2` varchar(6) NOT NULL, `kdbayar2` varchar(3) NOT NULL, `masapajak2` integer NOT NULL, `tahunpajak2` integer NOT NULL, `kpp_admin2` text NOT NULL, `ntpn` TEXT NULL );
+updatekantor;
+updatemap;
+updatejatuhtempo;
+updatemaxlapor;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.5' WHERE `key`='db.version';

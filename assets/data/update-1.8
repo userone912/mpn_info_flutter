@@ -1,0 +1,15 @@
+!1.8
+title;Updating Database;
+message;Update Data;
+sql;0;ALTER TABLE `mpn` ADD `tipe` integer NOT NULL DEFAULT 1;
+sql;0;ALTER TABLE `spm` ADD `tipe` integer NOT NULL DEFAULT 1;
+sql;0;CREATE TABLE `wpbesar` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL );
+sql;0;DROP table `wp`;
+sql;0;CREATE TABLE `wp` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NOT NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `sektor` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `wpbesar` integer NULL, `nipar` text NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='1.9' WHERE `key`='db.version';
+
+updatewp;
+
+ 

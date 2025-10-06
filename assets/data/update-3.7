@@ -1,0 +1,11 @@
+!3.7
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `dth_satker` (`kdsatker` VARCHAR(6) NOT NULL, `nama` VARCHAR(128), `npwp` VARCHAR(16));
+sql;0;CREATE TABLE `dth_sp2d` (`tahun` INTEGER(4) NOT NULL, `bulan` INTEGER(2) NOT NULL, `kdsatker` VARCHAR(6) NOT NULL, `kdpemda` VARCHAR(4) NOT NULL, `kdurusan` VARCHAR(2) NOT NULL, `urusan` VARCHAR(128) NOT NULL, `kdklpurusan` VARCHAR(2) NOT NULL, `klpurusan` VARCHAR(128) NOT NULL, `kdorganisasi` VARCHAR(2) NOT NULL, `organisasi` VARCHAR(128) NOT NULL, `sp2d` VARCHAR(64) NOT NULL, `spm` VARCHAR(64) NOT NULL, `jenis` INTEGER(2) NOT NULL, `tanggal` VARCHAR(45) NOT NULL, `nilai` DOUBLE NOT NULL, `npwpbud` VARCHAR(16), `npwpbend` VARCHAR(16), `npwprekan` VARCHAR(16), `keterangan` TEXT, `pejabat` VARCHAR(128));
+sql;0;CREATE TABLE `dth_belanja` (`tahun` INTEGER(4) NOT NULL, `bulan` INTEGER(2) NOT NULL, `kdsatker` VARCHAR(6) NOT NULL, `kdurusan` VARCHAR(2) NOT NULL, `kdklpurusan` VARCHAR(2) NOT NULL, `kdorganisasi` VARCHAR(2) NOT NULL, `sp2d` VARCHAR(64) NOT NULL, `kdakun` INTEGER(2), `akun` VARCHAR(128), `kdklpakun` INTEGER(2), `klpakun` VARCHAR(128), `kdjenisakun` INTEGER(2), `jenisakun` VARCHAR(128), `kdobjekakun` INTEGER(2), `objekakun` VARCHAR(128), `kdrincianobjekakun` VARCHAR(2), `rincianobjekakun` VARCHAR(128), `nilai` DOUBLE NOT NULL);
+sql;0;CREATE TABLE `dth_potongan` (`tahun` INTEGER(4) NOT NULL, `bulan` INTEGER(2) NOT NULL, `kdsatker` VARCHAR(6) NOT NULL, `kdurusan` VARCHAR(2) NOT NULL, `kdklpurusan` VARCHAR(2) NOT NULL, `kdorganisasi` VARCHAR(2) NOT NULL, `sp2d` VARCHAR(64) NOT NULL, `kdpajak` VARCHAR(6) NOT NULL, `nilai` DOUBLE NOT NULL);
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.8' WHERE `key`='db.version';

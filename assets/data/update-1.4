@@ -1,0 +1,46 @@
+!1.4
+title;Updating Database;
+message;Update Data;
+sql;0;DROP table `group`;
+sql;0;DROP table `pangkat`;
+sql;0;DROP table `jabatan`;
+sql;0;UPDATE `pegawai` SET `jabatan`=`jabatan`-1, `pangkat`=`pangkat`-1;
+sql;0;UPDATE `users` SET `group`=1;
+sql;0;UPDATE `users` SET `group`=0 WHERE `id`=1;
+sql;1;ALTER TABLE `mpn` MODIFY COLUMN `nosk` VARCHAR(15) NULL;
+sql;1;ALTER TABLE `spm` MODIFY COLUMN `nosk` VARCHAR(15) NULL;
+sql;1;ALTER TABLE `pegawai` DROP PRIMARY KEY;
+sql;1;ALTER TABLE `pegawai` ADD `seksi` integer NOT NULL AFTER `pangkat`;
+sql;1;ALTER TABLE `pegawai` ADD `tahun` integer NOT NULL AFTER `jabatan`;
+sql;1;UPDATE `pegawai` SET `tahun`='2014';
+sql;1;ALTER TABLE `renpen` ADD `tahun` integer NOT NULL AFTER `target`;
+sql;1;UPDATE `renpen` SET `tahun`='2014';
+sql;2;DROP TABLE `mpn`;
+sql;2;DROP TABLE `spm`;
+sql;2;DROP TABLE `renpen`;
+sql;2;DROP TABLE `pegawai`;
+sql;2;CREATE TABLE `mpn` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL, `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(3) NOT NULL, `masa` uint(2) NOT NULL, `tahun` uint(4) NOT NULL, `tanggalbayar` int NOT NULL, `bulanbayar` int NOT NULL, `tahunbayar` int NOT NULL, `nominal` double NOT NULL, `ntpn` varchar(16) NOT NULL, `bank` varchar(4) NOT NULL, `nosk` varchar(15) NULL );
+sql;2;CREATE TABLE `spm` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NOT NULL, `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(3) NOT NULL, `masa` uint(2) NOT NULL, `tahun` uint(4) NOT NULL, `tanggalbayar` int NOT NULL, `bulanbayar` int NOT NULL, `tahunbayar` int NOT NULL, `nominal` double NOT NULL, `ntpn` varchar(16) NOT NULL, `bank` varchar(4) NOT NULL, `nosk` varchar(15) NULL, `nospm` varchar(7) NOT NULL );
+sql;2;CREATE TABLE `pegawai` ( `nip` varchar(9) NOT NULL, `nip2` text DEFAULT NULL, `nama` text NOT NULL, `pangkat` integer NOT NULL, `seksi` integer NOT NULL, `jabatan` integer NOT NULL, `tahun` integer NOT NULL );
+sql;2;CREATE TABLE `renpen` ( `nip` varchar(9) NOT NULL, `target` double NOT NULL, `tahun` integer NOT NULL );
+sql;0;DROP TABLE `seksi`;
+sql;0;DROP TABLE `kantor`;
+sql;0;DROP TABLE `klu`;
+sql;0;DROP TABLE `wp`;
+sql;0;DROP TABLE `masterfile`;
+sql;0;DROP TABLE `download`;
+sql;1;CREATE TABLE `seksi` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `tipe` integer  NOT NULL, `nama` text NOT NULL );
+sql;2;CREATE TABLE `seksi` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `tipe` integer  NOT NULL, `nama` text NOT NULL );
+sql;0;CREATE TABLE `kantor` ( `kanwil` varchar(3) NOT NULL, `kpp` varchar(3) NOT NULL, `nama` text NOT NULL );
+sql;0;CREATE TABLE `klu` ( `kode` text NOT NULL, `nama` text NOT NULL, `sektor` text NOT NULL );
+sql;0;CREATE TABLE `wp` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NOT NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `sektor` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nipar` text NULL );
+sql;0;CREATE TABLE `masterfile` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NOT NULL, `alamat` text NOT NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NOT NULL, `bentukhukum` text NULL, `status` text NOT NULL, `klu` text NULL, `tanggaldaftar` date NOT NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nipar` text NULL );
+sql;0;CREATE TABLE `download` ( `id` integer NOT NULL, `tipe` integer NOT NULL, `kpp` text NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL);
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='1.5' WHERE `key`='db.version';
+
+updatekantor;
+updateklu;
+updatewp;
+ 

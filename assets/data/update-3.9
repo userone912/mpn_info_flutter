@@ -1,0 +1,15 @@
+!3.9
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `seksi` ADD COLUMN `telp` text NULL;
+sql;0;ALTER TABLE `mpn` ADD COLUMN `billing` varchar(15) NULL;
+sql;0;ALTER TABLE `mpn` ADD COLUMN `nop` varchar(15) NULL;
+sql;1;CREATE TABLE `sp2dk` ( `id` INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL , `npwp` VARCHAR(9) NOT NULL, `kpp` VARCHAR(3) NOT NULL, `cabang` VARCHAR(3) NOT NULL, `masastart` INTEGER NOT NULL, `masaend` INTEGER NOT NULL, `tahun` INTEGER NOT NULL, `tipe` INTEGER NOT NULL, `tanggal` DATE NOT NULL, `data` TEXT NOT NULL )
+sql;2;CREATE TABLE `sp2dk` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , `npwp` VARCHAR(9) NOT NULL, `kpp` VARCHAR(3) NOT NULL, `cabang` VARCHAR(3) NOT NULL, `masastart` INTEGER NOT NULL, `masaend` INTEGER NOT NULL, `tahun` INTEGER NOT NULL, `tipe` INTEGER NOT NULL, `tanggal` DATE NOT NULL, `data` TEXT NOT NULL )
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.0' WHERE `key`='db.version';
+
+updatejatuhtempo;
+updatemaxlapor;

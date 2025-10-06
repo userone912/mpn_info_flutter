@@ -1,0 +1,8 @@
+!2.1
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `catatan` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `catatan` text NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.1.1' WHERE `key`='db.version';

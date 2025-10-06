@@ -1,0 +1,13 @@
+!2.0
+title;Updating Database;
+message;Update Data;
+
+sql;1;ALTER TABLE `seksi` DROP PRIMARY KEY;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.0.1' WHERE `key`='db.version';
+
+updatemap;
+updatewp;
+
+ 

@@ -1,0 +1,480 @@
+KDMAP;KDBAYAR;SEKTOR;URAIAN
+411111;000;0;PPh Minyak Bumi
+411111;100;0;PPh Minyak Bumi
+411111;106;0;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411111;200;0;Tahunan PPh Minyak Bumi
+411111;201;0;Pembayaran Pajak Tahunan yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411111;300;0;STP PPh Minyak Bumi
+411111;310;0;SKPKB PPh Minyak Bumi
+411111;320;0;SKPKBT PPh Minyak Bumi
+411111;390;0;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411112;000;0;PPh Gas Alam
+411112;100;0;PPh Gas Alam
+411112;106;0;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411112;200;0;Tahunan PPh Gas Alam
+411112;201;0;Pembayaran Pajak Tahunan yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411112;300;0;STP PPh Gas Alam
+411112;310;0;SKPKB PPh Gas Alam
+411112;320;0;SKPKBT PPh Gas Alam
+411112;390;0;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411113;000;0;PPh Minyak Bumi Lainnya
+411113;100;0;PPh Gas Alam
+411113;300;0;STP PPh Lainnya Dari Minyak Bumi
+411113;310;0;SKPKB PPh Lainnya Dari Minyak Bumi
+411113;320;0;SKPKBT PPh Lainnya Dari Minyak Bumi
+411113;390;0;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, atau Putusan Banding PPh Minyak Bumi Lainnya
+411119;000;0;PPh Gas Alam Lainnya
+411119;100;0;PPh Migas Lainnya
+411119;106;0;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411119;200;0;Tahunan PPh Migas Lainnya
+411119;201;0;Pembayaran Pajak Tahunan yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411119;300;0;STP PPh Migas Lainnya
+411119;310;0;SKPKB PPh Migas Lainnya
+411119;320;0;SKPKBT PPh Migas Lainnya
+411119;390;0;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411121;000;1;PPh Pasal 21
+411121;100;1;Masa PPh Pasal 21
+411121;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411121;199;1;Pembayaran Pendahuluan skp PPh Pasal 21
+411121;200;1;Tahunan PPh Pasal 21
+411121;300;1;STP PPh Pasal 21
+411121;310;1;SKPKB PPh Pasal 21
+411121;311;1;SKPKB PPh Final Pasal 21 Pembayaran Sekaligus Atas Jaminan Hari Tua, Uang Tebusan Pensiun, dan Uang Pesangon
+411121;320;1;SKPKBT PPh Pasal 21
+411121;321;1;SKPKBT PPh Final Pasal 21 Pembayaran Sekaligus Atas Jaminan Hari Tua, Uang Tebusan Pensiun, dan Uang Pesangon
+411121;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411121;401;1;PPh Final Pasal 21 Pembayaran Sekaligus Atas Jaminan Hari Tua, Uang Tebusan Pensiun, dan Uang Pesangon
+411121;402;1;PPh Final Pasal 21 atas honorarium atau imbalan lain yang diterima Pejabat Negara, PNS, anggota TNI/POLRI dan para pensiunnya
+411121;500;1;PPh Pasal 21 atas pengungkapan ketidakbenaran
+411121;501;1;PPh Pasal 21 atas penghentian penyidikan tindak pidana
+411121;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPh Pasal 21
+411121;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411122;000;1;PPh Pasal 22
+411122;100;1;Masa PPh Pasal 22
+411122;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak- pihak terkait yang tercantum dalam BAPK/BAP
+411122;199;1;Pembayaran Pendahuluan skp PPh Pasal 22
+411122;300;1;STP PPh Pasal 22
+411122;310;1;SKPKB PPh Pasal 22
+411122;311;1;SKPKB PPh Final Pasal 22
+411122;320;1;SKPKBT PPh Pasal 22
+411122;321;1;SKPKBT PPh Final Pasal 22
+411122;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding atau Putusan Peninjauan Kembali
+411122;401;1;PPh Final Pasal 22 atas Penebusan Migas
+411122;402;1;PPh Final Pasal 22 atas Penyerahan Rokok Produksi Dalam Negeri
+411122;403;1;PPh Final Pasal 22 atas Penjualan Barang yang Tergolong Sangat Mewah
+411122;404;1;PPh Final Pasal 22 atas Ekspor Komoditas Tambang Batubara, Mineral Logam, dan Mineral Bukan Logam
+411122;500;1;PPh Pasal 22 atas pengungkapan ketidakbenaran
+411122;501;1;PPh Pasal 22 atas penghentian penyidikan tindak pidana
+411122;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT Masa PPh Pasal 22
+411122;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411122;900;1;Pemungut PPh Pasal 22 non-Bendaharawan
+411122;910;1;Pemungut PPh Pasal 22 Bendaharawan APBN
+411122;920;1;Pemungut PPh Pasal 22 Bendaharawan APBD
+411122;930;1;Pemungut PPh Pasal 22 Bendaharawan Dana Desa
+411123;000;1;PPh Pasal 22 Impor
+411123;100;1;Masa PPh Pasal 22 Impor
+411123;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411123;199;1;Pembayaran Pendahuluan skp PPh Pasal 22 Impor
+411123;300;1;STP PPh Pasal 22 Impor
+411123;310;1;SKPKB PPh Pasal 22 Impor
+411123;320;1;SKPKBT PPh Pasal 22 Impor
+411123;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411123;500;1;PPh Pasal 22 Impor atas pengungkapan ketidakbenaran
+411123;501;1;PPh Pasal 22 Impor atas penghentian penyidikan tindak pidana
+411123;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT Masa PPh Pasal 22 Impor
+411123;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411124;000;1;PPh Pasal 23
+411124;100;1;Masa PPh Pasal 23
+411124;101;1;PPh Pasal 23 atas Dividen
+411124;102;1;PPh Pasal 23 atas Bunga
+411124;103;1;PPh Pasal 23 atas Royalti
+411124;104;1;PPh Pasal 23 atas Jasa
+411124;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411124;199;1;Pembayaran Pendahuluan skp PPh Pasal 23
+411124;300;1;STP PPh Pasal 23
+411124;301;1;STP PPh Pasal 23 atas Dividen, Bunga, Royalti, dan Jasa
+411124;310;1;SKPKB PPh Pasal 23
+411124;311;1;SKPKB PPh Pasal 23 atas Dividen, Bunga, Royalti, dan Jasa
+411124;312;1;SKPKB PPh Final Pasal 23
+411124;320;1;SKPKBT PPh Pasal 23
+411124;321;1;SKPKBT PPh Pasal 23 atas Dividen, Bunga, Royalti, dan Jasa
+411124;322;1;SKPKBT PPh Final Pasal 23
+411124;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411124;401;1;PPh Final Pasal 23 atas Bunga Simpanan Anggota Koperasi
+411124;500;1;PPh Pasal 23 atas pengungkapan ketidakbenaran
+411124;501;1;PPh Pasal 23 atas penghentian penyidikan tindak pidana
+411124;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT Masa PPh Pasal 23
+411124;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411125;000;1;PPh Pasal 25/29 OP
+411125;100;1;Masa PPh Pasal 25 Orang Pribadi
+411125;101;1;Masa PPh Pasal 25 Orang Pribadi Pengusaha Tertentu
+411125;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411125;199;1;Pembayaran Pendahuluan skp PPh Orang Pribadi
+411125;200;1;Tahunan PPh Orang Pribadi
+411125;201;1;Pembayaran Pajak Tahunan yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411125;300;1;STP PPh Orang Pribadi
+411125;310;1;SKPKB PPh Orang Pribadi
+411125;320;1;SKPKBT PPh Orang Pribadi
+411125;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411125;500;1;PPh Orang Pribadi atas pengungkapan ketidakbenaran
+411125;501;1;PPh Orang Pribadi atas penghentian penyidikan tindak pidana
+411125;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPh Orang Pribadi
+411125;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411126;000;1;PPh Pasal 25/29 Badan
+411126;100;1;Masa PPh Pasal 25 Badan
+411126;101;1;PPh Atas Pengalihan Hak Atas Tanah dan/atau Bangunan yang tidak bersifat final Badan
+411126;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411126;199;1;Pembayaran Pendahuluan skp PPh Badan
+411126;200;1;Tahunan PPh Badan
+411126;201;1;Pembayaran Pajak Tahunan yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411126;300;1;STP PPh Badan
+411126;310;1;SKPKB PPh Badan
+411126;320;1;SKPKBT PPh Badan
+411126;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411126;500;1;PPh Badan atas pengungkapan ketidakbenaran
+411126;501;1;PPh Badan atas penghentian penyidikan tindak pidana
+411126;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPh Badan
+411126;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411127;000;1;PPh Pasal 26
+411127;100;1;Masa PPh Pasal 26
+411127;101;1;PPh Pasal 26 atas Dividen
+411127;102;1;PPh Pasal 26 atas Bunga
+411127;103;1;PPh Pasal 26 atas Royalti
+411127;104;1;PPh Pasal 26 atas Jasa
+411127;105;1;PPh Pasal 26 atas Laba setelah Pajak BUT
+411127;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411127;199;1;Pembayaran Pendahuluan skp PPh Pasal 26
+411127;300;1;STP PPh Pasal 26
+411127;301;1;STP PPh Pasal 26 atas Dividen, Bunga, Royalti, Jasa, dan Laba Setelah Pajak BUT
+411127;310;1;SKPKB PPh Pasal 26
+411127;311;1;SKPKB PPh Pasal 26 atas Dividen, Bunga, Royalti, Jasa, dan Laba Setelah Pajak BUT
+411127;320;1;SKPKBT PPh Pasal 26
+411127;321;1;SKPKBT PPh Pasal 26 atas Dividen, Bunga, Royalti, Jasa, dan Laba Setelah Pajak BUT
+411127;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411127;500;1;PPh Pasal 26 atas pengungkapan ketidakbenaran
+411127;501;1;PPh Pasal 26 atas penghentian penyidikan tindak pidana
+411127;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPh Pasal 26
+411127;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411128;000;1;PPh Final & FLN
+411128;100;1;Fiskal Luar Negeri
+411128;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411128;111;1;PPh Final atas kegiatan Perdagangan Melalui Sistem Elektronik (PMSE) yang dilakukan oleh Subjek Pajak Luar Negeri (SPLN)
+411128;199;1;Pembayaran Pendahuluan skp PPh Final
+411128;300;1;STP PPh Final
+411128;310;1;SKPKB PPh Final Pasal 4 ayat (2)
+411128;311;1;SKPKB PPh Final Pasal 15
+411128;312;1;SKPKB PPh Final Pasal 19
+411128;320;1;SKPKBT PPh Final Pasal 4 ayat (2)
+411128;321;1;SKPKBT PPh Final Pasal 15
+411128;322;1;SKPKBT PPh Final Pasal 19
+411128;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411128;401;1;PPh Final Pasal 4 ayat (2) atas Diskonto/Bunga Obligasi dan Surat Utang Negara
+411128;402;1;PPh Final Pasal 4 ayat (2) atas Pengalihan Hak atas Tanah dan/atau Bangunan
+411128;403;1;PPh Final Pasal 4 ayat (2) atas Persewaan Tanah dan/atau Bangunan
+411128;404;1;PPh Final Pasal 4 ayat (2) atas Bunga Deposito / Tabungan, Jasa Giro dan Diskonto SBI
+411128;405;1;PPh Final Pasal 4 ayat (2) atas Hadiah Undian
+411128;406;1;PPh Final Pasal 4 ayat (2) atas Transaksi Saham, Obligasi dan sekuritas lainnya di Bursa.
+411128;407;1;PPh Final Pasal 4 ayat (2) atas Penjualan Saham Pendiri
+411128;408;1;PPh Final Pasal 4 ayat (2) atas Penjualan Saham Milik Perusahaan Modal Ventura
+411128;409;1;PPh Final Pasal 4 ayat (2) atas Jasa Konstruksi
+411128;410;1;PPh Final Pasal 15 atas Jasa Pelayaran Dalam Negeri
+411128;411;1;PPh Final Pasal 15 atas Jasa Pelayaran dan/atau Penerbangan Luar Negeri
+411128;412;1;PPh Final Pasal 15 atas Jasa Penerbangan Dalam Negeri
+411128;413;1;PPh Final Pasal 15 atas Penghasilan Perwakilan Dagang Luar Negeri
+411128;414;1;PPh Final Pasal 15 atas Pola Bagi Hasil
+411128;415;1;PPh Final Pasal 15 atas Kerjasama Bentuk BOT
+411128;416;1;PPh Final Pasal 19 atas Revaluasi Aktiva Tetap
+411128;417;1;PPh Final Pasal 4 ayat (2) atas Bunga Simpanan Anggota Koperasi yang Dibayarkan kepada Orang Pribadi
+411128;418;1;PPh Final Pasal 4 ayat (2) atas penghasilan dari transaksi derivatif yang diperdagangkan di bursa
+411128;419;1;PPh Final Pasal 17 ayat (2c) atas penghasilan berupa dividen
+411128;420;1;PPh Final Pasal 4 Ayat (2) atas Penghasilan dari Usaha yang Diterima atau Diperoleh Wajib Pajak yang Memiliki Peredaran Bruto Tertentu
+411128;421;1;PPh Final atas Uplift dan Pengalihan Participating Interest di bidang usaha hulu minyak dan gas bumi
+411128;422;1;PPh Final atas pengungkapan harta bersih tambahan yang dianggap sebagai penghasilan dan dikenai Pajak Penghasilan
+411128;423;1;PPh Final atas Penghasilan dari Usaha yang Diterima atau Diperoleh Wajib Pajak yang Memiliki Peredaran Bruto Tertentu yang Dipotong atau Dipungut oleh Pemotong atau Pemungut Pajak
+411128;424;1;PPh Final Pasal 15 atas Kegiatan Usaha Jasa Maklon Internasional di Bidang Produksi Mainan Anak-Anak
+411128;425;1;PPh Final Pasal 4 Ayat (2) atas Penghasilan dari Pengalihan Real Estate dalam Skema Kontrak Investasi Kolektif Tertentu
+411128;499;1;PPh Final Lainnya
+411128;500;1;PPh Final atas pengungkapan ketidakbenaran
+411128;501;1;PPh Final atas penghentian penyidikan tindak pidana
+411128;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPh Final
+411128;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan.
+411128;514;1;SKPKB PPh Final atas harta bersih tambahan yang diperlakukan sebagai penghasilan
+411128;515;1;SKPKB PPh Final atas tambahan penghasilan dari harta yang belum atau kurang diungkap Wajib Pajak yang sudah memperoleh Surat Keterangan Pengampunan Pajak
+411128;516;1;SKPKB PPh Final atas tambahan penghasilan dari harta yang belum atau kurang diungkap Wajib Pajak yang tidak menyampaikan Surat Pernyataan sampai dengan periode Pengampunan Pajak berakhir
+411129;000;1;PPh Non Migas Lainnya
+411129;100;1;PPh Non Migas Lainnya
+411129;101;1;PPh Pasal 15 atas Jasa Penerbangan Dalam Negeri
+411129;106;1;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411129;300;1;STP PPh Non Migas Lainnya
+411129;301;1;STP PPh Pasal 15 atas Jasa Penerbangan Dalam Negeri
+411129;310;1;SKPKB PPh Non Migas Lainnya
+411129;311;1;SKPKB PPh Pasal 15 atas Jasa Penerbangan Dalam Negeri
+411129;320;1;SKPKBT PPh Non Migas Lainnya
+411129;321;1;SKPKBT PPh Pasal 15 atas Jasa Penerbangan Dalam Negeri
+411129;390;1;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411129;500;1;PPh Non Migas Lainnya atas pengungkapan ketidakbenaran
+411129;501;1;PPh Non Migas Lainnya atas penghentian penyidikan tindak pidana
+411129;510;1;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian surat pemberitahuan PPh Non Migas Lainnya
+411129;511;1;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411129;512;1;Uang Tebusan Pengampunan Pajak
+411129;513;1;Pembayaran Pasal 8 ayat (3) huruf d UU Pengampunan Pajak
+411129;514;1;SKPKB Pasal 13 ayat (4) huruf a UU Pengampunan Pajak
+411129;515;1;SKPKB Pasal 18 ayat (3) UU Pengampunan Pajak
+411129;516;1;SKPKB Pasal 18 ayat (4) UU Pengampunan Pajak
+411131;000;1;PPh Final & FLN
+411131;100;1;Fiskal Luar Negeri
+411131;300;1;STP Fiskal Luar Negeri
+411141;100;4;Pendapatan PPh Pasal 21 Ditanggung Pemerintah
+411142;100;4;Pendapatan PPh Pasal 22 Ditanggung Pemerintah
+411143;100;4;Pendapatan PPh Pasal 22 Impor Ditanggung Pemerintah
+411144;100;4;Pendapatan PPh Pasal 23 Ditanggung Pemerintah
+411145;100;4;Pendapatan PPh Pasal 25/29 Orang Pribadi Ditanggung Pemerintah
+411146;100;4;Pendapatan PPh Pasal 25/29 Badan Ditanggung Pemerintah
+411147;100;4;Pendapatan PPh Pasal 26 Ditanggung Pemerintah
+411148;100;4;Pendapatan PPh Final Ditanggung Pemerintah
+411149;100;4;Pendapatan PPh Non Migas Lainnya Ditanggung Pemerintah
+411231;100;4;Pendapatan PPN Dalam Negeri Ditanggung Pemerintah
+411232;100;4;Pendapatan PPN Impor Ditanggung Pemerintah
+411239;100;4;Pendapatan PPN Lainnya Ditanggung Pemerintah
+411241;100;4;Pendapatan PPN Dalam Negeri Ditanggung Pemerintah
+411211;000;2;PPN Dalam Negeri
+411211;100;2;Setoran Masa PPN Dalam Negeri
+411211;101;2;Setoran PPN BKP tidak berwujud dari luar Daerah Pabean
+411211;102;2;Setoran PPN JKP dari luar Daerah Pabean
+411211;103;2;Setoran Kegiatan Mem-bangun Sendiri
+411211;104;2;Setoran Penyerahan Aktiva yang menurut tujuan semula tidak untuk diperjualbelikan,Setoran Atas Pengalihan Aktiva Dalam Rangka Restrukturisasi Perusahaan
+411211;105;2;Penebusan Stiker Lunas PPN atas Penyerahan Produk Rekaman Suara atau Gambar
+411211;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411211;121;2;Pembayaran PPN yang semula mendapatkan fasilitas
+411211;122;2;Pembayaran PPN yang semula mendapatkan fasilitas
+411211;199;2;Pembayaran Pendahuluan skp PPN Dalam Negeri
+411211;300;2;STP PPN Dalam Negeri
+411211;310;2;SKPKB PPN Dalam Negeri
+411211;311;2;SKPKB PPN Pemanfaatan BKP tidak berwujud dari luar Daerah Pabean
+411211;312;2;SKPKB PPN Pemanfaatan JKP dari luar Daerah Pabean
+411211;313;2;SKPKB PPN Kegiatan Membangun Sendiri
+411211;314;2;SKPKB Pemungut PPN Dalam Negeri
+411211;320;2;SKPKBT PPN Dalam Negeri
+411211;321;2;SKPKBT PPN Pemanfaatan BKP tidak berwujud dari luar Daerah Pabean
+411211;322;2;SKPKBT PPN Peman-faatan JKP dari luar Daerah Pabean
+411211;323;2;SKPKBT PPN atas Kegiatan Membangun Sendiri
+411211;324;2;SKPKBT Pemungut PPN Dalam Negeri
+411211;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411211;500;2;PPN Dalam Negeri atas pengungkapan ketidakbenaran
+411211;501;2;PPN Dalam Negeri atas penghentian penyidikan tindak pidana
+411211;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT Masa PPN Dalam Negeri
+411211;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411211;900;2;Pemungut PPN Dalam Negeri non-Bendaharawan
+411211;910;2;Pemungut PPN Dalam Negeri Bendaharawan APBN
+411211;920;2;Pemungut PPN Dalam Negeri Bendaharawan APBD
+411211;930;2;Pemungut PPN Dalam Negeri Bendaharawan Dana Desa
+411212;000;2;PPN Impor
+411212;100;2;Setoran Masa PPN Impor
+411212;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411212;121;2;Pembayaran PPN Impor yang semula mendapatkan fasilitas
+411212;122;2;Pembayaran PPN Impor yang semula mendapatkan fasilitas
+411212;199;2;Pembayaran Pendahuluan skp PPN Impor
+411212;300;2;STP PPN Impor
+411212;310;2;SKPKB PPN Impor
+411212;320;2;SKPKBT PPN Impor
+411212;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411212;500;2;PPN Impor atas pengungkapan ketidakbenaran
+411212;501;2;PPN Impor atas penghentian penyidikan tindak pidana
+411212;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPN
+411212;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411212;900;2;Pemungut PPN Impor non-Bendaharawan
+411212;910;2;Pemungut PPN Impor Bendaharawan APBN
+411212;920;2;Pemungut PPN Impor Bendaharawan APBD
+411212;930;2;Pemungut PPN Impor Bendaharawan Dana Desa
+411219;000;2;PPN Lainnya
+411219;100;2;Setoran Masa PPN Lainnya
+411219;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411219;111;2;Setoran Masa PPN dari kegiatan Perdagangan Melalui Sistem Elektronik (PMSE)
+411219;300;2;STP PPN Lainnya
+411219;310;2;SKPKB PPN Lainnya
+411219;320;2;SKPKBT PPN Lainnya
+411219;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411219;500;2;PPN Lainnya atas pengungkapan ketidakbenaran
+411219;501;2;PPN Lainnya atas penghentian penyidikan tindak pidana
+411219;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT PPN
+411219;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411221;000;2;PPnBM Dalam Negeri
+411221;100;2;Setoran Masa PPnBM Dalam Negeri
+411221;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411221;199;2;Pembayaran Pendahuluan skp PPnBM Dalam Negeri
+411221;300;2;STP PPnBM Dalam Negeri
+411221;310;2;SKPKB Masa PPnBM Dalam Negeri
+411221;311;2;SKPKB Pemungut PPnBM Dalam Negeri
+411221;320;2;SKPKBT Masa PPnBM Dalam Negeri
+411221;321;2;SKPKBT Pemungut PPnBM Dalam Negeri
+411221;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411221;500;2;PPnBM Dalam Negeri atas pengungkapan ketidakbenaran
+411221;501;2;PPnBM Dalam Negeri atas penghentian penyidikan tindak pidana
+411221;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pengisian SPT Masa PPN Dalam Negeri
+411221;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411221;900;2;Pemungut PPnBM Dalam Negeri non-Bendaharawan
+411221;910;2;Pemungut PPnBM Dalam Negeri Bendaharawan APBN
+411221;920;2;Pemungut PPnBM Dalam Negeri Bendaharawan APBD
+411221;930;2;Pemungut PPnBM Dalam Negeri Bendaharawan Dana Desa
+411222;000;2;PPnBM Impor
+411222;100;2;Setoran Masa PPnBM Impor
+411222;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411222;199;2;Pembayaran Pendahuluan skp PPnBM Impor
+411222;300;2;STP PPnBM Impor
+411222;310;2;SKPKB PPnBM Impor
+411222;320;2;SKPKBT PPnBM Impor
+411222;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411222;500;2;PPnBM Impor atas pengungkapan ketidakbenaran
+411222;501;2;PPnBM Impor atas penghentian penyidikan tindak pidana
+411222;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran PPnBM pada saat impor BKP
+411222;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411222;900;2;Pemungut PPnBM Impor non-Bendaharawan
+411222;910;2;Pemungut PPnBM Impor Bendaharawan APBN
+411222;920;2;Pemungut PPnBM Impor Bendaharawan APBD
+411222;930;2;Pemungut PPnBM Impor Bendaharawan Dana Desa
+411229;000;2;PPnBM Lainnya
+411229;100;2;Setoran Masa PPnBM Lainnya
+411229;106;2;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411229;300;2;STP PPnBM Lainnya
+411229;310;2;SKPKB PPnBM Lainnya
+411229;320;2;SKPKBT PPnBM Lainnya
+411229;390;2;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411229;500;2;PPnBM Lainya atas pengungkapan ketidakbenaran
+411229;501;2;PPnBM Lainnya atas penghentian penyidikan tindak pidana
+411229;510;2;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran PPnBM Lainnya
+411229;511;2;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411311;000;3;Pendapatan PBB Pedesaan
+411311;100;3;Pendapatan PBB Pedesaan
+411312;000;3;Pendapatan PBB Perkotaan
+411312;100;3;Pendapatan PBB Perkotaan
+411313;000;3;Pendapatan PBB Sektor Perkebunan
+411313;100;3;SPPT PBB Sektor Perkebunan
+411313;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411313;300;3;STP PBB Sektor Perkebunan
+411313;310;3;SKP PBB Sektor Perkebunan
+411313;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411313;500;3;Pajak Bumi dan Bangunan Sektor Perkebunan atas pengungkapan ketidakbenaran
+411313;501;3;Pajak Bumi dan Bangunan Sektor Perkebunan atas penghentian penyidikan tindak pidana
+411313;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Perkebunan
+411313;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411314;000;3;Pendapatan PBB Sektor Perhutanan
+411314;100;3;SPPT PBB Sektor Perhutanan
+411314;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411314;300;3;STP PBB Sektor Perhutanan
+411314;310;3;SKP PBB Sektor Perhutanan
+411314;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411314;500;3;Pajak Bumi dan Bangunan Sektor Perhutanan atas pengungkapan ketidakbenaran
+411314;501;3;Pajak Bumi dan Bangunan Sektor Perhutanan atas penghentian penyidikan tindak pidana
+411314;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Perhutanan
+411314;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411315;000;3;Pendapatan PBB Sektor Pertambangan Mineral dan Batubara
+411315;100;3;SPPT PBB Sektor Pertambangan Mineral dan Batubara
+411315;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411315;300;3;STP PBB Sektor Pertambangan Mineral dan Batubara
+411315;310;3;SKP PBB Sektor Pertambangan Mineral dan Batubara
+411315;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411315;500;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Mineral dan Batubara atas pengungkapan ketidakbenaran
+411315;501;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Mineral dan Batubara atas penghentian penyidikan tindak pidana
+411315;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Mineral dan Batubara
+411315;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411316;000;3;Pendapatan PBB Sektor Pertambangan Minyak Bumi dan Gas Bumi
+411316;100;3;SPPT PBB Sektor Pertambangan Minyak Bumi dan Gas Bumi
+411316;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411316;300;3;STP PBB Sektor Pertambangan Minyak Bumi dan Gas Bumi
+411316;310;3;SKP PBB Sektor Pertambangan Minyak Bumi dan Gas Bumi
+411316;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411316;500;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Minyak Bumi dan Gas Bumi atas pengungkapan ketidakbenaran
+411316;501;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Minyak Bumi dan Gas Bumi atas penghentian penyidikan tindak pidana
+411316;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Minyak Bumi dan Gas Bumi
+411316;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411317;000;3;Pendapatan PBB Sektor Pertambangan Panas Bumi
+411317;100;3;SPPT PBB Sektor Pertambangan Panas Bumi
+411317;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411317;300;3;STP PBB Sektor Pertambangan Panas Bumi
+411317;310;3;SKP PBB Sektor Pertambangan Panas Bumi
+411317;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411317;500;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Panas Bumi atas pengungkapan ketidakbenaran
+411317;501;3;Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Panas Bumi atas penghentian penyidikan tindak pidana
+411317;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Pertambangan untuk Pertambangan Panas Bumi
+411317;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411318;000;3;Pendapatan PBB Lainnya
+411318;100;3;Pendapatan PBB Lainnya
+411319;000;3;Pendapatan PBB Sektor Lainnya
+411319;100;3;SPPT PBB Sektor Lainnya
+411319;106;3;Pembayaran PBB yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411319;300;3;STP PBB Sektor Lainnya
+411319;310;3;SKP PBB Sektor Lainnya
+411319;390;3;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411319;500;3;Pajak Bumi dan Bangunan Sektor Lainnya atas pengungkapan ketidakbenaran
+411319;501;3;Pajak Bumi dan Bangunan Sektor Lainnya atas penghentian penyidikan tindak pidana
+411319;510;3;Sanksi Administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Pajak Bumi dan Bangunan Sektor Lainnya
+411319;511;3;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411411;000;3;Pendapatan BPHTB
+411411;100;3;Pendapatan BPHTB
+411411;212;3;Pengembalian Kelebihan Pembayaran tan
+411411;400;3;Pengembalian Kelebihan Pembayaran tan
+411611;000;4;Bea Meterai
+411611;100;4;Bea Meterai
+411611;101;4;Pelunasan Bea Meterai dengan sistem komputerisasi
+411611;106;4;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/BAP
+411611;199;4;Pembayaran Pendahuluan skp Bea Meterai
+411611;201;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;202;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;203;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;204;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;205;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;206;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;207;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;208;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;209;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;210;4;Pembayaran deposit atas penggunaan Mesin Teraan Meterai Digital untuk membubuhkan tanda Bea Meterai Lunas
+411611;300;4;STP Bea Meterai
+411611;310;4;SKPKB Bea Meterai
+411611;320;4;SKPKBT Bea Meterai
+411611;390;4;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, atau Putusan Banding Bea Meterai
+411611;500;4;Bea Meterai atas pengungkapan ketidakbenaran
+411611;501;4;Bea Meterai atas penghentian penyidikan tindak pidana
+411611;510;4;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Bea Meterai
+411611;511;4;Sanksi denda administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411611;512;4;Denda atas Pemeteraian Kemudian
+411612;000;4;Penjualan Benda Materai
+411612;100;4;Penjualan Benda Meterai
+411612;106;4;Pembayaran Pajak Masa yang berasal dari kegiatan permintaan keterangan yang dilakukan terhadap pihak-pihak terkait yang tercantum dalam BAPK/ BAP
+411612;199;4;Pembayaran Pendahuluan skp Benda Meterai
+411612;300;4;STP Benda Meterai
+411612;310;4;SKPKB Benda Meterai
+411612;320;4;SKPKBT Benda Meterai
+411612;390;4;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, atau Putusan Banding Benda Meterai
+411612;500;4;Benda Meterai atas pengungkapan ketidakbenaran
+411612;501;4;Benda Meterai atas penghentian penyidikan tindak pidana
+411612;510;4;Sanksi administrasi berupa denda atau kenaikan atas pengungkapan ketidakbenaran pembayaran Benda Meterai
+411612;511;4;Sanksi administrasi berupa denda atas penghentian penyidikan tindak pidana di bidang perpajakan
+411613;000;4;PTLL
+411613;100;4;Pajak Penjualan Batubara
+411613;300;4;STP Pajak Penjualan Batubara
+411613;310;4;SKPKB Pajak Penjualan Batubara
+411613;320;4;SKPKBT Pajak Penjualan Batubara
+411613;390;4;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411619;000;4;Pajak Tidak Langsung Lainnya
+411619;100;4;Setoran Masa Pajak Tidak Langsung Lainnya
+411619;111;4;Setoran Masa Pajak Transaksi Elektronik (PTE)
+411619;300;4;STP Pajak Tidak Langsung Lainnya
+411619;310;4;SKPKB Pajak Tidak Langsung Lainnya
+411619;320;4;SKPKBT Pajak Tidak Langsung Lainnya
+411619;390;4;Pembayaran atas Surat Keputusan Pembetulan, Surat Keputusan Keberatan, Putusan Banding, atau Putusan Peninjauan Kembali
+411619;900;4;Pemungut Pajak Tidak Langsung Lainnya non-Bendaharawan
+411619;910;4;Pemungut Pajak Tidak Langsung Lainnya Bendahawan APBN
+411619;920;4;Pemungut Pajak Tidak Langsung Lainnya Bendahawan APBD
+411619;930;4;Pemungut Pajak Tidak Langsung Lainnya Bendahawan Dana Desa
+411621;000;4;Bunga Penagihan PPh
+411621;300;4;STP atas Bunga Penagihan
+411621;301;4;STP atas Denda Penagihan
+411622;000;4;Bunga Penagihan PPN
+411622;300;4;STP atas Bunga Penagihan PPN
+411622;301;4;STP atas Denda Penagihan
+411623;000;4;Bunga Penagihan PPN
+411623;300;4;STP atas Bunga Penagihan PPnBM
+411623;301;4;STP atas Denda Penagihan
+411624;000;4;Bunga Penagihan PPN
+411624;300;4;STP atas Bunga Penagihan PTLL
+411624;301;4;STP atas Denda Penagihan

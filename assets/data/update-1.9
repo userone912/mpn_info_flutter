@@ -1,0 +1,46 @@
+!1.9
+title;Updating Database;
+message;Update Data;
+
+sql;0;DROP table `renpen`;
+sql;0;CREATE TABLE `renpen` ( `kpp` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL, `kdmap` text NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `target` double NOT NULL );
+
+sql;0;DROP table `assignar`;
+sql;0;CREATE TABLE `assignar` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+
+sql;0;DROP table `assignklu`;
+sql;0;CREATE TABLE `assignklu` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `klu` varchar(5) NOT NULL );
+
+sql;1;ALTER TABLE `seksi` ADD COLUMN `kantor` VARCHAR(3) NOT NULL AFTER `id`;
+sql;1;UPDATE `seksi` SET `kantor`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;ALTER TABLE `seksi` DROP PRIMARY KEY;
+sql;2;DROP table `seksi`;
+sql;2;CREATE TABLE `seksi` ( `id` integer NOT NULL, `kantor` varchar(3) NOT NULL, `tipe` integer  NOT NULL, `nama` text NOT NULL );
+
+sql;1;ALTER TABLE `pegawai` ADD COLUMN `kantor` VARCHAR(3) NOT NULL FIRST;
+sql;1;UPDATE `pegawai` SET `kantor`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;2;DROP table `pegawai`;
+sql;2;CREATE TABLE `pegawai` ( `kantor` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL, `nip2` text NULL, `nama` text NOT NULL, `pangkat` integer NOT NULL, `seksi` integer NULL, `jabatan` integer NOT NULL, `tahun` integer NOT NULL );
+
+sql;0;CREATE TABLE `wpfavorit` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nip` varchar(9) NOT NULL );
+sql;0;CREATE TABLE `notify` ( `nip` varchar(9) NOT NULL, `tipe` integer NOT NULL, `args` text NULL, `start` date NOT NULL, `end` date NULL );
+
+sql;0;DROP table `download`;
+
+sql;0;DROP table `mpn`;
+sql;0;DROP table `spm`;
+sql;0;CREATE TABLE `mpn` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `kdmap` varchar(6) NULL, `kdbayar` varchar(3) NULL, `masa` integer NULL, `tahun` integer NULL, `tanggalbayar` integer NOT NULL, `bulanbayar` integer NOT NULL, `tahunbayar` integer NOT NULL, `datebayar` date NOT NULL, `nominal` double NULL, `ntpn` varchar(16) NULL, `bank` text NULL, `nosk` varchar(15) NULL, `nospm` varchar(7) NULL, `tipe` integer NOT NULL, `source` integer NOT NULL );
+
+sql;0;DROP table `masterfile`;
+sql;0;CREATE TABLE `masterfile` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nipar` text NULL );
+
+sql;0;DROP table `wp`;
+sql;0;CREATE TABLE `wp` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `sektor` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `wpbesar` integer NULL, `nipar` text NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.0' WHERE `key`='db.version';
+
+updatemap;
+updatewp;
+
+ 

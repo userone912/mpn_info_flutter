@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import 'database_service.dart';
@@ -7,22 +5,15 @@ import '../../core/constants/app_constants.dart';
 
 /// Authentication service for user login/logout and session management
 class AuthService {
-  /// Hash password using SHA-256
-  String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
-  }
 
   /// Authenticate user with username and password
   Future<UserModel?> login(String username, String password) async {
     try {
-      final hashedPassword = _hashPassword(password);
-      
+      // Compare password directly (no hashing) since database stores plain text
       final result = await DatabaseService.query(
         AppConstants.tableUsers,
         where: 'username = ? AND password = ?',
-        whereArgs: [username, hashedPassword],
+        whereArgs: [username, password],
         limit: 1,
       );
 
@@ -56,11 +47,10 @@ class AuthService {
         return false; // Username already exists
       }
 
-      final hashedPassword = _hashPassword(password);
-      
+      // Store password as plain text (to match database structure)
       await DatabaseService.insert(AppConstants.tableUsers, {
         'username': username,
-        'password': hashedPassword,
+        'password': password,
         'fullname': fullname,
         'group_type': group,
       });
@@ -75,12 +65,11 @@ class AuthService {
   /// Change user password
   Future<bool> changePassword(int userId, String oldPassword, String newPassword) async {
     try {
-      // Verify old password
-      final hashedOldPassword = _hashPassword(oldPassword);
+      // Verify old password (plain text comparison)
       final user = await DatabaseService.query(
         AppConstants.tableUsers,
         where: 'id = ? AND password = ?',
-        whereArgs: [userId, hashedOldPassword],
+        whereArgs: [userId, oldPassword],
         limit: 1,
       );
 
@@ -88,11 +77,10 @@ class AuthService {
         return false; // Old password is incorrect
       }
 
-      // Update with new password
-      final hashedNewPassword = _hashPassword(newPassword);
+      // Update with new password (plain text)
       final result = await DatabaseService.update(
         AppConstants.tableUsers,
-        {'password': hashedNewPassword},
+        {'password': newPassword},
         'id = ?',
         [userId],
       );

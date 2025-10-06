@@ -1,0 +1,10 @@
+!1.3
+title;Updating Database;
+message;Update Data;
+sql;1;ALTER TABLE `spmkp` ADD `kdmap` varchar(6) NOT NULL AFTER `cabang`;
+sql;2;DROP table `spmkp`;
+sql;2;CREATE TABLE `spmkp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `nominal` double NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='1.4' WHERE `key`='db.version';
+ 

@@ -1,0 +1,10 @@
+!2.4
+title;Updating Database;
+message;Update Data;
+
+sql;0;CREATE TABLE `appportal_spttahunan` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `tahun` integer NOT NULL, `omzet` double NULL, `phlain` double NULL, `phfinal` double NULL, `phnotax` double NULL );
+sql;0;CREATE TABLE `appportal_sptppn` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `tahun` integer NOT NULL, `jumlahspt` integer NULL, `ekspor` double NULL, `dppdn` double NULL, `jumlahpk` integer NULL, `dpppk` double NULL );
+sql;0;CREATE TABLE `appportal_sptppn_detail` ( `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `ekspor` double NULL, `dppdn` double NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.5' WHERE `key`='db.version';

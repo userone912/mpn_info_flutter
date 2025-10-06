@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/database_service.dart';
+import '../../data/services/database_migration_service.dart';
 import '../../core/constants/app_enums.dart';
 
 /// Database configuration dialog
@@ -52,7 +53,8 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
       _portController.text = config.port.toString();
       _nameController.text = config.name;
       _usernameController.text = config.username;
-      _passwordController.text = config.password;
+      // Don't show the hashed password in the UI - leave it empty for security
+      _passwordController.text = '';
       _useSsl = config.useSsl;
     });
   }
@@ -74,12 +76,34 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
       if (!mounted) return;
 
       if (isConnected) {
+        // Run database migration after successful connection
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Koneksi database berhasil!'),
-            backgroundColor: Colors.green,
+            content: Text('Koneksi berhasil! Memeriksa struktur database...'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
           ),
         );
+        
+        final migrationSuccess = await DatabaseMigrationService.migrateDatabase();
+        
+        if (!mounted) return;
+        
+        if (migrationSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Database berhasil disinkronisasi!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Koneksi berhasil! Database sudah up-to-date.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -117,6 +141,9 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
       
       // Initialize database with the configuration
       await DatabaseService.initializeWithConfig(config);
+      
+      // Run database migration to ensure schema is up-to-date
+      await DatabaseMigrationService.migrateDatabase();
       
       if (!mounted) return;
       Navigator.of(context).pop(true); // Return success

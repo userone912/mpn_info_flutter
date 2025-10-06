@@ -1,0 +1,9 @@
+!2.5
+title;Updating Database;
+message;Update Data;
+
+sql;1;CREATE TABLE `lokasi` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `title` text  NOT NULL, `desc` text NULL, `lat` double  NOT NULL, `lng` double  NOT NULL );
+sql;2;CREATE TABLE `lokasi` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `title` text  NOT NULL, `desc` text NULL, `lat` double  NOT NULL, `lng` double  NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.6' WHERE `key`='db.version';

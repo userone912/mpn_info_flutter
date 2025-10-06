@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import '../models/import_result.dart';
 import '../../core/constants/app_constants.dart';
@@ -53,7 +52,7 @@ class CsvImportService {
 
       // Clear existing data for this office
       await DatabaseService.delete(
-        'seksi', 
+        AppConstants.tableSeksi, 
         'kantor = ?', 
         [kodeKantor]
       );
@@ -71,7 +70,7 @@ class CsvImportService {
           }
 
           // Insert into database
-          await DatabaseService.insert('seksi', {
+          await DatabaseService.insert(AppConstants.tableSeksi, {
             'id': int.tryParse(data[0]) ?? 0,
             'kantor': data[1],
             'tipe': int.tryParse(data[2]) ?? 0,
@@ -308,6 +307,11 @@ class CsvImportService {
         );
       }
 
+      // Extract office code and year from filename
+      final parts = fileName.split('-');
+      final kodeKantor = parts[1];
+      final tahun = int.tryParse(parts[2].split('.')[0]) ?? DateTime.now().year;
+
       // Process data lines
       int successCount = 0;
       int errorCount = 0;
@@ -326,14 +330,15 @@ class CsvImportService {
           }
 
           // Insert into database
-          await DatabaseService.insert('spmkp', {
-            'id': int.tryParse(data[0]) ?? 0,
+          await DatabaseService.insert(AppConstants.tableSpmkp, {
+            'admin': kodeKantor,
             'npwp': data[1],
             'kpp': data[2],
             'cabang': data[3],
             'kdmap': data[4],
             'bulan': int.tryParse(data[5]) ?? 1,
-            'tahun': int.tryParse(data[6]) ?? DateTime.now().year,
+            'tahun': int.tryParse(data[6]) ?? tahun,
+            'tanggal': DateTime.now(), // Current date as default
             'nominal': double.tryParse(data[7]) ?? 0.0,
           });
 

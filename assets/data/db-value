@@ -1,0 +1,8 @@
+!4.7
+message;Memasukkan default data;
+sql;0;INSERT INTO `users`(`username`, `password`, `fullname`, `group`) VALUES('admin', 'admin', 'Administrator', 0);
+updatekantor;
+updateklu;
+updatemap;
+updatejatuhtempo;
+updatemaxlapor;

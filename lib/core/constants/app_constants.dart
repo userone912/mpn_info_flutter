@@ -9,7 +9,9 @@ class AppConstants {
 
   // Database Tables
   static const String tableUsers = 'users';
+  static const String tableSeksi = 'seksi';
   static const String tablePegawai = 'pegawai';
+  static const String tableSpmkp = 'spmkp';
   static const String tableWp = 'wp';
   static const String tableMpn = 'mpn';
 

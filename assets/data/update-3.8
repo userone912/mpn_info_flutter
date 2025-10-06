@@ -1,0 +1,14 @@
+!3.8
+title;Updating Database;
+message;Update Data;
+
+sql;1;ALTER TABLE `spmkp` ADD COLUMN `tanggal` DATE NULL AFTER `tahun`;
+sql;1;ALTER TABLE `spmpp` ADD COLUMN `tanggal` DATE NULL AFTER `tahun`;
+sql;2;DROP TABLE `spmkp`;
+sql;2;DROP TABLE `spmpp`;
+sql;2;CREATE TABLE `spmkp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `tanggal` DATE NULL, `nominal` double NOT NULL );
+sql;2;CREATE TABLE `spmpp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `admin` varchar(3) NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `tanggal` DATE NULL, `nominal` double NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.9' WHERE `key`='db.version';
+

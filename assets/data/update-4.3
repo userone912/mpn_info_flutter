@@ -1,0 +1,9 @@
+!4.3
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `pbk` ADD COLUMN `ntpn` TEXT NULL;
+sql;0;UPDATE `mpn` SET `masa`=0 WHERE `kdbayar`='200'
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.4' WHERE `key`='db.version';

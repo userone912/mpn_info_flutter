@@ -1,0 +1,12 @@
+!3.6
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `lokasi` ADD COLUMN `tanggal` TEXT NULL;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.7' WHERE `key`='db.version';
+
+updatejatuhtempo;
+updatemaxlapor;
+updatemap;

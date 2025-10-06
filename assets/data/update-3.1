@@ -1,0 +1,18 @@
+!3.1
+title;Updating Database;
+message;Update Data;
+
+sql;0;ALTER TABLE `pegawai` ADD COLUMN `plh` varchar(9) NULL;
+sql;1;ALTER TABLE `nothitstppembayaran` ADD COLUMN `dasar` integer NOT NULL default 0;
+sql;1;ALTER TABLE `nothitstppelaporan` ADD COLUMN `tipe` integer NOT NULL default 0;
+sql;1;UPDATE `nothitstppembayaran` SET `dasar`=(SELECT `nothitstp`.`tipe` FROM `nothitstp` WHERE `nothitstp`.`id`=`nothitstppembayaran`.`nothitstp`);
+sql;1;ALTER TABLE `nothitstp` DROP COLUMN `tipe`, MODIFY COLUMN `denda` double NULL, MODIFY COLUMN `bunga` double NULL, ADD COLUMN `bungapembetulan` double NULL AFTER `bunga`;
+sql;2;DROP TABLE `nothitstp`;
+sql;2;DROP TABLE `nothitstppembayaran`;
+sql;2;DROP TABLE `nothitstppelaporan`;
+sql;2;CREATE TABLE `nothitstp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `denda` double NULL, `bunga` double NULL, `bungapembetulan` double NULL, `tanggalterbit` date NOT NULL, `nip` text NOT NULL );
+sql;2;CREATE TABLE `nothitstppembayaran` ( `nothitstp` integer NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` text NOT NULL, `kdbayar` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `tanggalbayar` date NOT NULL, `ntpn` text NOT NULL, `nominal` double NOT NULL, `bulanterlambat` integer NOT NULL, `bunga` double NOT NULL, `dasar` integer NOT NULL );
+sql;2;CREATE TABLE `nothitstppelaporan` ( `nothitstp` integer NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `jenis` text NOT NULL, `masa` integer NOT NULL, `tahun` integer NOT NULL, `tanggalterima` date NULL, `denda` double NOT NULL, `tipe` integer NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.2' WHERE `key`='db.version';

@@ -1,0 +1,20 @@
+!3.4
+title;Updating Database;
+message;Update Data;
+
+sql;1;ALTER TABLE `spmkp` DROP COLUMN `admin`;
+sql;1;ALTER TABLE `spmpp` DROP COLUMN `admin`;
+sql;1;ALTER TABLE `spmkp` ADD COLUMN `admin` varchar(3) NOT NULL AFTER `id`;
+sql;1;ALTER TABLE `spmpp` ADD COLUMN `admin` varchar(3) NOT NULL AFTER `id`;
+sql;1;UPDATE `spmkp` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+sql;1;UPDATE `spmpp` SET `admin`=(SELECT `value` FROM `settings` WHERE `key`='kantor.kode');
+
+sql;1;TRUNCATE TABLE `appportal_nsfp_sebelum`;
+sql;1;TRUNCATE TABLE `appportal_nsfp_bukan`;
+sql;1;TRUNCATE TABLE `appportal_nsfp_log`;
+sql;2;DELETE FROM `appportal_nsfp_sebelum`;
+sql;2;DELETE FROM `appportal_nsfp_bukan`;
+sql;2;DELETE FROM `appportal_nsfp_log`;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='3.5' WHERE `key`='db.version';

@@ -1,0 +1,12 @@
+!4.2
+title;Updating Database;
+message;Update Data;
+
+sql;1;ALTER TABLE `mpn` ADD COLUMN `pembuat` TEXT NULL AFTER `nop`, ADD COLUMN `ket` TEXT NULL AFTER `pembuat`;
+sql;2;ALTER TABLE `mpn` ADD COLUMN `pembuat` TEXT NULL;
+sql;2;ALTER TABLE `mpn` ADD COLUMN `ket` TEXT NULL;
+updatejatuhtempo;
+updatemaxlapor;
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='4.3' WHERE `key`='db.version';

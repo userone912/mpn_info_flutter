@@ -1,0 +1,14 @@
+!1.6
+title;Updating Database;
+message;Update Data;
+sql;0;DROP TABLE `masterfile`;
+sql;0;CREATE TABLE `masterfile` ( `npwp` text NOT NULL, `kpp` text NOT NULL, `cabang` text NOT NULL, `nama` text NOT NULL, `alamat` text NULL, `kelurahan` text NULL, `kecamatan` text NULL, `kota` text NULL, `propinsi` text NULL, `jenis` text NULL, `bentukhukum` text NULL, `status` text NULL, `klu` text NULL, `tanggaldaftar` date NULL, `tanggalpkp` date NULL, `tanggalpkpcabut` date NULL, `nipar` text NULL );
+sql;0;CREATE TABLE `map` ( `kdmap` varchar(6) NOT NULL, `kdbayar` varchar(9) NOT NULL, `sektor` integer NOT NULL, `uraian` text NOT NULL );
+sql;0;CREATE TABLE `jatuhtempo` ( `bulan` integer NOT NULL, `tahun` integer NOT NULL, `potput` date NULL, `pph` date NULL, `ppn` date NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='1.7' WHERE `key`='db.version';
+
+updatemap;
+updatejatuhtempo;
+ 

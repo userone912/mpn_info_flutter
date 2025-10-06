@@ -22,13 +22,33 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as int,
-      username: json['username'] as String,
-      password: json['password'] as String,
-      fullname: json['fullname'] as String,
+      username: _safeStringCast(json['username']),
+      password: _safeStringCast(json['password']),
+      fullname: _safeStringCast(json['fullname']),
       group: (json['group_type'] ?? json['group']) as int, // Handle both column names
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
     );
+  }
+
+  /// Helper method to safely cast any value to String (handles Blob and other types)
+  static String _safeStringCast(dynamic value) {
+    if (value == null) return '';
+    
+    if (value is String) {
+      return value;
+    } else if (value is List<int>) {
+      // Handle Blob data (binary data as List<int>)
+      try {
+        return String.fromCharCodes(value);
+      } catch (e) {
+        print('Error converting binary data to string: $e');
+        return '';
+      }
+    } else {
+      // For any other type, convert to string
+      return value.toString();
+    }
   }
 
   /// Helper method to parse DateTime from various formats

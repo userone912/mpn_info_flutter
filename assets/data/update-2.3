@@ -1,0 +1,9 @@
+!2.3
+title;Updating Database;
+message;Update Data;
+
+sql;1;CREATE TABLE `spmpp` ( `id` integer PRIMARY KEY AUTO_INCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `nominal` double NOT NULL );
+sql;2;CREATE TABLE `spmpp` ( `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `npwp` varchar(9) NOT NULL, `kpp` varchar(3) NOT NULL, `cabang` varchar(3) NOT NULL, `kdmap` varchar(6) NOT NULL, `bulan` integer NOT NULL, `tahun` integer NOT NULL, `nominal` double NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='2.4' WHERE `key`='db.version';

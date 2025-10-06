@@ -8,6 +8,8 @@ import '../core/constants/app_constants.dart';
 import '../shared/widgets/app_logo.dart';
 import '../shared/dialogs/about_dialog.dart' as app_about;
 import 'login_page.dart';
+import 'reference/klu_page.dart';
+import 'reference/map_page.dart';
 
 /// Main dashboard page after login
 class DashboardPage extends ConsumerWidget {
@@ -81,8 +83,8 @@ class DashboardPage extends ConsumerWidget {
               _buildMenuItem('Manage SPMPP', Icons.edit, () => _showComingSoon(context, 'Manage SPMPP')),
             ]),
             _buildAppBarMenu(context, 'Referensi', [
-              _buildMenuItem('KLU', Icons.category, () => _showComingSoon(context, 'KLU')),
-              _buildMenuItem('Maps', Icons.map, () => _showComingSoon(context, 'Maps')),
+              _buildMenuItem('KLU', Icons.category, () => _navigateToKlu(context)),
+              _buildMenuItem('Maps', Icons.map, () => _navigateToMap(context)),
               _buildMenuItem('Import KLU', Icons.import_export, () => _showComingSoon(context, 'Import KLU')),
               _buildMenuItem('Import Maps', Icons.import_export, () => _showComingSoon(context, 'Import Maps')),
             ]),
@@ -247,52 +249,53 @@ class DashboardPage extends ConsumerWidget {
                   // Left panel with gauge and statistics
                   Expanded(
                     flex: 1,
-                    child: Column(
-                      children: [
-                        // Gauge widget
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Penerimaan Kantor Tahun 2025',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Gauge widget
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Penerimaan Kantor Tahun 2025',
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                // Placeholder for gauge - will implement with custom painter later
-                                Container(
-                                  width: 200,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.grey.shade300, width: 2),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      Center(
-                                        child: Container(
-                                          width: 180,
-                                          height: 180,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: RadialGradient(
-                                              colors: [Colors.grey.shade100, Colors.grey.shade300],
+                                  const SizedBox(height: 16),
+                                  // Placeholder for gauge - will implement with custom painter later
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.grey.shade300, width: 2),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Center(
+                                          child: Container(
+                                            width: 180,
+                                            height: 180,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              gradient: RadialGradient(
+                                                colors: [Colors.grey.shade100, Colors.grey.shade300],
+                                              ),
                                             ),
-                                          ),
-                                          child: const Center(
-                                            child: Text(
-                                              '0%',
-                                              style: TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold,
+                                            child: const Center(
+                                              child: Text(
+                                                '0%',
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -327,6 +330,7 @@ class DashboardPage extends ConsumerWidget {
                       ],
                     ),
                   ),
+                ),
                   const SizedBox(width: 16),
 
                   // Right panel with charts
@@ -471,57 +475,6 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0), // Reduced padding
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 32, // Smaller icon
-                color: color,
-              ),
-              const SizedBox(height: 8), // Reduced spacing
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith( // Smaller text
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2), // Reduced spacing
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                  fontSize: 11, // Smaller subtitle
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showProfile(BuildContext context, UserModel user) {
     showDialog(
       context: context,
@@ -611,6 +564,71 @@ class DashboardPage extends ConsumerWidget {
 
   Future<void> _importSpmkp(BuildContext context) async {
     await _performImport(context, 'Import SPMKP', CsvImportService.importSpmkp);
+  }
+
+  // Reference data navigation methods
+  void _navigateToKlu(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(
+            minWidth: 500,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const KluPage(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToMap(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(
+            minWidth: 500,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const MapPage(),
+        ),
+      ),
+    );
   }
 
   /// Generic import handler with progress dialog

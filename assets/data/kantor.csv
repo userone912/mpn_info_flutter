@@ -1,0 +1,399 @@
+KANWIL;KPP;NAMA
+010;000;Kanwil DJP Aceh
+010;101;KPP Pratama Banda Aceh
+010;102;KPP Pratama Lhokseumawe
+010;103;KPP Pratama Meulaboh
+010;104;KPP Pratama Bireuen
+010;105;KPP Pratama Langsa
+010;106;KPP Pratama Tapak Tuan
+010;107;KPP Pratama Subulussalam
+010;108;KPP Pratama Aceh Besar
+020;000;Kanwil DJP Sumatera Utara I
+020;111;KPP Pratama Medan Barat
+020;112;KPP Pratama Medan Belawan
+020;113;KPP Pratama Medan Timur
+020;119;KPP Pratama Binjai
+020;121;KPP Pratama Medan Polonia
+020;122;KPP Pratama Medan Kota
+020;123;KPP Madya Medan
+020;124;KPP Pratama Medan Petisah
+020;125;KPP Pratama Lubuk Pakam
+020;129;KPP Madya Dua Medan
+030;000;Kanwil DJP Sumatera Utara II
+030;114;KPP Pratama Tebing Tinggi
+030;115;KPP Pratama Kisaran
+030;116;KPP Pratama Rantau Prapat
+030;117;KPP Pratama Pematang Siantar
+030;118;KPP Pratama Padang Sidempuan
+030;126;KPP Pratama Sibolga
+030;127;KPP Pratama Balige
+030;128;KPP Pratama Kabanjahe
+040;000;Kanwil DJP Riau
+040;211;KPP Pratama Pekanbaru Senapelan
+040;212;KPP Pratama Dumai
+040;213;KPP Pratama Rengat
+040;216;KPP Pratama Pekanbaru Tampan
+040;218;KPP Madya Pekanbaru
+040;219;KPP Pratama Bengkalis
+040;221;KPP Pratama Bangkinang
+040;222;KPP Pratama Pangkalan Kerinci
+340;000;Kanwil DJP Kepulauan Riau
+340;217;KPP Madya Batam
+340;214;KPP Pratama Tanjung Pinang
+340;215;KPP Pratama Batam Utara
+340;225;KPP Pratama Batam Selatan
+340;223;KPP Pratama Tanjung Balai Karimun
+340;224;KPP Pratama Bintan
+050;000;Kanwil DJP Sumatera Barat dan Jambi
+050;201;KPP Pratama Padang Satu
+050;202;KPP Pratama Bukittinggi
+050;203;KPP Pratama Solok
+050;204;KPP Pratama Payakumbuh
+050;205;KPP Pratama Padang Dua
+050;331;KPP Pratama Jambi Telanaipura
+050;332;KPP Pratama Muara Bungo
+050;333;KPP Pratama Bangko
+050;334;KPP Pratama Kuala Tungkal
+050;335;KPP Pratama Jambi Pelayangan
+060;000;Kanwil DJP Sumatera Selatan dan Kepulauan Bangka Belitung
+060;301;KPP Pratama Palembang Ilir Timur
+060;302;KPP Pratama Baturaja
+060;303;KPP Pratama Lubuk Linggau
+060;304;KPP Pratama Pangkal Pinang
+060;305;KPP Pratama Tanjung Pandan
+060;306;KPP Pratama Palembang Seberang Ulu
+060;307;KPP Pratama Palembang Ilir Barat
+060;308;KPP Madya Palembang
+060;309;KPP Pratama Lahat
+060;312;KPP Pratama Kayu Agung
+060;313;KPP Pratama Prabumulih
+060;314;KPP Pratama Sekayu
+060;315;KPP Pratama Bangka
+070;000;Kanwil DJP Bengkulu dan Lampung
+070;311;KPP Pratama Bengkulu Dua
+070;321;KPP Pratama Metro
+070;322;KPP Pratama Bandar Lampung Satu
+070;323;KPP Pratama Bandar Lampung Dua
+070;324;KPP Pratama Teluk Betung
+070;325;KPP Pratama Natar
+070;326;KPP Pratama Kotabumi
+070;327;KPP Pratama Curup
+070;328;KPP Pratama Bengkulu Satu
+070;329;KPP Madya Bandar Lampung
+080;000;Kanwil DJP Jakarta Pusat
+080;021;KPP Pratama Jakarta Menteng Satu
+080;022;KPP Pratama Jakarta Tanah Abang Satu
+080;023;KPP Pratama Jakarta Senen
+080;024;KPP Pratama Jakarta Cempaka Putih
+080;025;KPP Pratama Jakarta Gambir Satu
+080;026;KPP Pratama Jakarta Sawah Besar Satu
+080;027;KPP Pratama Jakarta Kemayoran
+080;028;KPP Pratama Jakarta Gambir Dua
+080;029;KPP Pratama Jakarta Gambir Tiga
+080;071;KPP Pratama Jakarta Menteng Dua
+080;072;KPP Pratama Jakarta Tanah Abang Dua
+080;073;KPP Madya Jakarta Pusat
+080;074;KPP Pratama Jakarta Gambir Empat
+080;075;KPP Pratama Jakarta Sawah Besar Dua
+080;076;KPP Pratama Jakarta Menteng Tiga
+080;077;KPP Pratama Jakarta Tanah Abang Tiga
+080;078;KPP Madya Dua Jakarta Pusat
+090;000;Kanwil DJP Jakarta Barat
+090;031;KPP Pratama Jakarta Palmerah
+090;032;KPP Pratama Jakarta Tamansari
+090;033;KPP Pratama Jakarta Tambora
+090;034;KPP Pratama Jakarta Cengkareng
+090;035;KPP Pratama Jakarta Kebon Jeruk Satu
+090;036;KPP Pratama Jakarta Grogol Petamburan
+090;038;KPP Madya Jakarta Barat
+090;039;KPP Pratama Jakarta Kebon Jeruk Dua
+090;085;KPP Pratama Jakarta Kalideres
+090;086;KPP Pratama Jakarta Kembangan
+090;087;KPP Madya Dua Jakarta Barat
+100;000;Kanwil DJP Jakarta Selatan I
+100;011;KPP Pratama Jakarta Setiabudi Satu
+100;014;KPP Pratama Jakarta Mampang Prapatan
+100;015;KPP Pratama Jakarta Tebet
+100;018;KPP Pratama Jakarta Setiabudi Dua
+100;061;KPP Pratama Jakarta Pancoran
+100;062;KPP Madya Jakarta Selatan I
+100;063;KPP Pratama Jakarta Setiabudi Tiga
+100;067;KPP Pratama Jakarta Setiabudi Empat
+100;069;KPP Madya Dua Jakarta Selatan I
+110;000;Kanwil DJP Jakarta Timur
+110;001;KPP Pratama Jakarta Matraman
+110;002;KPP Pratama Jakarta Jatinegara
+110;003;KPP Pratama Jakarta Pulogadung
+110;004;KPP Pratama Jakarta Cakung
+110;005;KPP Pratama Jakarta Kramat Jati
+110;007;KPP Madya Jakarta Timur
+110;008;KPP Pratama Jakarta Duren Sawit
+110;009;KPP Pratama Jakarta Pasar Rebo
+110;097;KPP Madya Dua Jakarta Timur
+120;000;Kanwil DJP Jakarta Utara
+120;041;KPP Pratama Jakarta Penjaringan
+120;042;KPP Pratama Jakarta Tanjung Priok
+120;043;KPP Pratama Jakarta Kelapa Gading
+120;044;KPP Pratama Jakarta Pademangan
+120;045;KPP Pratama Jakarta Koja
+120;046;KPP Madya Jakarta Utara
+120;047;KPP Pratama Jakarta Pluit
+120;048;KPP Pratama Jakarta Sunter
+120;098;KPP Madya Dua Jakarta Utara
+130;000;Kanwil DJP Jakarta Khusus
+130;052;KPP Penanaman Modal Asing Satu
+130;053;KPP Badan dan Orang Asing
+130;054;KPP Perusahaan Masuk Bursa
+130;055;KPP Penanaman Modal Asing Dua
+130;056;KPP Penanaman Modal Asing Tiga
+130;057;KPP Penanaman Modal Asing Empat
+130;058;KPP Penanaman Modal Asing Lima
+130;059;KPP Penanaman Modal Asing Enam
+130;081;KPP Minyak dan Gas Bumi
+140;000;Kanwil DJP Banten
+140;401;KPP Pratama Serang Barat
+140;454;KPP Pratama Serang Timur
+140;402;KPP Pratama Tangerang Barat
+140;411;KPP Pratama Serpong
+140;415;KPP Madya Tangerang
+140;416;KPP Pratama Tangerang Timur
+140;417;KPP Pratama Cilegon
+140;418;KPP Pratama Kosambi
+140;419;KPP Pratama Pandeglang
+140;451;KPP Pratama Tigaraksa
+140;452;KPP Pratama Cikupa
+140;453;KPP Pratama Pondok Aren
+140;456;KPP Madya Dua Tangerang
+150;000;Kanwil DJP Jawa Barat I
+150;405;KPP Pratama Sukabumi
+150;406;KPP Pratama Cianjur
+150;409;KPP Pratama Purwakarta
+150;421;KPP Pratama Cimahi
+150;422;KPP Pratama Bandung Tegallega
+150;423;KPP Pratama Bandung Cibeunying
+150;424;KPP Pratama Bandung Karees
+150;425;KPP Pratama Tasikmalaya
+150;428;KPP Pratama Bandung Bojonagara
+150;429;KPP Pratama Bandung Cicadas
+150;441;KPP Madya Bandung
+150;442;KPP Pratama Ciamis
+150;443;KPP Pratama Garut
+150;444;KPP Pratama Majalaya
+150;445;KPP Pratama Soreang
+150;446;KPP Pratama Sumedang
+150;459;KPP Madya Dua Bandung
+160;000;Kanwil DJP Jawa Barat II
+160;408;KPP Pratama Karawang
+160;413;KPP Pratama Cikarang Selatan
+160;414;KPP Pratama Cikarang Utara
+160;426;KPP Pratama Cirebon Satu
+160;455;KPP Pratama Cirebon Dua
+160;431;KPP Madya Bekasi
+160;435;KPP Pratama Cibitung
+160;437;KPP Pratama Indramayu
+160;438;KPP Pratama Kuningan
+160;439;KPP Pratama Subang
+160;457;KPP Madya Karawang
+170;000;Kanwil DJP Jawa Tengah I
+170;501;KPP Pratama Tegal
+170;502;KPP Pratama Pekalongan
+170;503;KPP Pratama Semarang Barat
+170;504;KPP Pratama Semarang Timur
+170;505;KPP Pratama Salatiga
+170;506;KPP Pratama Kudus
+170;507;KPP Pratama Pati
+170;508;KPP Pratama Semarang Selatan
+170;509;KPP Pratama Semarang Tengah
+170;511;KPP Madya Semarang
+170;513;KPP Pratama Batang
+170;514;KPP Pratama Blora
+170;515;KPP Pratama Demak
+170;516;KPP Pratama Jepara
+170;517;KPP Pratama Semarang Candisari
+170;518;KPP Pratama Semarang Gayamsari
+170;519;KPP Madya Dua Semarang
+180;000;Kanwil DJP Jawa Tengah II
+180;521;KPP Pratama Purwokerto
+180;522;KPP Pratama Cilacap
+180;523;KPP Pratama Kebumen
+180;524;KPP Pratama Magelang
+180;525;KPP Pratama Klaten
+180;526;KPP Pratama Surakarta
+180;527;KPP Pratama Boyolali
+180;528;KPP Pratama Karanganyar
+180;529;KPP Pratama Purbalingga
+180;532;KPP Pratama Sukoharjo
+180;533;KPP Pratama Temanggung
+180;534;KPP Madya Surakarta
+190;000;Kanwil DJP Daerah Istimewa Yogyakarta
+190;541;KPP Pratama Yogyakarta
+190;542;KPP Pratama Sleman
+190;543;KPP Pratama Bantul
+190;544;KPP Pratama Wates
+190;545;KPP Pratama Wonosari
+200;000;Kanwil DJP Jawa Timur I
+200;604;KPP Pratama Surabaya Sukomanunggal
+200;605;KPP Pratama Surabaya Krembangan
+200;606;KPP Pratama Surabaya Gubeng
+200;607;KPP Pratama Surabaya Tegalsari
+200;609;KPP Pratama Surabaya Wonocolo
+200;611;KPP Pratama Surabaya Genteng
+200;613;KPP Pratama Surabaya Pabean Cantikan
+200;614;KPP Pratama Surabaya Sawahan
+200;615;KPP Pratama Surabaya Rungkut
+200;616;KPP Pratama Surabaya Simokerto
+200;618;KPP Pratama Surabaya Karangpilang
+200;619;KPP Pratama Surabaya Mulyorejo
+200;631;KPP Madya Surabaya
+200;632;KPP Madya Dua Surabaya
+210;000;Kanwil DJP Jawa Timur II
+210;601;KPP Pratama Bojonegoro
+210;602;KPP Pratama Mojokerto
+210;603;KPP Pratama Sidoarjo Barat
+210;608;KPP Pratama Pamekasan
+210;617;KPP Pratama Sidoarjo Selatan
+210;621;KPP Pratama Madiun
+210;641;KPP Madya Sidoarjo
+210;642;KPP Pratama Gresik
+210;643;KPP Pratama Sidoarjo Utara
+210;644;KPP Pratama Bangkalan
+210;645;KPP Pratama Lamongan
+210;646;KPP Pratama Ngawi
+210;647;KPP Pratama Ponorogo
+210;648;KPP Pratama Tuban
+210;649;KPP Pratama Jombang
+210;636;KPP Madya Gresik
+220;000;Kanwil DJP Jawa Timur III
+220;622;KPP Pratama Kediri
+220;623;KPP Pratama Malang Selatan
+220;624;KPP Pratama Pasuruan
+220;625;KPP Pratama Probolinggo
+220;626;KPP Pratama Jember
+220;627;KPP Pratama Banyuwangi
+220;628;KPP Pratama Batu
+220;629;KPP Pratama Tulungagung
+220;651;KPP Madya Malang
+220;652;KPP Pratama Malang Utara
+220;653;KPP Pratama Blitar
+220;654;KPP Pratama Kepanjen
+220;655;KPP Pratama Pare
+220;656;KPP Pratama Situbondo
+220;657;KPP Pratama Singosari
+230;000;Kanwil DJP Kalimantan Barat
+230;701;KPP Pratama Pontianak Barat
+230;707;KPP Pratama Pontianak Timur
+230;702;KPP Pratama Singkawang
+230;703;KPP Pratama Ketapang
+230;704;KPP Pratama Kubu Raya
+230;705;KPP Pratama Sanggau
+230;706;KPP Pratama Sintang
+240;000;Kanwil DJP Kalimantan Selatan dan Tengah
+240;711;KPP Pratama Palangkaraya
+240;712;KPP Pratama Sampit
+240;713;KPP Pratama Pangkalanbun
+240;714;KPP Pratama Muara Teweh
+240;731;KPP Pratama Banjarmasin
+240;732;KPP Pratama Banjarbaru
+240;733;KPP Pratama Barabai
+240;734;KPP Pratama Batulicin
+240;735;KPP Pratama Tanjung
+240;737;KPP Madya Banjarmasin
+250;000;Kanwil DJP Kalimantan Timur dan Utara
+250;721;KPP Pratama Balikpapan Timur
+250;729;KPP Pratama Balikpapan Barat
+250;722;KPP Pratama Samarinda Ilir
+250;741;KPP Pratama Samarinda Ulu
+250;723;KPP Pratama Tarakan
+250;724;KPP Pratama Bontang
+250;725;KPP Madya Balikpapan
+250;726;KPP Pratama Penajam
+250;727;KPP Pratama Tanjung Redeb
+250;728;KPP Pratama Tenggarong
+260;000;"Kanwil DJP Sulawesi Selatan, Barat, dan Tenggara"
+260;801;KPP Pratama Makassar Utara
+260;802;KPP Pratama Parepare
+260;803;KPP Pratama Palopo
+260;804;KPP Pratama Makassar Barat
+260;805;KPP Pratama Makassar Selatan
+260;806;KPP Pratama Bulukumba
+260;807;KPP Pratama Bantaeng
+260;808;KPP Pratama Watampone
+260;809;KPP Pratama Maros
+260;811;KPP Pratama Kendari
+260;812;KPP Madya Makassar
+260;813;KPP Pratama Majene
+260;814;KPP Pratama Mamuju
+260;815;KPP Pratama Kolaka
+260;816;KPP Pratama Baubau
+270;000;"Kanwil DJP Sulawesi Utara, Tengah, Gorontalo, dan Maluku Utara"
+270;821;KPP Pratama Manado
+270;822;KPP Pratama Gorontalo
+270;823;KPP Pratama Bitung
+270;824;KPP Pratama Kotamobagu
+270;825;KPP Pratama Tahuna
+270;831;KPP Pratama Palu
+270;832;KPP Pratama Luwuk
+270;833;KPP Pratama Poso
+270;834;KPP Pratama Toli Toli
+270;942;KPP Pratama Ternate
+270;943;KPP Pratama Tobelo
+280;000;Kanwil DJP Bali
+280;901;KPP Pratama Denpasar Barat
+280;902;KPP Pratama Singaraja
+280;903;KPP Pratama Denpasar Timur
+280;904;KPP Madya Denpasar
+280;905;KPP Pratama Badung Selatan
+280;906;KPP Pratama Badung Utara
+280;907;KPP Pratama Gianyar
+280;908;KPP Pratama Tabanan
+290;000;Kanwil DJP Nusa Tenggara
+290;911;KPP Pratama Mataram Barat
+290;912;KPP Pratama Raba Bima
+290;913;KPP Pratama Sumbawa Besar
+290;914;KPP Pratama Mataram Timur
+290;915;KPP Pratama Praya
+290;921;KPP Pratama Maumere
+290;922;KPP Pratama Kupang
+290;923;KPP Pratama Ende
+290;924;KPP Pratama Ruteng
+290;925;KPP Pratama Atambua
+290;926;KPP Pratama Waingapu
+300;000;Kanwil DJP Papua, Papua Barat, dan Maluku
+300;941;KPP Pratama Ambon
+300;951;KPP Pratama Sorong
+300;952;KPP Pratama Jayapura
+300;953;KPP Pratama Timika
+300;954;KPP Pratama Biak
+300;955;KPP Pratama Manokwari
+300;956;KPP Pratama Merauke
+310;000;Kanwil DJP Wajib Pajak Besar
+310;051;KPP Wajib Pajak Besar Tiga
+310;091;KPP Wajib Pajak Besar Satu
+310;092;KPP Wajib Pajak Besar Dua
+310;093;KPP Wajib Pajak Besar Empat
+320;000;Kanwil DJP Jakarta Selatan II
+320;012;KPP Pratama Jakarta Kebayoran Baru Satu
+320;013;KPP Pratama Jakarta Kebayoran Lama
+320;016;KPP Pratama Jakarta Cilandak
+320;017;KPP Pratama Jakarta Pasar Minggu
+320;019;KPP Pratama Jakarta Kebayoran Baru Dua
+320;064;KPP Pratama Jakarta Kebayoran Baru Tiga
+320;065;KPP Pratama Jakarta Kebayoran Baru Empat
+320;066;KPP Pratama Jakarta Pesanggrahan
+320;068;KPP Pratama Jakarta Jagakarsa
+320;095;KPP Madya Jakarta Selatan II
+320;096;KPP Madya Dua Jakarta Selatan II
+330;000;Kanwil DJP Jawa Barat III
+330;403;KPP Pratama Cibinong
+330;404;KPP Pratama Bogor
+330;407;KPP Pratama Bekasi Utara
+330;412;KPP Pratama Depok Cimanggis
+330;427;KPP Pratama Bekasi Barat
+330;432;KPP Pratama Bekasi Selatan
+330;434;KPP Pratama Ciawi
+330;436;KPP Pratama Cileungsi
+330;447;KPP Pratama Pondok Gede
+330;448;KPP Pratama Depok Sawangan
+330;449;KPP Madya Bogor
+330;458;KPP Madya Kota Bekasi
+

@@ -1,0 +1,14 @@
+!1.5
+title;Updating Database;
+message;Update Data;
+sql;0;DROP TABLE `assign`;
+sql;0;CREATE TABLE `assignar` ( `npwp` varchar(9) NOT NULL, `cabang` varchar(9) NOT NULL, `nip` varchar(9) NOT NULL );
+sql;0;CREATE TABLE `assignklu` ( `npwp` varchar(9) NOT NULL, `cabang` varchar(9) NOT NULL, `klu` varchar(5) NOT NULL );
+
+message;Updating versi database;
+sql;0;UPDATE `info` SET `value`='1.6' WHERE `key`='db.version';
+
+updatekantor;
+updateklu;
+updatewp;
+ 
