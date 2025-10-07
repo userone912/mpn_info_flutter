@@ -375,7 +375,7 @@ class MenuConfigurations {
             id: 'settings',
             title: 'Settings',
             icon: 'settings',
-            action: 'office_config',
+            action: 'settings',
             enabled: true,
           ),
         ],

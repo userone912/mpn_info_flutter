@@ -129,7 +129,6 @@ extension MenuActionExtension on MenuAction {
         return MenuAction.manageUsers;
       case 'settings':
         return MenuAction.settings;
-      case 'coming_soon':
       default:
         return MenuAction.comingSoon;
     }

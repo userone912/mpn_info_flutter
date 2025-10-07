@@ -699,6 +699,8 @@ class CsvImportService {
         final src = row['SOURCE'].toString().toUpperCase();
         if (src.contains('LAINNYA')) {
           row['FLAG_BO'] = 'PENGAWASAN';
+        } else if (src.contains('PPM')) {
+          row['FLAG_BO'] = 'PENGAWASAN';
         } else if (src.contains('PEMERIKSAAN')) {
           row['FLAG_BO'] = 'PEMERIKSAAN';
         } else if (src.contains('PENAGIHAN')) {

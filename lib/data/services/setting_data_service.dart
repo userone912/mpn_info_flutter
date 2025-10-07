@@ -2,9 +2,71 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/seksi_model.dart';
 import '../models/pegawai_model.dart';
 import 'database_service.dart';
+import '../models/office_settings_model.dart';
+import '../../core/constants/app_constants.dart';
 
 /// Centralized settings data service that loads all management data at startup
 class SettingDataService {
+  /// Fetch office settings from database
+  Future<OfficeSettingsModel> fetchOfficeSettings() async {
+    final keys = [
+      AppConstants.kantorKodeKey,
+      AppConstants.kantorWpjKey,
+      AppConstants.kantorKpKey,
+      AppConstants.kantorAlamatKey,
+      AppConstants.kantorTeleponKey,
+      AppConstants.kantorKotaKey,
+    ];
+    final result = await DatabaseService.rawQuery(
+      'SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?, ?, ?, ?)',
+      keys,
+    );
+    final map = { for (var row in result) row['key']: row['value'] };
+    return OfficeSettingsModel(
+      kode: map[AppConstants.kantorKodeKey] ?? '',
+      wpj: map[AppConstants.kantorWpjKey] ?? '',
+      kp: map[AppConstants.kantorKpKey] ?? '',
+      alamat: map[AppConstants.kantorAlamatKey] ?? '',
+      telepon: map[AppConstants.kantorTeleponKey] ?? '',
+      kota: map[AppConstants.kantorKotaKey] ?? '',
+    );
+  }
+
+  /// Update office settings in database
+  Future<void> updateOfficeSettings(OfficeSettingsModel settings) async {
+    final updates = [
+      {
+        'key': AppConstants.kantorKodeKey,
+        'value': settings.kode,
+      },
+      {
+        'key': AppConstants.kantorWpjKey,
+        'value': settings.wpj,
+      },
+      {
+        'key': AppConstants.kantorKpKey,
+        'value': settings.kp,
+      },
+      {
+        'key': AppConstants.kantorAlamatKey,
+        'value': settings.alamat,
+      },
+      {
+        'key': AppConstants.kantorTeleponKey,
+        'value': settings.telepon,
+      },
+      {
+        'key': AppConstants.kantorKotaKey,
+        'value': settings.kota,
+      },
+    ];
+    for (final item in updates) {
+      await DatabaseService.rawQuery(
+        'UPDATE settings SET value = ? WHERE `key` = ?',
+        [item['value'], item['key']],
+      );
+    }
+  }
   /// Get office code from database settings table
   static Future<String> getOfficeCodeFromDatabase() async {
     try {
@@ -134,13 +196,14 @@ class SettingDataService {
     if (_isLoading) return;
     _isLoading = true;
     try {
-      await Future.wait([
-        loadSeksiData(),
-        loadPegawaiData(),
-        // loadUsers(),
-        // loadSettings(),
-      ]);
-      print('Settings data loaded: Seksi=${_seksiData.length}, Pegawai=${_pegawaiData.length}');
+      print('Loading all settings data...');
+      await loadSeksiData();
+      await loadPegawaiData();
+      // await loadUsers();
+      // await loadSettings();
+  print('Settings data loaded successfully:');
+  print('- Seksi records: ${_seksiData.length}');
+  print('- Pegawai records: ${_pegawaiData.length}');
     } catch (e) {
       print('Error loading settings data: $e');
       rethrow;

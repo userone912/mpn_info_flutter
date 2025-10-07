@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/klu_model.dart';
 import '../models/map_model.dart';
@@ -7,6 +8,84 @@ import 'database_migration_service.dart';
 /// Centralized reference data service that loads all data once at startup
 /// This mimics the Qt legacy approach where all data is loaded in memory
 class ReferenceDataService {
+  // Cached Kanwil and KPP data for office config dropdowns
+  List<Map<String, String>> _kanwilList = [];
+  List<Map<String, String>> get kanwilList => List.unmodifiable(_kanwilList);
+
+
+  /// Load Kanwil data for office config dropdowns
+  Future<void> loadKantorDropdownData() async {
+    print('Loading Kanwil data for office config...');
+    final kanwilResult = await DatabaseService.rawQuery(
+      "SELECT kanwil, CONCAT(kanwil, ' - ', nama) AS label FROM kantor WHERE kpp='000' ORDER BY kanwil"
+    );
+    _kanwilList = kanwilResult.map((row) => {
+      'value': row['kanwil']?.toString() ?? '',
+      'label': row['label']?.toString() ?? '',
+    }).toList();
+    print('- Kanwil records: ${_kanwilList.length}');
+    print('Kanwil data loaded successfully.');
+  }
+
+  /// Load KPP list for a selected Kanwil (no cache)
+  Future<List<Map<String, String>>> loadKppListForKanwil(String kanwil) async {
+    print('Loading KPP list for Kanwil: $kanwil');
+    final kppResult = await DatabaseService.rawQuery(
+      "SELECT kpp, nama FROM kantor WHERE kanwil = ? ORDER BY kpp",
+      [kanwil]
+    );
+    final kppList = kppResult.map((row) {
+      final kpp = row['kpp']?.toString() ?? '';
+      final nama = row['nama']?.toString() ?? '';
+      final label = nama.isNotEmpty ? '$kpp - $nama' : kpp;
+      return {
+        'value': kpp,
+        'label': label,
+      };
+    }).toList();
+    print('KPP for Kanwil $kanwil: ${kppList.length}');
+    return kppList;
+  }
+  /// Utility: Normalize CSV by removing all commas (for kantor.csv import)
+  Future<void> _normalizeCsvRemoveCommas(String srcPath, String destPath) async {
+    final srcFile = File(srcPath);
+    String actualDestPath = destPath;
+    bool isDebug = false;
+    assert(() {
+      isDebug = true;
+      return true;
+    }());
+    if (isDebug) {
+      // Write to debug build directory
+      actualDestPath = 'build/windows/x64/runner/Debug/data/kantor.csv';
+      print('[normalizeCsv] DEBUG mode detected, writing to: ' + actualDestPath);
+    }
+    final destFile = File(actualDestPath);
+    print('[normalizeCsv] Source (relative): $srcPath');
+    print('[normalizeCsv] Dest   (relative): $actualDestPath');
+    if (!await srcFile.exists()) {
+      print('[normalizeCsv] ERROR: Source CSV file not found: $srcPath');
+      throw Exception('Source CSV file not found: $srcPath');
+    }
+    final lines = await srcFile.readAsLines();
+    print('[normalizeCsv] Read ${lines.length} lines from source.');
+    // Remove commas and double quotes from each line
+    final normalizedLines = lines.map((line) => line.replaceAll(',', '').replaceAll('"', '')).toList();
+    print('[normalizeCsv] Normalized ${normalizedLines.length} lines.');
+    try {
+      await destFile.writeAsString(normalizedLines.join('\n'));
+      final exists = await destFile.exists();
+      if (exists) {
+        print('[normalizeCsv] Successfully wrote to dest: $destPath');
+      } else {
+        print('[normalizeCsv] ERROR: Dest file does NOT exist after write: $destPath');
+      }
+    } catch (e) {
+      print('[normalizeCsv] ERROR writing to dest: $e');
+      rethrow;
+    }
+    print('CSV normalization complete: commas and double quotes removed from $srcPath');
+  }
   // In-memory storage for all reference data
   List<KluModel> _kluData = [];
   List<MapModel> _mapData = [];
@@ -32,15 +111,14 @@ class ReferenceDataService {
     print('Loading all reference data...');
     
     try {
-      // Load all data in parallel for better performance
-      await Future.wait([
-        _loadKluData(),
-        _loadMapData(),
-      ]);
-      
+      // Load all data sequentially for correct Kanwil/KPP cache
+      await _loadKluData();
+      await _loadMapData();
+      await loadKantorDropdownData();
       print('Reference data loaded successfully:');
       print('- KLU records: ${_kluData.length}');
       print('- MAP records: ${_mapData.length}');
+      print('- Kanwil records: ${_kanwilList.length}');
     } catch (e) {
       print('Error loading reference data: $e');
       rethrow;
@@ -203,14 +281,15 @@ class ReferenceDataService {
   Future<SyncResult> syncKantorFromCsv() async {
     try {
       print('Starting manual sync: Kantor from kantor.csv');
-      
-      // Execute SQL script to import kantor.csv to database
-      // This mimics Qt legacy: KantorImportController with "./data/kantor.csv"
+      // Normalize kantor.csv: remove all commas before import
+      final importPath = 'data/kantor.csv';
+      final normalizedPath = 'data/kantor.csv';
+      await _normalizeCsvRemoveCommas(importPath, normalizedPath);
+      // Execute SQL script to import normalized kantor.csv to database
       final result = await DatabaseService.executeCsvImport(
         tableName: 'kantor',
-        csvAssetPath: 'assets/data/kantor.csv',
+        csvAssetPath: normalizedPath,
       );
-      
       print('Kantor sync completed: ${result.successCount} records');
       return SyncResult(
         success: true,
@@ -234,7 +313,7 @@ class ReferenceDataService {
       
       final result = await DatabaseService.executeCsvImport(
         tableName: 'klu',
-        csvAssetPath: 'assets/data/klu.csv',
+        csvAssetPath: 'data/klu.csv',
       );
       
       // Reload KLU data in memory after sync
@@ -263,7 +342,7 @@ class ReferenceDataService {
       
       final result = await DatabaseService.executeCsvImport(
         tableName: 'map',
-        csvAssetPath: 'assets/data/map.csv',
+        csvAssetPath: 'data/map.csv',
       );
       
       // Reload MAP data in memory after sync
@@ -292,7 +371,7 @@ class ReferenceDataService {
       
       final result = await DatabaseService.executeCsvImport(
         tableName: 'jatuhtempo',
-        csvAssetPath: 'assets/data/jatuhtempo.csv',
+        csvAssetPath: 'data/jatuhtempo.csv',
       );
       
       print('Jatuh Tempo sync completed: ${result.successCount} records');
@@ -318,7 +397,7 @@ class ReferenceDataService {
       
       final result = await DatabaseService.executeCsvImport(
         tableName: 'maxlapor',
-        csvAssetPath: 'assets/data/maxlapor.csv',
+        csvAssetPath: 'data/maxlapor.csv',
       );
       
       print('Max Lapor sync completed: ${result.successCount} records');
@@ -371,14 +450,27 @@ class ReferenceDataService {
       print('Starting comprehensive reference data update...');
       print('Loading data from external data directory');
       
-      // Reuse the existing CSV loading mechanism from DatabaseMigrationService
-      // This is the same process that runs during database connection setup
-      final csvTypes = ['updatekantor', 'updateklu', 'updatemap', 'updatejatuhtempo', 'updatemaxlapor'];
+      // Always normalize kantor.csv before importing
+      try {
+        final importPath = 'data/kantor.csv';
+        final normalizedPath = 'data/kantor.csv';
+        final refService = ReferenceDataService();
+        await refService._normalizeCsvRemoveCommas(importPath, normalizedPath);
+        final recordCount = await DatabaseService.executeCsvImport(
+          tableName: 'kantor',
+          csvAssetPath: normalizedPath,
+        );
+        print('Successfully updated: kantor ($recordCount records)');
+      } catch (e) {
+        final error = 'Failed to update kantor: $e';
+        print(error);
+      }
+      // Continue with other reference types
+      final otherCsvTypes = ['updateklu', 'updatemap', 'updatejatuhtempo', 'updatemaxlapor'];
       int totalRecords = 0;
       final errors = <String>[];
       final successDetails = <String>[];
-      
-      for (final csvType in csvTypes) {
+      for (final csvType in otherCsvTypes) {
         try {
           final recordCount = await DatabaseMigrationService.loadSpecificCsvData(csvType);
           final tableName = csvType.replaceFirst('update', '');

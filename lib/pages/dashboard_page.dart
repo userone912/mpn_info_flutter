@@ -13,10 +13,12 @@ import '../shared/dialogs/about_dialog.dart' as app_about;
 import '../shared/utils/menu_icon_helper.dart';
 import 'settings/seksi_page.dart';
 import 'settings/pegawai_page.dart';
+import 'settings/officeconfig_page.dart';
 import 'login_page.dart';
 import 'reference/klu_page.dart';
 import 'reference/map_page.dart';
 import '../data/services/reference_data_service.dart';
+import '../data/services/setting_data_service.dart';
 
 /// Main dashboard page after login
 class DashboardPage extends ConsumerStatefulWidget {
@@ -673,6 +675,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ),
     );
   }
+
+  void _navigateToOfficeConfig(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(
+            minWidth: 500,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const OfficeConfigDialog(),
+        ),
+      ),
+    );
+  }
   /// Generic import handler with progress dialog
   Future<void> _performImport(
     BuildContext context,
@@ -1097,6 +1131,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       case MenuAction.managePegawai:
         _navigateToPegawai(context);
         break;
+      case MenuAction.settings:
+        _navigateToOfficeConfig(context);
+        break;
 
       case MenuAction.manageUsers:
         showDialog(
@@ -1104,21 +1141,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           builder: (context) => AlertDialog(
             title: const Text('Kelola User'),
             content: const Text('Fitur kelola user akan segera hadir.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Tutup'),
-              ),
-            ],
-          ),
-        );
-        break;
-      case MenuAction.settings:
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Pengaturan Database'),
-            content: const Text('Fitur pengaturan database akan segera hadir.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
