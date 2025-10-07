@@ -14,14 +14,23 @@ if ($LASTEXITCODE -ne 0) {
 # Define paths
 $BuildDir = "build\windows\x64\runner\Release"
 $DataDir = "$BuildDir\data"
+$UpdateDir = "$BuildDir\update"  
 
 # Create data directory in build output
 Write-Host "Setting up data directory..." -ForegroundColor Yellow
 New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 
+# Create update directory in build output
+Write-Host "Setting up update directory..." -ForegroundColor Yellow
+New-Item -ItemType Directory -Force -Path $UpdateDir | Out-Null
+
 # Copy data files from project root data folder
 Write-Host "Copying data files..." -ForegroundColor Yellow
 Copy-Item -Path "data\*" -Destination $DataDir -Recurse -Force
+
+# Copy update files from project root update folder
+Write-Host "Copying update files..." -ForegroundColor Yellow
+Copy-Item -Path "update\*" -Destination $UpdateDir -Recurse -Force
 
 Write-Host ""
 Write-Host "Build completed successfully!" -ForegroundColor Green

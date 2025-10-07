@@ -1,5 +1,5 @@
 @echo off
-echo Building MPN-Info Flutter Application...
+echo Building MPN-Info Application...
 
 REM Get the directory where this script is located
 set SCRIPT_DIR=%~dp0
@@ -20,6 +20,10 @@ mkdir "%BUILD_DIR%\data"
 REM Copy data files from project root data folder
 echo Copying data files...
 xcopy /Y /E "data\*" "%BUILD_DIR%\data\"
+
+REM Copy update files from project root update folder
+echo Copying update files...
+xcopy /Y /E "update\*" "%BUILD_DIR%\update\"
 
 REM Verify copy was successful
 if %ERRORLEVEL% neq 0 (

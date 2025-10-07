@@ -1,9 +1,0 @@
-ID;USERNAME;PASSWORD;FULLNAME;GROUP
-1;admin;password123;Administrator;0
-2;user1;userpass1;John Doe;1
-3;user2;userpass2;Jane Smith;1
-4;guest1;guestpass;Guest User;2
-5;supervisor;superpass;Supervisor Manager;1
-6;operator1;oppass1;System Operator;1
-7;analyst1;anapass1;Data Analyst;1
-8;viewer1;viewpass;Report Viewer;2

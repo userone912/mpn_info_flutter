@@ -38,6 +38,8 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+# Ignore all files in update folder
+update/
 
 # Android Studio will place build artifacts here
 /android/app/debug
