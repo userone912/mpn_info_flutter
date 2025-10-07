@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:crypto/crypto.dart';
 import '../models/import_result.dart';
 import '../../core/constants/app_constants.dart';
 import 'database_service.dart';
@@ -259,7 +260,7 @@ class CsvImportService {
       final kodeKantor = fileName.split('-')[1].split('.')[0];
 
       // Validate against current office settings (database-based)
-      final kantorKode = await _getOfficeCodeFromDatabase();
+    final kantorKode = await getOfficeCodeFromDatabase();
       if (kantorKode.isEmpty || kantorKode.length != 3) {
         return ImportResult.error(
           AppConstants.importErrorOfficeCode,
@@ -506,7 +507,7 @@ class CsvImportService {
       final tahun = int.tryParse(parts[2].split('.')[0]) ?? DateTime.now().year;
 
       // Validate office code against current office settings (database-based)
-      final kantorKode = await _getOfficeCodeFromDatabase();
+  final kantorKode = await getOfficeCodeFromDatabase();
       if (kantorKode.isEmpty || kantorKode.length != 3) {
         return ImportResult.error(
           AppConstants.importErrorOfficeCode,
@@ -586,6 +587,178 @@ class CsvImportService {
     }
   }
 
+  /// Import PKPM/PPM CSV files to DRM_PPMPKM table
+  /// Supports multiple header patterns and filename patterns
+  static Future<ImportResult> importPkpmboCsvFiles(File file, String sourceContext, {void Function(double progress, int currentRow, int totalRows)? onProgress}) async {
+
+    print('[DEBUG] importPkpmboCsvFiles called for file: ${file.path}, sourceContext: $sourceContext');
+    final content = await file.readAsString();
+    final lines = content.split('\n');
+    if (lines.isEmpty) {
+      print('[DEBUG] File is empty');
+      return ImportResult.error('IMPORT_ERROR_CONTENT', 'File kosong');
+    }
+
+    // For progress callback
+    final totalRows = lines.length - 1;
+
+    // Calculate SHA-1 hash of the file
+    final fileBytes = await file.readAsBytes();
+    final fileHash = _sha1Hex(fileBytes);
+    print('[DEBUG] Calculated file hash: $fileHash');
+
+    // Detect header pattern
+    final header = lines[0].replaceAll('"', '').replaceAll("'", '').trim();
+    final validHeaders = [
+      'KD_KANWIL,KPPADM,NPWP,NO PRODUK HUKUM,NO PBK,NTPN,TGL SETOR,THN SETOR,BLN SETOR,THN PAJAK,MASA PAJAK,JML SETOR,KODE MAP,KODE SETOR,ID SBR DATA',
+      'KD_KANWIL,KPPADM,NPWP,NO PBK,NTPN,TGL SETOR,THN SETOR,BLN SETOR,THN PAJAK,MASA PAJAK,JML SETOR,KODE MAP,KODE SETOR,ID SBR DATA',
+      'KD_KANWIL,KPPADM,NPWP,NO PBK,NTPN,TGL SETOR,THN SETOR,BLN SETOR,THN PAJAK,MASA PAJAK,JML SETOR,KODE MAP,KODE SETOR,ID_SBR_DATA',
+      'KD_KANWIL,KPPADM,NPWP,NO PBK,NTPN,TGL SETOR,THN SETOR,BLN SETOR,THN PAJAK,MASA PAJAK,JML SETOR,KODE MAP,KODE SETOR,FLAG SKP,ID SBR DATA',
+    ];
+    print('[DEBUG] Header detected: $header');
+    if (!validHeaders.contains(header)) {
+      print('[DEBUG] Header not recognized, aborting import');
+      return ImportResult.error('IMPORT_ERROR_HEADER', 'Header tidak dikenali: $header');
+    }
+
+    // Check if this file hash already exists in ppmpkmbo table
+    final existing = await DatabaseService.query(
+      'ppmpkmbo',
+      where: 'FILE_HASH = ?',
+      whereArgs: [fileHash],
+      limit: 1,
+    );
+    print('[DEBUG] Existing file hash found: ${existing.isNotEmpty}');
+    if (existing.isNotEmpty) {
+      // Show confirmation dialog to user
+      final shouldReimport = await _showReimportConfirmationDialog(fileHash, existing.first['SOURCE'], existing.first['created_at']);
+      print('[DEBUG] Reimport confirmation: $shouldReimport');
+      if (!shouldReimport) {
+        return ImportResult.error('IMPORT_SKIPPED', 'File sudah pernah diimport (hash: $fileHash)');
+      }
+    }
+
+    // Map columns based on header
+    final isProdukHukum = header.contains('NO PRODUK HUKUM');
+    final hasFlagSkp = header.contains('FLAG SKP');
+
+    int successCount = 0;
+    int errorCount = 0;
+    final errors = <String>[];
+
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      // Progress callback
+      if (onProgress != null) {
+        onProgress(i / totalRows, i, totalRows);
+      }
+      print('[DEBUG] Importing row $i/$totalRows: $line');
+      try {
+        final data = line.split(',');
+        int idx = 0;
+        final row = <String, dynamic>{};
+        row['KD_KANWIL'] = data[idx++];
+        row['KPPADM'] = data[idx++];
+        row['NPWP'] = data[idx++];
+        if (isProdukHukum) idx++; // skip NO PRODUK HUKUM
+        row['NO_PBK'] = data[idx++];
+        row['NTPN'] = data[idx++];
+        row['TGL_SETOR'] = data[idx++];
+        row['THN_SETOR'] = int.tryParse(data[idx++]) ?? 0;
+        row['BLN_SETOR'] = int.tryParse(data[idx++]) ?? 0;
+        row['THN_PAJAK'] = int.tryParse(data[idx++]) ?? 0;
+        row['MASA_PAJAK'] = data[idx++];
+        row['JML_SETOR'] = double.tryParse(data[idx++].replaceAll('"', '')) ?? 0.0;
+        row['KD_MAP'] = data[idx++];
+        row['KD_SETOR'] = data[idx++];
+        if (hasFlagSkp) idx++; // skip FLAG SKP
+        row['ID_SBR_DATA'] = data[idx++];
+
+        // Add SOURCE from context (filename or folder)
+        row['SOURCE'] = sourceContext;
+        row['FILE_HASH'] = fileHash;
+
+        // Apply rules for VOLUNTARY
+        if (row['SOURCE'].toString().toUpperCase().contains('WRA')) {
+          row['VOLUNTARY'] = 'W';
+        } else if (row['SOURCE'].toString().toUpperCase().contains('AKTIVITAS')) {
+          row['VOLUNTARY'] = 'N';
+        } else {
+          row['VOLUNTARY'] = 'Y';
+        }
+
+        // Apply rules for FLAG_PKPM
+        if (row['SOURCE'].toString().toUpperCase().contains('PKM')) {
+          row['FLAG_PKPM'] = 'PKM';
+        } else {
+          row['FLAG_PKPM'] = 'PPM';
+        }
+
+        // Apply rules for FLAG_BO
+        final src = row['SOURCE'].toString().toUpperCase();
+        if (src.contains('LAINNYA')) {
+          row['FLAG_BO'] = 'PENGAWASAN';
+        } else if (src.contains('PEMERIKSAAN')) {
+          row['FLAG_BO'] = 'PEMERIKSAAN';
+        } else if (src.contains('PENAGIHAN')) {
+          row['FLAG_BO'] = 'PENAGIHAN';
+        } else if (src.contains('PENGAWASAN')) {
+          row['FLAG_BO'] = 'PENGAWASAN';
+        } else if (src.contains('PENEGAKAN')) {
+          row['FLAG_BO'] = 'GAKKUM';
+        } else if (src.contains('EDUKASI')) {
+          row['FLAG_BO'] = 'EDUKASI';
+        }
+
+        // Insert into ppmpkmbo table
+        print('[DEBUG] Inserting row into ppmpkmbo: $row');
+        await DatabaseService.insert('ppmpkmbo', row);
+        successCount++;
+      } catch (e) {
+        print('[DEBUG] Error importing row $i: $e');
+        errors.add('Baris ${i + 1}: ${e.toString()}');
+        errorCount++;
+      }
+    }
+
+    print('[DEBUG] PKPM/PPM import finished: success=$successCount, error=$errorCount');
+    return ImportResult.success(
+      message: '$successCount data berhasil diimport, $errorCount error',
+      successCount: successCount,
+      errorCount: errorCount,
+      errors: errors,
+    );
+  }
+
+  /// Show confirmation dialog for re-import if file hash already exists
+  static Future<bool> _showReimportConfirmationDialog(String fileHash, dynamic source, dynamic createdAt) async {
+    // This function should be called from a context where BuildContext is available
+    // For now, use a placeholder implementation. Integrate with UI as needed.
+    // You can use showDialog in Flutter to show a confirmation dialog.
+    // Example:
+    // return await showDialog<bool>(
+    //   context: context,
+    //   builder: (context) => AlertDialog(
+    //     title: Text('File sudah diimport'),
+    //     content: Text('File dengan hash $fileHash sudah diimport pada $createdAt dari $source.\nIngin re-import?'),
+    //     actions: [
+    //       TextButton(child: Text('Tidak'), onPressed: () => Navigator.of(context).pop(false)),
+    //       TextButton(child: Text('Ya'), onPressed: () => Navigator.of(context).pop(true)),
+    //     ],
+    //   ),
+    // ) ?? false;
+    // For non-UI context, always return false (skip re-import)
+    return false;
+  }
+
+  /// Calculate SHA-1 hash and return as hex string
+  static String _sha1Hex(List<int> bytes) {
+  // Use Dart's crypto library
+  // If not available, you need to add `crypto: ^3.0.0` to pubspec.yaml
+  return sha1.convert(bytes).toString();
+  }
+
   /// Pick a CSV file using file picker
   static Future<FilePickerResult?> _pickFile(String title) async {
     return await FilePicker.platform.pickFiles(
@@ -621,7 +794,7 @@ class CsvImportService {
   }
 
   /// Get office code from database settings table
-  static Future<String> _getOfficeCodeFromDatabase() async {
+  static Future<String> getOfficeCodeFromDatabase() async {
     try {
       final result = await DatabaseService.query(
         AppConstants.tableSettings,

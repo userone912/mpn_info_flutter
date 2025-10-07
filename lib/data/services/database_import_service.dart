@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import '../models/import_result.dart';
 import '../../core/constants/app_constants.dart';
 import 'database_service.dart';
+import 'csv_import_service.dart';
 
 /// Database Import Service
 /// Consolidated import service that scans for CSV files and imports them automatically
@@ -12,7 +13,9 @@ class DatabaseImportService {
   /// Import all database CSV files from selected directory
   /// Scans for SEKSI-{KODE}.csv, PEGAWAI-{KODE}.csv, USER.csv, SPMKP-{KODE}-{YEAR}.csv
   /// Validates KODE_KANTOR against settings.kantor.kode (Qt legacy behavior)
-  static Future<ImportResult> importAllDatabaseFiles() async {
+  static Future<ImportResult> importAllDatabaseFiles({void Function(double progress)? onProgress}) async {
+  print('[DEBUG] Scanning for PKPM/PPM files...');
+    // Scan for CSV files
     try {
       // Let user select directory containing CSV files
       final selectedDirectory = await FilePicker.platform.getDirectoryPath(
@@ -27,16 +30,6 @@ class DatabaseImportService {
       if (!directory.existsSync()) {
         return ImportResult.error('DIRECTORY_NOT_FOUND', 'Direktori tidak ditemukan');
       }
-
-      // Get office code from database settings (not file-based settings)
-      final kantorKode = await _getOfficeCodeFromDatabase();
-      if (kantorKode.isEmpty || kantorKode.length != 3) {
-        return ImportResult.error(
-          'INVALID_KANTOR_KODE', 
-          'Kode kantor tidak valid di settings. Silakan atur kode kantor 3 digit di menu Konfigurasi.'
-        );
-      }
-
       // Scan for CSV files
       final csvFiles = directory
           .listSync()
@@ -46,6 +39,34 @@ class DatabaseImportService {
 
       if (csvFiles.isEmpty) {
         return ImportResult.error('NO_CSV_FILES', 'Tidak ada file CSV ditemukan di direktori');
+      }
+
+      // Get office code from database settings (not file-based settings) ONLY if SEKSI, PEGAWAI, or USER files are present
+      final hasSeksi = csvFiles.any((f) => _isSeksiFile(f.path));
+      final hasPegawai = csvFiles.any((f) => _isPegawaiFile(f.path));
+      final hasUser = csvFiles.any((f) => _isUserFile(f.path));
+      String kantorKode = '';
+      if (hasSeksi || hasPegawai || hasUser) {
+        kantorKode = await _getOfficeCodeFromDatabase();
+        if (kantorKode.isEmpty || kantorKode.length != 3) {
+          return ImportResult.error(
+            'INVALID_KANTOR_KODE', 
+            'Kode kantor tidak valid di settings. Silakan atur kode kantor 3 digit di menu Konfigurasi.'
+          );
+        }
+      }
+
+      if (csvFiles.isEmpty) {
+        return ImportResult.error('NO_CSV_FILES', 'Tidak ada file CSV ditemukan di direktori');
+      }
+
+      // PKPM/PPM file detection (NEW)
+      bool _isPkpmboFile(String path) {
+        final fileName = path.split(Platform.pathSeparator).last;
+        // Match PKPMBO-*.csv, PPMBO-*.csv, or filename containing PKPM/PPM
+        return RegExp(r'^(PKPMBO|PPMBO)-.*\.csv$', caseSensitive: false).hasMatch(fileName)
+          || fileName.toUpperCase().contains('PKPM')
+          || fileName.toUpperCase().contains('PPM');
       }
 
       // Categorize and validate files
@@ -58,7 +79,7 @@ class DatabaseImportService {
       final seksiFiles = csvFiles.where((f) => _isSeksiFile(f.path)).toList();
       for (final file in seksiFiles) {
         final kodeFromFile = _extractKodeFromSeksiFile(file.path);
-        if (kodeFromFile != kantorKode) {
+        if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['SEKSI-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
             'Kode kantor $kodeFromFile tidak sesuai dengan settings ($kantorKode)'
@@ -67,8 +88,7 @@ class DatabaseImportService {
           allErrors.add('SEKSI-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
-
-        final result = await _importSeksiFile(file);
+  final result = await _importSeksiFile(file);
         results['SEKSI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -79,7 +99,7 @@ class DatabaseImportService {
       final pegawaiFiles = csvFiles.where((f) => _isPegawaiFile(f.path)).toList();
       for (final file in pegawaiFiles) {
         final kodeFromFile = _extractKodeFromPegawaiFile(file.path);
-        if (kodeFromFile != kantorKode) {
+        if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['PEGAWAI-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
             'Kode kantor $kodeFromFile tidak sesuai dengan settings ($kantorKode)'
@@ -88,8 +108,7 @@ class DatabaseImportService {
           allErrors.add('PEGAWAI-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
-
-        final result = await _importPegawaiFile(file);
+  final result = await _importPegawaiFile(file);
         results['PEGAWAI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -100,7 +119,7 @@ class DatabaseImportService {
       final userFiles = csvFiles.where((f) => _isUserFile(f.path)).toList();
       for (final file in userFiles) {
         final kodeFromFile = _extractKodeFromUserFile(file.path);
-        if (kodeFromFile != kantorKode) {
+        if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['USER-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
             'Kode kantor $kodeFromFile tidak sesuai dengan settings ($kantorKode)'
@@ -109,7 +128,6 @@ class DatabaseImportService {
           allErrors.add('USER-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
-
         final result = await _importUserFile(file);
         results['USER-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
@@ -140,10 +158,32 @@ class DatabaseImportService {
         allErrors.addAll(result.errors);
       }
 
+      // 5. Import PKPM/PPM files (NEW)
+      final pkpmboFiles = csvFiles.where((f) => _isPkpmboFile(f.path)).toList();
+      print('[DEBUG] Found PKPM/PPM files: ${pkpmboFiles.map((f) => f.path).toList()}');
+      for (final file in pkpmboFiles) {
+        print('[DEBUG] Importing PKPM/PPM file: ${file.path}');
+        final fileName = file.path.split(Platform.pathSeparator).last;
+        final fileNameOnly = file.path.split(Platform.pathSeparator).last;
+        // PKPM/PPM files do NOT use kantor.kode validation, use their own validation system
+        final result = await CsvImportService.importPkpmboCsvFiles(
+          file,
+          fileNameOnly,
+          onProgress: onProgress != null
+            ? (double p, int row, int total) => onProgress(p)
+            : null,
+        );
+        print('[DEBUG] Import result for $fileName: success=${result.successCount}, error=${result.errorCount}');
+        results[fileName] = result;
+        totalSuccess += result.successCount;
+        totalErrors += result.errorCount;
+        allErrors.addAll(result.errors);
+      }
+
       // Generate summary
       final processedFiles = results.length;
       final successfulFiles = results.values.where((r) => r.isSuccess).length;
-      
+
       return ImportResult.success(
         message: 'Database import selesai: $successfulFiles/$processedFiles file berhasil, $totalSuccess records imported, $totalErrors errors',
         successCount: totalSuccess,
@@ -240,6 +280,7 @@ class DatabaseImportService {
       final fileName = file.path.split(Platform.pathSeparator).last;
       final kodeKantor = _extractKodeFromSeksiFile(file.path);
 
+    final kantorKodeSettings = await _getOfficeCodeFromDatabase();
       // Process using existing logic
       int successCount = 0;
       int errorCount = 0;
@@ -264,9 +305,9 @@ class DatabaseImportService {
             continue;
           }
 
-          // Qt legacy validation: KANTOR field must match filename KODE_KANTOR
-          if (data[1] != kodeKantor) {
-            errors.add('$fileName baris ${i + 1}: KANTOR ${data[1]} tidak sesuai dengan file $kodeKantor');
+          // Strict validation: KANTOR field must match both filename KODE_KANTOR and settings value
+          if (data[1] != kodeKantor || data[1] != kantorKodeSettings) {
+            errors.add('$fileName baris ${i + 1}: KANTOR ${data[1]} tidak sesuai dengan file $kodeKantor dan settings $kantorKodeSettings');
             errorCount++;
             continue;
           }
@@ -319,8 +360,9 @@ class DatabaseImportService {
         );
       }
 
-      final fileName = file.path.split(Platform.pathSeparator).last;
-      final kodeKantor = _extractKodeFromPegawaiFile(file.path);
+  final fileName = file.path.split(Platform.pathSeparator).last;
+  final kodeKantor = _extractKodeFromPegawaiFile(file.path);
+  final kantorKodeSettings = await _getOfficeCodeFromDatabase();
 
       // Process using existing logic
       int successCount = 0;
@@ -346,9 +388,9 @@ class DatabaseImportService {
             continue;
           }
 
-          // Qt legacy validation: KANTOR field must match filename KODE_KANTOR
-          if (data[0] != kodeKantor) {
-            errors.add('$fileName baris ${i + 1}: KANTOR ${data[0]} tidak sesuai dengan file $kodeKantor');
+          // Strict validation: KANTOR field must match both filename KODE_KANTOR and settings value
+          if (data[0] != kodeKantor || data[0] != kantorKodeSettings) {
+            errors.add('$fileName baris ${i + 1}: KANTOR ${data[0]} tidak sesuai dengan file $kodeKantor dan settings $kantorKodeSettings');
             errorCount++;
             continue;
           }

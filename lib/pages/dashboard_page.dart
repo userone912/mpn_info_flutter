@@ -11,6 +11,8 @@ import '../core/constants/app_constants.dart';
 import '../shared/widgets/app_logo.dart';
 import '../shared/dialogs/about_dialog.dart' as app_about;
 import '../shared/utils/menu_icon_helper.dart';
+import 'settings/seksi_page.dart';
+import 'settings/pegawai_page.dart';
 import 'login_page.dart';
 import 'reference/klu_page.dart';
 import 'reference/map_page.dart';
@@ -25,6 +27,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
+  // Scaffolded management dialogs/pages
   @override
   void initState() {
     super.initState();
@@ -499,29 +502,47 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   // CSV Import Methods
   Future<void> _importSeksi(BuildContext context) async {
-    await _performImport(context, 'Import Seksi', CsvImportService.importSeksi);
+    await _performImport(
+      context,
+      'Import Seksi',
+      ({onProgress}) => CsvImportService.importSeksi(),
+    );
   }
 
   Future<void> _importPegawai(BuildContext context) async {
-    await _performImport(context, 'Import Pegawai', CsvImportService.importPegawai);
+    await _performImport(
+      context,
+      'Import Pegawai',
+      ({onProgress}) => CsvImportService.importPegawai(),
+    );
   }
 
   Future<void> _importUser(BuildContext context) async {
-    await _performImport(context, 'Import User', CsvImportService.importUser);
-  }
-
-  Future<void> _importSpmkp(BuildContext context) async {
-    await _performImport(context, 'Import SPMKP', CsvImportService.importSpmkp);
+    await _performImport(
+      context,
+      'Import User',
+      ({onProgress}) => CsvImportService.importUser(),
+    );
   }
 
   Future<void> _importRencanaPenerimaan(BuildContext context) async {
-    await _performImport(context, 'Import Rencana Penerimaan', CsvImportService.importRencanaPenerimaan);
+    await _performImport(
+      context,
+      'Import Rencana Penerimaan',
+      ({onProgress}) => CsvImportService.importRencanaPenerimaan(),
+    );
   }
 
   /// Update all database files from selected directory
   /// Scans for CSV files and imports them automatically with office validation
   Future<void> _updateAllDatabaseFiles(BuildContext context) async {
-    await _performImport(context, 'Update Database', DatabaseImportService.importAllDatabaseFiles);
+    await _performImport(
+      context,
+      'Update Database',
+      ({onProgress}) => DatabaseImportService.importAllDatabaseFiles(
+        onProgress: onProgress != null ? (progress) => onProgress(progress, 0, 0) : null,
+      ),
+    );
   }
 
   // Reference data navigation methods
@@ -589,44 +610,116 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
+  void _navigateToPegawai(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(
+            minWidth: 500,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const PegawaiManageDialog(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToSeksi(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(
+            minWidth: 500,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const SeksiManageDialog(),
+        ),
+      ),
+    );
+  }
   /// Generic import handler with progress dialog
   Future<void> _performImport(
     BuildContext context,
     String title,
-    Future<ImportResult> Function() importFunction,
+  Future<ImportResult> Function({void Function(double progress, int currentRow, int totalRows)? onProgress}) importFunction,
   ) async {
-    // Show loading dialog
+    double progress = 0.0;
+    int currentRow = 0;
+    int totalRows = 0;
+    late StateSetter setDialogState;
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        contentPadding: const EdgeInsets.all(24),
-        content: SizedBox(
-          width: 240, // Compact width
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  '$title...',
-                  style: const TextStyle(fontSize: 14),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            setDialogState = setState;
+            return AlertDialog(
+              contentPadding: const EdgeInsets.all(24),
+              content: SizedBox(
+                width: 260,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$title...', style: const TextStyle(fontSize: 15)),
+                    const SizedBox(height: 18),
+                    LinearProgressIndicator(value: progress, minHeight: 8),
+                    const SizedBox(height: 12),
+                    Text('${(progress * 100).toStringAsFixed(0)}%  ($currentRow/$totalRows)', style: const TextStyle(fontSize: 13)),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
 
     try {
-      final result = await importFunction();
-      
+      final result = await importFunction(onProgress: (p, row, total) {
+        progress = p;
+        currentRow = row;
+        totalRows = total;
+        setDialogState(() {});
+      });
+
       // Close loading dialog
       if (context.mounted) Navigator.of(context).pop();
 
@@ -980,9 +1073,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       case MenuAction.importUser:
         _importUser(context);
         break;
-      case MenuAction.importSpmkp:
-        _importSpmkp(context);
-        break;
       case MenuAction.importRencanaPenerimaan:
         _importRencanaPenerimaan(context);
         break;
@@ -1001,10 +1091,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       case MenuAction.aboutDialog:
         app_about.AboutDialog.show(context);
         break;
+      case MenuAction.manageSeksi:
+        _navigateToSeksi(context);
+        break;
+      case MenuAction.managePegawai:
+        _navigateToPegawai(context);
+        break;
+
+      case MenuAction.manageUsers:
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Kelola User'),
+            content: const Text('Fitur kelola user akan segera hadir.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Tutup'),
+              ),
+            ],
+          ),
+        );
+        break;
+      case MenuAction.settings:
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Pengaturan Database'),
+            content: const Text('Fitur pengaturan database akan segera hadir.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Tutup'),
+              ),
+            ],
+          ),
+        );
+        break;
       case MenuAction.comingSoon:
       default:
         _showComingSoon(context, actionString ?? 'Unknown Action');
         break;
     }
+
+  // Scaffolded management dialogs/pages
   }
 }

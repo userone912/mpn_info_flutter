@@ -1,119 +1,94 @@
 /// Pegawai (Employee) model for user management
 /// Migrated from Qt pegawai table structure
 class PegawaiModel {
-  final int id;
-  final String? nip;
-  final String? nama;
-  final String? username;
-  final String? password;
-  final int? jabatan;
+  factory PegawaiModel.fromMap(Map<String, dynamic> map) {
+    return PegawaiModel(
+      kantor: map['kantor']?.toString() ?? '',
+      nip: map['nip']?.toString() ?? '',
+      nip2: map['nip2']?.toString(),
+      nama: map['nama']?.toString() ?? '',
+      pangkat: map['pangkat'] is int ? map['pangkat'] as int : int.tryParse(map['pangkat']?.toString() ?? '') ?? 0,
+      seksi: map['nmseksi'] is int ? map['seksi'] as int : int.tryParse(map['seksi']?.toString() ?? '') ?? null,
+      jabatan: map['jabatan'] is int ? map['jabatan'] as int : int.tryParse(map['jabatan']?.toString() ?? '') ?? 0,
+      tahun: map['tahun'] is int ? map['tahun'] as int : int.tryParse(map['tahun']?.toString() ?? '') ?? 0,
+      plh: map['plh']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'kantor': kantor,
+      'nip': nip,
+      'nip2': nip2,
+      'nama': nama,
+      'pangkat': pangkat,
+      'seksi': seksi,
+      'jabatan': jabatan,
+      'tahun': tahun,
+      'plh': plh,
+    };
+  }
+  final String kantor;
+  final String nip;
+  final String? nip2;
+  final String nama;
+  final int pangkat;
   final int? seksi;
-  final String? email;
-  final String? telepon;
-  final String? alamat;
-  final DateTime? tanggalLahir;
-  final String? tempatLahir;
-  final int? status;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final int jabatan;
+  final int tahun;
+  final String? plh;
 
   const PegawaiModel({
-    required this.id,
-    this.nip,
-    this.nama,
-    this.username,
-    this.password,
-    this.jabatan,
+    required this.kantor,
+    required this.nip,
+    this.nip2,
+    required this.nama,
+    required this.pangkat,
     this.seksi,
-    this.email,
-    this.telepon,
-    this.alamat,
-    this.tanggalLahir,
-    this.tempatLahir,
-    this.status,
-    this.createdAt,
-    this.updatedAt,
+    required this.jabatan,
+    required this.tahun,
+    this.plh,
   });
 
   factory PegawaiModel.fromJson(Map<String, dynamic> json) {
     return PegawaiModel(
-      id: json['id'] as int,
-      nip: json['nip'] as String?,
-      nama: json['nama'] as String?,
-      username: json['username'] as String?,
-      password: json['password'] as String?,
-      jabatan: json['jabatan'] as int?,
-      seksi: json['seksi'] as int?,
-      email: json['email'] as String?,
-      telepon: json['telepon'] as String?,
-      alamat: json['alamat'] as String?,
-      tanggalLahir: json['tanggal_lahir'] != null 
-          ? DateTime.parse(json['tanggal_lahir'] as String)
-          : null,
-      tempatLahir: json['tempat_lahir'] as String?,
-      status: json['status'] as int?,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
+      kantor: json['kantor']?.toString() ?? '',
+      nip: json['nip']?.toString() ?? '',
+      nip2: json['nip2']?.toString(),
+      nama: json['nama']?.toString() ?? '',
+      pangkat: json['pangkat'] is int ? json['pangkat'] as int : int.tryParse(json['pangkat']?.toString() ?? '') ?? 0,
+      seksi: json['seksi'] is int ? json['seksi'] as int : int.tryParse(json['seksi']?.toString() ?? '') ?? null,
+      jabatan: json['jabatan'] is int ? json['jabatan'] as int : int.tryParse(json['jabatan']?.toString() ?? '') ?? 0,
+      tahun: json['tahun'] is int ? json['tahun'] as int : int.tryParse(json['tahun']?.toString() ?? '') ?? 0,
+      plh: json['plh']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nip': nip,
-      'nama': nama,
-      'username': username,
-      'password': password,
-      'jabatan': jabatan,
-      'seksi': seksi,
-      'email': email,
-      'telepon': telepon,
-      'alamat': alamat,
-      'tanggal_lahir': tanggalLahir?.toIso8601String(),
-      'tempat_lahir': tempatLahir,
-      'status': status,
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-    };
+    return toMap();
   }
 
   PegawaiModel copyWith({
-    int? id,
+    String? kantor,
     String? nip,
+    String? nip2,
     String? nama,
-    String? username,
-    String? password,
-    int? jabatan,
+    int? pangkat,
     int? seksi,
-    String? email,
-    String? telepon,
-    String? alamat,
-    DateTime? tanggalLahir,
-    String? tempatLahir,
-    int? status,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    int? jabatan,
+    int? tahun,
+    String? plh,
   }) {
     return PegawaiModel(
-      id: id ?? this.id,
+      kantor: kantor ?? this.kantor,
       nip: nip ?? this.nip,
+      nip2: nip2 ?? this.nip2,
       nama: nama ?? this.nama,
-      username: username ?? this.username,
-      password: password ?? this.password,
-      jabatan: jabatan ?? this.jabatan,
+      pangkat: pangkat ?? this.pangkat,
       seksi: seksi ?? this.seksi,
-      email: email ?? this.email,
-      telepon: telepon ?? this.telepon,
-      alamat: alamat ?? this.alamat,
-      tanggalLahir: tanggalLahir ?? this.tanggalLahir,
-      tempatLahir: tempatLahir ?? this.tempatLahir,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      jabatan: jabatan ?? this.jabatan,
+      tahun: tahun ?? this.tahun,
+      plh: plh ?? this.plh,
     );
   }
 
@@ -135,53 +110,38 @@ class PegawaiModel {
     }
   }
 
-  /// Check if employee is active
-  bool get isActive => status == 1;
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is PegawaiModel &&
-        other.id == id &&
+        other.kantor == kantor &&
         other.nip == nip &&
+        other.nip2 == nip2 &&
         other.nama == nama &&
-        other.username == username &&
-        other.password == password &&
-        other.jabatan == jabatan &&
+        other.pangkat == pangkat &&
         other.seksi == seksi &&
-        other.email == email &&
-        other.telepon == telepon &&
-        other.alamat == alamat &&
-        other.tanggalLahir == tanggalLahir &&
-        other.tempatLahir == tempatLahir &&
-        other.status == status &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        other.jabatan == jabatan &&
+        other.tahun == tahun &&
+        other.plh == plh;
   }
 
   @override
   int get hashCode {
     return Object.hash(
-      id,
+      kantor,
       nip,
+      nip2,
       nama,
-      username,
-      password,
-      jabatan,
+      pangkat,
       seksi,
-      email,
-      telepon,
-      alamat,
-      tanggalLahir,
-      tempatLahir,
-      status,
-      createdAt,
-      updatedAt,
+      jabatan,
+      tahun,
+      plh,
     );
   }
 
   @override
   String toString() {
-    return 'PegawaiModel(id: $id, nip: $nip, nama: $nama, jabatan: $jabatanDisplayName)';
+    return 'PegawaiModel(kantor: $kantor, nip: $nip, nama: $nama, jabatan: $jabatanDisplayName)';
   }
 }

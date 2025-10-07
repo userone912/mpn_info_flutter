@@ -90,6 +90,10 @@ enum MenuAction {
   updateReferenceData,
   aboutDialog,
   comingSoon,
+  manageSeksi,
+  managePegawai,
+  manageUsers,
+  settings,
 }
 
 extension MenuActionExtension on MenuAction {
@@ -105,8 +109,6 @@ extension MenuActionExtension on MenuAction {
         return MenuAction.importPegawai;
       case 'import_user':
         return MenuAction.importUser;
-      case 'import_spmkp':
-        return MenuAction.importSpmkp;
       case 'import_rencana':
         return MenuAction.importRencanaPenerimaan;
       case 'update_database':
@@ -119,6 +121,14 @@ extension MenuActionExtension on MenuAction {
         return MenuAction.updateReferenceData;
       case 'about_dialog':
         return MenuAction.aboutDialog;
+      case 'manage_seksi':
+        return MenuAction.manageSeksi;
+      case 'manage_pegawai':
+        return MenuAction.managePegawai;
+      case 'manage_users':
+        return MenuAction.manageUsers;
+      case 'settings':
+        return MenuAction.settings;
       case 'coming_soon':
       default:
         return MenuAction.comingSoon;
