@@ -120,7 +120,7 @@ class AppConstants {
 
   // CSV Import Headers (from Qt application)
   static const String seksiHeaderFormat = 'ID;KANTOR;TIPE;NAMA;KODE;TELP';
-  static const String pegawaiHeaderFormat = 'KANTOR;NIP;NIP2;NAMA;SEKSI;PANGKAT;JABATAN;TAHUN';
+  static const String pegawaiHeaderFormat = 'KANTOR;NIP;NIP2;NAMA;PANGKAT;SEKSI;JABATAN;TAHUN;PLH';
   static const String userHeaderFormat = 'ID;USERNAME;PASSWORD;FULLNAME;GROUP';
   static const String spmkpHeaderFormat = 'NPWP;KPP;CABANG;KDMAP;BULAN;TAHUN;NOMINAL';
   static const String renpenHeaderFormat = 'KPP;NIP;KDMAP;BULAN;TAHUN;TARGET';

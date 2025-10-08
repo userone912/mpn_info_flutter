@@ -32,6 +32,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
+
   // Syncfusion chart builder for dynamic chart type
   Widget _buildDynamicChartSf() {
     List<Map<String, dynamic>> data;
@@ -256,7 +257,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   // Dashboard state for kantor dropdown
   String? _selectedKpp;
   String? _selectedKppNama;
-  bool _kantorLoading = true;
   List<Map<String, String>> _kantorList = [];
 
   // Chart type state for Penerimaan Per Bulan Setor chart
@@ -266,7 +266,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   // Tahun Pembayaran state
   List<String> _tahunOptions = [];
   String? _selectedTahun;
-  bool _tahunLoading = true;
 
   // Dataset selection state
   String _selectedDataset = 'PKPM';
@@ -286,38 +285,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Future<void> _initKantorDropdown() async {
-    setState(() => _kantorLoading = true);
     final kantorKode = await SettingDataService.getOfficeCodeFromDatabase();
-    if (kantorKode.isNotEmpty) {
-      // Query kantor table for kpp and nama
-      final result = await DatabaseService.rawQuery(
-        'SELECT kpp, nama FROM kantor WHERE kpp = ?', [kantorKode],
-      );
-      if (result.isNotEmpty) {
-        _selectedKpp = result.first['kpp']?.toString();
-        _selectedKppNama = result.first['nama']?.toString();
-        _kantorList = [
-          {'kpp': _selectedKpp ?? '', 'nama': _selectedKppNama ?? ''},
-        ];
-        // Only load data if tahun is already loaded
-        if (_selectedTahun != null) {
-          await _loadAllDashboardData();
-        }
+    if (kantorKode.isEmpty) {
+      // kantorKode is mandatory, prompt user to set it up
+      if (mounted) {
+        _navigateToOfficeConfig(context);
+      }
+      return;
+    }
+    // Query kantor table for kpp and nama
+    final result = await DatabaseService.rawQuery(
+      'SELECT kpp, nama FROM kantor WHERE kpp = ?', [kantorKode],
+    );
+    if (result.isNotEmpty) {
+      _selectedKpp = result.first['kpp']?.toString();
+      _selectedKppNama = result.first['nama']?.toString();
+      _kantorList = [
+        {'kpp': _selectedKpp ?? '', 'nama': _selectedKppNama ?? ''},
+      ];
+      // Only load data if tahun is already loaded
+      if (_selectedTahun != null) {
+        await _loadAllDashboardData();
       }
     }
-    setState(() => _kantorLoading = false);
-
   }
 
   Future<void> _initTahunDropdown() async {
-    setState(() => _tahunLoading = true);
     final result = await DatabaseService.rawQuery(
       'SELECT DISTINCT THN_SETOR FROM ppmpkmbo ORDER BY THN_SETOR DESC',
       [],
     );
     _tahunOptions = result.map((row) => row['THN_SETOR'].toString()).toList();
     _selectedTahun = _tahunOptions.isNotEmpty ? _tahunOptions.first : null;
-    setState(() => _tahunLoading = false);
     // Only load data if kantor is already loaded
     if (_selectedKpp != null) {
       await _loadAllDashboardData();
@@ -441,8 +440,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             Row(
               children: [
                 IntrinsicWidth(
-                  child: (_kantorLoading || _kantorList.isEmpty)
-                      ? const Center(child: CircularProgressIndicator())
+                  child: _kantorList.isEmpty
+                      ? DropdownButtonFormField<String>(
+                          value: null,
+                          decoration: const InputDecoration(
+                            labelText: 'Kantor',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text('Silakan lakukan pengaturan Kantor', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                          onChanged: null,
+                        )
                       : DropdownButtonFormField<String>(
                           value: _selectedKpp,
                           decoration: const InputDecoration(
@@ -465,8 +479,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 const SizedBox(width: 16),
                 IntrinsicWidth(
-                  child: (_tahunLoading || _tahunOptions.isEmpty)
-                      ? const Center(child: CircularProgressIndicator())
+                  child: _tahunOptions.isEmpty
+                      ? DropdownButtonFormField<String>(
+                          value: DateTime.now().year.toString(),
+                          decoration: const InputDecoration(
+                            labelText: 'Tahun Pembayaran',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: DateTime.now().year.toString(),
+                              child: Text(DateTime.now().year.toString(), style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                          onChanged: null,
+                        )
                       : DropdownButtonFormField<String>(
                           value: _selectedTahun,
                           decoration: const InputDecoration(
