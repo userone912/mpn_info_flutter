@@ -36,7 +36,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^SEKSI-\w{3}\.csv$').hasMatch(fileName)) {
+      if (!RegExp(r'^SEKSI-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: ${AppConstants.seksiFilePattern}'
@@ -134,7 +134,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^PEGAWAI-\w{3}\.csv$').hasMatch(fileName)) {
+      if (!RegExp(r'^PEGAWAI-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: ${AppConstants.pegawaiFilePattern}'
@@ -249,7 +249,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^USER-\w{3}\.csv$').hasMatch(fileName)) {
+      if (!RegExp(r'^USER-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: ${AppConstants.userFilePattern}'
@@ -392,7 +392,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^SPMKP-\w{3}-\d{4}\.csv$').hasMatch(fileName)) {
+      if (!RegExp(r'^SPMKP-\w{3}-\d{4}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: ${AppConstants.spmkpFilePattern}'

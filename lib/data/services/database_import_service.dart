@@ -13,7 +13,7 @@ class DatabaseImportService {
   /// Import all database CSV files from selected directory
   /// Scans for SEKSI-{KODE}.csv, PEGAWAI-{KODE}.csv, USER.csv, SPMKP-{KODE}-{YEAR}.csv
   /// Validates KODE_KANTOR against settings.kantor.kode (Qt legacy behavior)
-  static Future<ImportResult> importAllDatabaseFiles({void Function(double progress)? onProgress}) async {
+  static Future<ImportResult> importAllDatabaseFiles({void Function(double progress, int currentRow, int totalRows, String fileName)? onProgress}) async {
   print('[DEBUG] Scanning for PKPM/PPM files...');
     // Scan for CSV files
     try {
@@ -63,10 +63,8 @@ class DatabaseImportService {
       // PKPM/PPM file detection (NEW)
       bool _isPkpmboFile(String path) {
         final fileName = path.split(Platform.pathSeparator).last;
-        // Match PKPMBO-*.csv, PPMBO-*.csv, or filename containing PKPM/PPM
-        return RegExp(r'^(PKPMBO|PPMBO)-.*\.csv$', caseSensitive: false).hasMatch(fileName)
-          || fileName.toUpperCase().contains('PKPM')
-          || fileName.toUpperCase().contains('PPM');
+        // Match any file containing PKM or PPM (case-insensitive)
+        return fileName.toUpperCase().contains('PKM') || fileName.toUpperCase().contains('PPM');
       }
 
       // Categorize and validate files
@@ -79,6 +77,7 @@ class DatabaseImportService {
       final seksiFiles = csvFiles.where((f) => _isSeksiFile(f.path)).toList();
       for (final file in seksiFiles) {
         final kodeFromFile = _extractKodeFromSeksiFile(file.path);
+        final fileName = file.path.split(Platform.pathSeparator).last;
         if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['SEKSI-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
@@ -88,7 +87,13 @@ class DatabaseImportService {
           allErrors.add('SEKSI-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
-  final result = await _importSeksiFile(file);
+        final content = await file.readAsString();
+        final lines = content.split('\n');
+        final totalRows = lines.length - 1;
+  if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
+        int currentRow = 0;
+        final result = await _importSeksiFile(file);
+  if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         results['SEKSI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -99,6 +104,7 @@ class DatabaseImportService {
       final pegawaiFiles = csvFiles.where((f) => _isPegawaiFile(f.path)).toList();
       for (final file in pegawaiFiles) {
         final kodeFromFile = _extractKodeFromPegawaiFile(file.path);
+        final fileName = file.path.split(Platform.pathSeparator).last;
         if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['PEGAWAI-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
@@ -108,7 +114,13 @@ class DatabaseImportService {
           allErrors.add('PEGAWAI-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
-  final result = await _importPegawaiFile(file);
+        final content = await file.readAsString();
+        final lines = content.split('\n');
+        final totalRows = lines.length - 1;
+        if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
+        int currentRow = 0;
+        final result = await _importPegawaiFile(file);
+  if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         results['PEGAWAI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -119,6 +131,7 @@ class DatabaseImportService {
       final userFiles = csvFiles.where((f) => _isUserFile(f.path)).toList();
       for (final file in userFiles) {
         final kodeFromFile = _extractKodeFromUserFile(file.path);
+        final fileName = file.path.split(Platform.pathSeparator).last;
         if (kantorKode.isNotEmpty && kodeFromFile != kantorKode) {
           results['USER-$kodeFromFile'] = ImportResult.error(
             'KANTOR_MISMATCH',
@@ -128,7 +141,13 @@ class DatabaseImportService {
           allErrors.add('USER-$kodeFromFile: Kode kantor tidak sesuai');
           continue;
         }
+        final content = await file.readAsString();
+        final lines = content.split('\n');
+        final totalRows = lines.length - 1;
+        if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
+        int currentRow = 0;
         final result = await _importUserFile(file);
+        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         results['USER-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -139,8 +158,8 @@ class DatabaseImportService {
       final spmkpFiles = csvFiles.where((f) => _isSpmkpFile(f.path)).toList();
       for (final file in spmkpFiles) {
         final kodeFromFile = _extractKodeFromSpmkpFile(file.path);
+        final fileName = file.path.split(Platform.pathSeparator).last;
         if (kodeFromFile != kantorKode) {
-          final fileName = file.path.split(Platform.pathSeparator).last;
           results[fileName] = ImportResult.error(
             'KANTOR_MISMATCH',
             'Kode kantor $kodeFromFile tidak sesuai dengan settings ($kantorKode)'
@@ -149,9 +168,13 @@ class DatabaseImportService {
           allErrors.add('$fileName: Kode kantor tidak sesuai');
           continue;
         }
-
+        final content = await file.readAsString();
+        final lines = content.split('\n');
+        final totalRows = lines.length - 1;
+        if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
+        int currentRow = 0;
         final result = await _importSpmkpFile(file);
-        final fileName = file.path.split(Platform.pathSeparator).last;
+        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         results[fileName] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -165,14 +188,20 @@ class DatabaseImportService {
         print('[DEBUG] Importing PKPM/PPM file: ${file.path}');
         final fileName = file.path.split(Platform.pathSeparator).last;
         final fileNameOnly = file.path.split(Platform.pathSeparator).last;
+        final content = await file.readAsString();
+        final lines = content.split('\n');
+        final totalRows = lines.length - 1;
+        if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
+        int currentRow = 0;
         // PKPM/PPM files do NOT use kantor.kode validation, use their own validation system
         final result = await CsvImportService.importPkpmboCsvFiles(
           file,
           fileNameOnly,
           onProgress: onProgress != null
-            ? (double p, int row, int total) => onProgress(p)
+            ? (double p, int row, int total) => onProgress(p, row, total, fileName)
             : null,
         );
+        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         print('[DEBUG] Import result for $fileName: success=${result.successCount}, error=${result.errorCount}');
         results[fileName] = result;
         totalSuccess += result.successCount;

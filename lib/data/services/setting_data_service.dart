@@ -7,6 +7,44 @@ import '../../core/constants/app_constants.dart';
 
 /// Centralized settings data service that loads all management data at startup
 class SettingDataService {
+  /// Helper to safely convert DB value to String
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    if (value is List<int>) return String.fromCharCodes(value);
+    return value.toString();
+  }
+  /// Prepare settings table with default office keys if missing, then fetch values
+  Future<List<Map<String, dynamic>>> prepareOfficeSettingsTableAndFetchValues() async {
+    final officeKeys = [
+      AppConstants.kantorKodeKey,
+      AppConstants.kantorWpjKey,
+      AppConstants.kantorKpKey,
+      AppConstants.kantorAlamatKey,
+      AppConstants.kantorTeleponKey,
+      AppConstants.kantorKotaKey,
+    ];
+    // Check which keys are missing
+    final keyResult = await DatabaseService.rawQuery(
+      'SELECT `key` FROM settings WHERE `key` IN (?, ?, ?, ?, ?, ?)',
+      officeKeys,
+    );
+    final existingKeys = keyResult.map((row) => row['key'] as String).toSet();
+    for (final key in officeKeys) {
+      if (!existingKeys.contains(key)) {
+        await DatabaseService.rawQuery(
+          'INSERT INTO settings (`key`, `value`) VALUES (?, ?)',
+          [key, ''],
+        );
+      }
+    }
+    // Fetch values
+    final valueResult = await DatabaseService.rawQuery(
+      'SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?, ?, ?, ?)',
+      officeKeys,
+    );
+    return valueResult;
+  }
   /// Fetch office settings from database
   Future<OfficeSettingsModel> fetchOfficeSettings() async {
     final keys = [
@@ -17,18 +55,26 @@ class SettingDataService {
       AppConstants.kantorTeleponKey,
       AppConstants.kantorKotaKey,
     ];
+    print('[fetchOfficeSettings] Fetching keys:');
+    for (final key in keys) {
+      print('  $key');
+    }
     final result = await DatabaseService.rawQuery(
       'SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?, ?, ?, ?)',
       keys,
     );
+    print('[fetchOfficeSettings] DB result:');
+    for (final row in result) {
+      print('  key: ${row['key']}, value: ${row['value']}');
+    }
     final map = { for (var row in result) row['key']: row['value'] };
     return OfficeSettingsModel(
-      kode: map[AppConstants.kantorKodeKey] ?? '',
-      wpj: map[AppConstants.kantorWpjKey] ?? '',
-      kp: map[AppConstants.kantorKpKey] ?? '',
-      alamat: map[AppConstants.kantorAlamatKey] ?? '',
-      telepon: map[AppConstants.kantorTeleponKey] ?? '',
-      kota: map[AppConstants.kantorKotaKey] ?? '',
+      kode: safeString(map[AppConstants.kantorKodeKey]),
+      wpj: safeString(map[AppConstants.kantorWpjKey]),
+      kp: safeString(map[AppConstants.kantorKpKey]),
+      alamat: safeString(map[AppConstants.kantorAlamatKey]),
+      telepon: safeString(map[AppConstants.kantorTeleponKey]),
+      kota: safeString(map[AppConstants.kantorKotaKey]),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_constants.dart';
 import '../../data/models/office_settings_model.dart';
 import '../../data/services/setting_data_service.dart';
 import '../../data/services/reference_data_service.dart';
@@ -15,7 +16,7 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
   final _formKey = GlobalKey<FormState>();
   bool _loading = true;
   bool _saving = false;
-  OfficeSettingsModel? _settings;
+  // Use raw settings map instead of OfficeSettingsModel
 
   String? _selectedKanwil;
   String? _selectedKpp;
@@ -33,52 +34,91 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
   void initState() {
     super.initState();
     _referenceService = ref.read(referenceDataServiceProvider);
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    setState(() => _loading = true);
-    final settingService = ref.read(settingDataServiceProvider);
     _kanwilList = _referenceService.kanwilList;
-    final settings = await settingService.fetchOfficeSettings();
-    _settings = settings;
-    _wpjController.text = settings.wpj;
-    _kpController.text = settings.kp;
-    _alamatController.text = settings.alamat;
-    _teleponController.text = settings.telepon;
-    _kotaController.text = settings.kota;
+    final settingService = ref.read(settingDataServiceProvider);
+    settingService.prepareOfficeSettingsTableAndFetchValues().then((result) async {
+      final map = { for (var row in result) row['key']: row['value'] };
+      print('[OfficeConfigDialog] Settings table raw result:');
+      for (final row in result) {
+        print('  key: ${row['key']}, value: ${row['value']}');
+      }
+  setState(() => _loading = true);
+  print('[OfficeConfigDialog] AppConstants.kantorWpjKey: ${AppConstants.kantorWpjKey}');
+  print('[OfficeConfigDialog] AppConstants.kantorKpKey: ${AppConstants.kantorKpKey}');
+  print('[OfficeConfigDialog] AppConstants.kantorAlamatKey: ${AppConstants.kantorAlamatKey}');
+  print('[OfficeConfigDialog] AppConstants.kantorTeleponKey: ${AppConstants.kantorTeleponKey}');
+  print('[OfficeConfigDialog] AppConstants.kantorKotaKey: ${AppConstants.kantorKotaKey}');
+  print('[OfficeConfigDialog] AppConstants.kantorKodeKey: ${AppConstants.kantorKodeKey}');
 
-    // Preselect Kanwil and KPP only if there is a saved setting
-    if (_kanwilList.isNotEmpty && settings.kode.isNotEmpty) {
-      final kodeKantor = settings.kode;
+  // Use actual key strings matching the settings table
+  _wpjController.text = settingService.safeString(map['kantor.wpj']);
+  print('[OfficeConfigDialog] Assigned _wpjController.text: ${_wpjController.text}');
+  _kpController.text = settingService.safeString(map['kantor.kp']);
+  print('[OfficeConfigDialog] Assigned _kpController.text: ${_kpController.text}');
+  _alamatController.text = settingService.safeString(map['kantor.alamat']);
+  print('[OfficeConfigDialog] Assigned _alamatController.text: ${_alamatController.text}');
+  _teleponController.text = settingService.safeString(map['kantor.telepon']);
+  print('[OfficeConfigDialog] Assigned _teleponController.text: ${_teleponController.text}');
+  _kotaController.text = settingService.safeString(map['kantor.kota']);
+  print('[OfficeConfigDialog] Assigned _kotaController.text: ${_kotaController.text}');
+  // Preselect Kanwil and KPP based on saved kode value
+  String? kode = settingService.safeString(map['kantor.kode']);
+  print('[OfficeConfigDialog] kode for dropdown: $kode');
       String? foundKanwil;
       String? foundKpp;
       List<Map<String, String>> kppList = [];
-      for (final kanwil in _kanwilList) {
-        kppList = await _referenceService.loadKppListForKanwil(kanwil['value']!);
-        for (final kpp in kppList) {
-          if (kpp['value'] == kodeKantor) {
-            foundKanwil = kanwil['value'];
-            foundKpp = kpp['value'];
-            break;
+      if (_kanwilList.isNotEmpty && kode.isNotEmpty) {
+        for (final kanwil in _kanwilList) {
+          kppList = await _referenceService.loadKppListForKanwil(kanwil['value']!);
+          for (final kpp in kppList) {
+            if (kpp['value'] == kode) {
+              foundKanwil = kanwil['value'];
+              foundKpp = kpp['value'];
+              break;
+            }
           }
+          if (foundKanwil != null) break;
         }
-        if (foundKanwil != null) break;
       }
       _selectedKanwil = foundKanwil;
+      print('[OfficeConfigDialog] Assigned _selectedKanwil: $_selectedKanwil');
       _kppList = foundKanwil != null ? await _referenceService.loadKppListForKanwil(foundKanwil) : [];
+      print('[OfficeConfigDialog] Assigned _kppList: ${_kppList.map((k) => k['value']).toList()}');
       _selectedKpp = foundKpp;
-    } else {
-      _selectedKanwil = null;
-      _kppList = [];
-      _selectedKpp = null;
-    }
-    setState(() => _loading = false);
+      print('[OfficeConfigDialog] Assigned _selectedKpp: $_selectedKpp');
+      setState(() => _loading = false);
+    });
   }
 
+  // Removed unused _loadSettingsWithModel
   Future<void> _saveSettings() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedKpp == null) return;
+    print('[OfficeConfigDialog] Save pressed');
+    print('[OfficeConfigDialog] _selectedKanwil: $_selectedKanwil');
+    print('[OfficeConfigDialog] _selectedKpp: $_selectedKpp');
+    print('[OfficeConfigDialog] WPJ: ${_wpjController.text}');
+    print('[OfficeConfigDialog] KP: ${_kpController.text}');
+    print('[OfficeConfigDialog] Alamat: ${_alamatController.text}');
+    print('[OfficeConfigDialog] Telepon: ${_teleponController.text}');
+    print('[OfficeConfigDialog] Kota: ${_kotaController.text}');
+    if (_selectedKpp == null) {
+      print('[OfficeConfigDialog] ERROR: _selectedKpp is null');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Silakan pilih KPP terlebih dahulu.'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedKpp == null) {
+      print('[OfficeConfigDialog] ERROR: _selectedKpp is null');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Silakan pilih KPP terlebih dahulu.'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
     setState(() => _saving = true);
     final service = ref.read(settingDataServiceProvider);
     final newSettings = OfficeSettingsModel(
@@ -89,6 +129,7 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
       telepon: _teleponController.text.trim(),
       kota: _kotaController.text.trim(),
     );
+    print('[OfficeConfigDialog] Saving OfficeSettingsModel: $newSettings');
     await service.updateOfficeSettings(newSettings);
     setState(() => _saving = false);
     if (context.mounted) {
@@ -99,104 +140,144 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
     }
   }
 
+  // Removed duplicate _buildTextField method
+
   @override
   Widget build(BuildContext context) {
     return _loading
         ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Pengaturan Kantor', style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 16),
-                    // Kanwil Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedKanwil,
-                      decoration: const InputDecoration(
-                        labelText: 'Kanwil',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+        : Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          tooltip: 'Tutup',
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
                       ),
-                      items: _kanwilList.map((item) => DropdownMenuItem(
-                        value: item['value'],
-                        child: Text(item['label'] ?? ''),
-                      )).toList(),
-                      onChanged: (value) async {
-                        print('[OfficeConfigDialog] Kanwil selected: $value');
-                        if (value != null && value.isNotEmpty) {
-                          final kppList = await _referenceService.loadKppListForKanwil(value);
-                          print('[OfficeConfigDialog] KPP list for Kanwil $value:');
-                          for (final kpp in kppList) {
-                            print('  value: ${kpp['value']}, label: ${kpp['label']}');
-                          }
-                          Map<String, String> firstKppMap = kppList.firstWhere(
-                            (kpp) => kpp['value'] != '000',
-                            orElse: () => kppList.isNotEmpty ? kppList.first : <String, String>{},
-                          );
-                          String? firstKpp = firstKppMap.isNotEmpty ? firstKppMap['value'] : null;
-                          setState(() {
-                            _selectedKanwil = value;
-                            _kppList = kppList;
-                            _selectedKpp = firstKpp;
-                          });
-                        } else {
-                          setState(() {
-                            _selectedKanwil = value;
-                            _kppList = [];
-                            _selectedKpp = null;
-                          });
-                        }
-                      },
-                      validator: (value) => value == null || value.isEmpty ? 'Wajib pilih Kanwil' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    // KPP Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedKpp,
-                      decoration: const InputDecoration(
-                        labelText: 'Kode KPP',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Text(
+                                'Pengaturan Kantor',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Kanwil Dropdown
+                            DropdownButtonFormField<String>(
+                              value: _selectedKanwil,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Kanwil',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: _kanwilList.map((item) => DropdownMenuItem(
+                                value: item['value'],
+                                child: Text(item['label'] ?? ''),
+                              )).toList(),
+                              onChanged: (value) async {
+                                print('[OfficeConfigDialog] Kanwil selected: $value');
+                                if (value != null && value.isNotEmpty) {
+                                  final kppList = await _referenceService.loadKppListForKanwil(value);
+                                  print('[OfficeConfigDialog] KPP list for Kanwil $value:');
+                                  for (final kpp in kppList) {
+                                    print('  value: ${kpp['value']}, label: ${kpp['label']}');
+                                  }
+                                  Map<String, String> firstKppMap = kppList.firstWhere(
+                                    (kpp) => kpp['value'] != '000',
+                                    orElse: () => kppList.isNotEmpty ? kppList.first : <String, String>{},
+                                  );
+                                  String? firstKpp = firstKppMap.isNotEmpty ? firstKppMap['value'] : null;
+                                  setState(() {
+                                    _selectedKanwil = value;
+                                    _kppList = kppList;
+                                    _selectedKpp = firstKpp;
+                                  });
+                                } else {
+                                  setState(() {
+                                    _selectedKanwil = value;
+                                    _kppList = [];
+                                    _selectedKpp = null;
+                                  });
+                                }
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Wajib pilih Kanwil';
+                                if (!_kanwilList.any((item) => item['value'] == value)) return 'Kanwil tidak valid';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            // KPP Dropdown
+                            DropdownButtonFormField<String>(
+                              value: _selectedKpp,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Kode KPP',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: [
+                                if (_kppList.isEmpty)
+                                  const DropdownMenuItem(
+                                    value: null,
+                                    child: Text('Pilih Kanwil terlebih dahulu', style: TextStyle(color: Colors.grey)),
+                                  ),
+                                ..._kppList.map((item) => DropdownMenuItem(
+                                  value: item['value'],
+                                  child: Text(item['label'] ?? ''),
+                                ))
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedKpp = value;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Wajib pilih KPP';
+                                if (!_kppList.any((item) => item['value'] == value)) return 'KPP tidak valid';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(_wpjController, 'WPJ', false),
+                            _buildTextField(_kpController, 'KP', false),
+                            _buildTextField(_alamatController, 'Alamat', false),
+                            _buildTextField(_teleponController, 'Telepon', false),
+                            _buildTextField(_kotaController, 'Kota', false),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.save),
+                                onPressed: _saving ? null : _saveSettings,
+                                label: _saving
+                                    ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                    : const Text('Simpan'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      items: [
-                        if (_kppList.isEmpty)
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('Pilih Kanwil terlebih dahulu', style: TextStyle(color: Colors.grey)),
-                          ),
-                        ..._kppList.map((item) => DropdownMenuItem(
-                          value: item['value'],
-                          child: Text(item['label'] ?? ''),
-                        ))
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedKpp = value;
-                        });
-                      },
-                      validator: (value) => value == null || value.isEmpty ? 'Wajib pilih KPP' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(_wpjController, 'WPJ', false),
-                    _buildTextField(_kpController, 'KP', false),
-                    _buildTextField(_alamatController, 'Alamat', false),
-                    _buildTextField(_teleponController, 'Telepon', false),
-                    _buildTextField(_kotaController, 'Kota', false),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _saving ? null : _saveSettings,
-                        child: _saving
-                            ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Simpan'),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
