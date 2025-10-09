@@ -433,17 +433,17 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
           child: const Text('Batal'),
         ),
-        if (_selectedType == DatabaseType.mysql)
-          ElevatedButton(
-            onPressed: _isLoading ? null : _testConnection,
-            child: _isLoading
-                ? const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Test Koneksi'),
-          ),
+        // if (_selectedType == DatabaseType.mysql)
+        //   ElevatedButton(
+        //     onPressed: _isLoading ? null : _testConnection,
+        //     child: _isLoading
+        //         ? const SizedBox(
+        //             height: 16,
+        //             width: 16,
+        //             child: CircularProgressIndicator(strokeWidth: 2),
+        //           )
+        //         : const Text('Test Koneksi'),
+        //   ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveAndConnect,
           style: ElevatedButton.styleFrom(
@@ -459,7 +459,7 @@ class _DatabaseConfigDialogState extends ConsumerState<DatabaseConfigDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text('Simpan & Gunakan'),
+              : const Text('Simpan'),
         ),
       ],
     );

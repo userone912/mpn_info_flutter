@@ -10,8 +10,7 @@ class PegawaiModel {
       pangkat: map['pangkat'] is int ? map['pangkat'] as int : int.tryParse(map['pangkat']?.toString() ?? '') ?? 0,
       seksi: map['nmseksi'] is int ? map['seksi'] as int : int.tryParse(map['seksi']?.toString() ?? '') ?? null,
       jabatan: map['jabatan'] is int ? map['jabatan'] as int : int.tryParse(map['jabatan']?.toString() ?? '') ?? 0,
-      tahun: map['tahun'] is int ? map['tahun'] as int : int.tryParse(map['tahun']?.toString() ?? '') ?? 0,
-      plh: map['plh']?.toString(),
+      tahun: map['tahun'] is int ? map['tahun'] as int : int.tryParse(map['tahun']?.toString() ?? '') ?? 0
     );
   }
 
@@ -25,7 +24,6 @@ class PegawaiModel {
       'seksi': seksi,
       'jabatan': jabatan,
       'tahun': tahun,
-      'plh': plh,
     };
   }
   final String kantor;
@@ -36,7 +34,6 @@ class PegawaiModel {
   final int? seksi;
   final int jabatan;
   final int tahun;
-  final String? plh;
 
   const PegawaiModel({
     required this.kantor,
@@ -47,7 +44,6 @@ class PegawaiModel {
     this.seksi,
     required this.jabatan,
     required this.tahun,
-    this.plh,
   });
 
   factory PegawaiModel.fromJson(Map<String, dynamic> json) {
@@ -60,7 +56,6 @@ class PegawaiModel {
       seksi: json['seksi'] is int ? json['seksi'] as int : int.tryParse(json['seksi']?.toString() ?? '') ?? null,
       jabatan: json['jabatan'] is int ? json['jabatan'] as int : int.tryParse(json['jabatan']?.toString() ?? '') ?? 0,
       tahun: json['tahun'] is int ? json['tahun'] as int : int.tryParse(json['tahun']?.toString() ?? '') ?? 0,
-      plh: json['plh']?.toString(),
     );
   }
 
@@ -77,7 +72,6 @@ class PegawaiModel {
     int? seksi,
     int? jabatan,
     int? tahun,
-    String? plh,
   }) {
     return PegawaiModel(
       kantor: kantor ?? this.kantor,
@@ -88,7 +82,6 @@ class PegawaiModel {
       seksi: seksi ?? this.seksi,
       jabatan: jabatan ?? this.jabatan,
       tahun: tahun ?? this.tahun,
-      plh: plh ?? this.plh,
     );
   }
 
@@ -121,8 +114,7 @@ class PegawaiModel {
         other.pangkat == pangkat &&
         other.seksi == seksi &&
         other.jabatan == jabatan &&
-        other.tahun == tahun &&
-        other.plh == plh;
+        other.tahun == tahun;
   }
 
   @override
@@ -136,7 +128,6 @@ class PegawaiModel {
       seksi,
       jabatan,
       tahun,
-      plh,
     );
   }
 

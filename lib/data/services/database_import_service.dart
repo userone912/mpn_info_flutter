@@ -9,7 +9,11 @@ import 'csv_import_service.dart';
 /// Consolidated import service that scans for CSV files and imports them automatically
 /// Similar to Update Referensi but for database tables (Seksi, Pegawai, User, Renpen)
 class DatabaseImportService {
-  
+  static void updateProgress(void Function(double, int, int, String)? onProgress, int currentRow, int totalRows, String fileName) {
+    if (onProgress != null && totalRows > 0) {
+      onProgress(currentRow / totalRows, currentRow, totalRows, fileName);
+    }
+  }
   /// Import all database CSV files from selected directory
   /// Scans for SEKSI-{KODE}.csv, PEGAWAI-{KODE}.csv, USER.csv, RENPEN-{KODE}-{YEAR}.csv
   /// Validates KODE_KANTOR against settings.kantor.kode (Qt legacy behavior)
@@ -93,7 +97,7 @@ class DatabaseImportService {
   if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
         int currentRow = 0;
         final result = await _importSeksiFile(file);
-  if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
+  updateProgress(onProgress, currentRow, totalRows, fileName);
         results['SEKSI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -120,7 +124,7 @@ class DatabaseImportService {
         if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
         int currentRow = 0;
         final result = await _importPegawaiFile(file);
-  if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
+  updateProgress(onProgress, currentRow, totalRows, fileName);
         results['PEGAWAI-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -147,7 +151,7 @@ class DatabaseImportService {
         if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
         int currentRow = 0;
         final result = await _importUserFile(file);
-        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
+        updateProgress(onProgress, currentRow, totalRows, fileName);
         results['USER-$kodeFromFile'] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -174,7 +178,7 @@ class DatabaseImportService {
         if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
         int currentRow = 0;
         final result = await _importRenpenFile(file);
-        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
+        updateProgress(onProgress, currentRow, totalRows, fileName);
         results[fileName] = result;
         totalSuccess += result.successCount;
         totalErrors += result.errorCount;
@@ -201,7 +205,7 @@ class DatabaseImportService {
             ? (double p, int row, int total) => onProgress(p, row, total, fileName)
             : null,
         );
-        if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
+        updateProgress(onProgress, currentRow, totalRows, fileName);
         print('[DEBUG] Import result for $fileName: success=${result.successCount}, error=${result.errorCount}');
         results[fileName] = result;
         totalSuccess += result.successCount;
@@ -328,7 +332,7 @@ class DatabaseImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 6) {
+          if (data.length < AppConstants.seksiColumnCount) {
             errors.add('$fileName baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -346,9 +350,7 @@ class DatabaseImportService {
             'id': int.tryParse(data[0]) ?? 0,
             'kantor': data[1],
             'tipe': int.tryParse(data[2]) ?? 0,
-            'nama': data[3],
-            'kode': data[4],
-            'telp': data[5],
+            'nama': data[3]
           });
 
           successCount++;
@@ -411,7 +413,7 @@ class DatabaseImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 8) {
+          if (data.length < AppConstants.pegawaiColumnCount) {
             errors.add('$fileName baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -487,7 +489,7 @@ class DatabaseImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 5) {
+          if (data.length < AppConstants.userColumnCount) {
             errors.add('$fileName baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -581,7 +583,7 @@ class DatabaseImportService {
       // Delete existing RENPEN data for this office and year (Qt legacy behavior)
       await DatabaseService.delete(
         AppConstants.tableRenpen, 
-        'admin = ? AND tahun = ?', 
+        'kpp = ? AND tahun = ?', 
         [kodeKantor, tahun]
       );
 
@@ -596,7 +598,7 @@ class DatabaseImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 7) {
+          if (data.length < AppConstants.renpenColumnCount) {
             errors.add('$fileName baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -604,12 +606,12 @@ class DatabaseImportService {
 
           // Insert into database with admin field from filename (Qt legacy behavior)
           await DatabaseService.insert(AppConstants.tableRenpen, {
-            'kpp': kodeKantor,  // From filename, not from CSV data
-            'nip': data[0],      // NPWP field
-            'kdmap': data[1],       // KPP field
-            'bulan': data[2],    // CABANG field
-            'tahun': int.tryParse(data[3])?? tahun,     // KDMAP field
-            'target': int.tryParse(data[4]) ?? 0.0
+            'kpp': data[0],
+            'nip': data[1],
+            'kdmap': data[2], 
+            'bulan': int.tryParse(data[3])?? 1,  
+            'tahun': int.tryParse(data[4])?? tahun,     
+            'target': int.tryParse(data[5]) ?? 0.0
           });
 
           successCount++;

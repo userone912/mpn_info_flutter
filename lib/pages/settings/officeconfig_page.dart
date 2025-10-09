@@ -4,7 +4,7 @@ import '../../data/models/office_settings_model.dart';
 import '../../data/services/setting_data_service.dart';
 import '../../data/services/reference_data_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:dropdown_search/dropdown_search.dart';
 import '../dashboard_page.dart';
 
 class OfficeConfigDialog extends ConsumerStatefulWidget {
@@ -138,7 +138,6 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pengaturan kantor berhasil disimpan.'), backgroundColor: Colors.green),
       );
-      // Close dialog first, then navigate to dashboard after frame
       Navigator.of(context).pop();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {
@@ -192,19 +191,43 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            // Kanwil Dropdown
-                            DropdownButtonFormField<String>(
-                              value: _selectedKanwil,
-                              isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Kanwil',
-                                border: OutlineInputBorder(),
-                                isDense: true,
+                            // Kanwil Dropdown with search and 'kode - name' display
+                            DropdownSearch<String>(
+                              selectedItem: _selectedKanwil,
+                              items: _kanwilList.map((item) => item['value']!).toList(),
+                              dropdownDecoratorProps: const DropDownDecoratorProps(
+                                dropdownSearchDecoration: InputDecoration(
+                                  labelText: 'Kanwil',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
                               ),
-                              items: _kanwilList.map((item) => DropdownMenuItem(
-                                value: item['value'],
-                                child: Text(item['label'] ?? ''),
-                              )).toList(),
+                              popupProps: PopupProps.menu(
+                                showSearchBox: true,
+                                itemBuilder: (context, item, isSelected) {
+                                  final kanwil = _kanwilList.firstWhere((k) => k['value'] == item);
+                                  final display = kanwil['label'] ?? '';
+                                  return ListTile(title: Text(display));
+                                },
+                              ),
+                              filterFn: (item, filter) {
+                                final kanwil = _kanwilList.firstWhere((k) => k['value'] == item, orElse: () => {});
+                                final kode = kanwil['value']?.toLowerCase() ?? '';
+                                final label = kanwil['label']?.toLowerCase() ?? '';
+                                final f = filter.toLowerCase();
+                                return kode.contains(f) || label.contains(f);
+                              },
+                              dropdownBuilder: (context, selectedItem) {
+                                if (selectedItem == null) return const Text('');
+                                final kanwil = _kanwilList.firstWhere((k) => k['value'] == selectedItem, orElse: () => {});
+                                final display = kanwil.isNotEmpty ? kanwil['label'] ?? '' : selectedItem;
+                                return Text(display);
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Wajib pilih Kanwil';
+                                if (!_kanwilList.any((item) => item['value'] == value)) return 'Kanwil tidak valid';
+                                return null;
+                              },
                               onChanged: (value) async {
                                 print('[OfficeConfigDialog] Kanwil selected: $value');
                                 if (value != null && value.isNotEmpty) {
@@ -231,42 +254,49 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
                                   });
                                 }
                               },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'Wajib pilih Kanwil';
-                                if (!_kanwilList.any((item) => item['value'] == value)) return 'Kanwil tidak valid';
-                                return null;
-                              },
                             ),
                             const SizedBox(height: 12),
-                            // KPP Dropdown
-                            DropdownButtonFormField<String>(
-                              value: _selectedKpp,
-                              isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Kode KPP',
-                                border: OutlineInputBorder(),
-                                isDense: true,
+                            // KPP Dropdown with search and 'kode - name' display
+                            DropdownSearch<String>(
+                              selectedItem: _selectedKpp,
+                              items: _kppList.map((item) => item['value']!).toList(),
+                              dropdownDecoratorProps: const DropDownDecoratorProps(
+                                dropdownSearchDecoration: InputDecoration(
+                                  labelText: 'Kode KPP',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
                               ),
-                              items: [
-                                if (_kppList.isEmpty)
-                                  const DropdownMenuItem(
-                                    value: null,
-                                    child: Text('Pilih Kanwil terlebih dahulu', style: TextStyle(color: Colors.grey)),
-                                  ),
-                                ..._kppList.map((item) => DropdownMenuItem(
-                                  value: item['value'],
-                                  child: Text(item['label'] ?? ''),
-                                ))
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedKpp = value;
-                                });
+                              popupProps: PopupProps.menu(
+                                showSearchBox: true,
+                                itemBuilder: (context, item, isSelected) {
+                                  final kpp = _kppList.firstWhere((k) => k['value'] == item);
+                                  final display = kpp['label'] ?? '';
+                                  return ListTile(title: Text(display));
+                                },
+                              ),
+                              filterFn: (item, filter) {
+                                final kpp = _kppList.firstWhere((k) => k['value'] == item, orElse: () => {});
+                                final kode = kpp['value']?.toLowerCase() ?? '';
+                                final label = kpp['label']?.toLowerCase() ?? '';
+                                final f = filter.toLowerCase();
+                                return kode.contains(f) || label.contains(f);
+                              },
+                              dropdownBuilder: (context, selectedItem) {
+                                if (selectedItem == null) return const Text('');
+                                final kpp = _kppList.firstWhere((k) => k['value'] == selectedItem, orElse: () => {});
+                                final display = kpp.isNotEmpty ? kpp['label'] ?? '' : selectedItem;
+                                return Text(display);
                               },
                               validator: (value) {
                                 if (value == null || value.isEmpty) return 'Wajib pilih KPP';
                                 if (!_kppList.any((item) => item['value'] == value)) return 'KPP tidak valid';
                                 return null;
+                              },
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedKpp = value;
+                                });
                               },
                             ),
                             const SizedBox(height: 12),

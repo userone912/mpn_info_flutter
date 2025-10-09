@@ -134,8 +134,8 @@ class SettingDataService {
   Future<int> addSeksi(SeksiModel seksi) async {
   final kantor = await SettingDataService.getOfficeCodeFromDatabase();
     final insertId = await DatabaseService.rawQuery(
-      'INSERT INTO seksi (kode, nama, tipe, telp, kantor) VALUES (?, ?, ?, ?, ?)',
-      [seksi.kode, seksi.nama, seksi.tipe, seksi.telp, kantor],
+      'INSERT INTO seksi (kantor, nama, tipe, kantor) VALUES (?, ?, ?, ?, ?)',
+      [seksi.kantor, seksi.nama, seksi.tipe, kantor],
     );
     await refreshSeksiData();
     if (insertId.isNotEmpty && insertId.first['insertId'] != null) {
@@ -148,8 +148,8 @@ class SettingDataService {
   Future<int> updateSeksi(SeksiModel seksi) async {
   final kantor = await SettingDataService.getOfficeCodeFromDatabase();
     final count = await DatabaseService.rawQuery(
-      'UPDATE seksi SET kode = ?, nama = ?, tipe = ?, telp = ?, kantor = ? WHERE id = ?',
-      [seksi.kode, seksi.nama, seksi.tipe, seksi.telp, kantor, seksi.id],
+      'UPDATE seksi SET kode = ?, nama = ?, tipe = ?, kantor = ? WHERE id = ?',
+      [seksi.kantor, seksi.nama, seksi.tipe, kantor, seksi.id],
     );
     await refreshSeksiData();
     if (count.isNotEmpty && count.first['affectedRows'] != null) {
@@ -261,7 +261,7 @@ class SettingDataService {
   /// Load Seksi data
   Future<void> loadSeksiData() async {
     try {
-      final result = await DatabaseService.rawQuery('SELECT * FROM seksi ORDER BY kode');
+      final result = await DatabaseService.rawQuery('SELECT * FROM seksi ORDER BY tipe');
       _seksiData = result.map((json) => SeksiModel.fromMap(json)).toList();
       _isSeksiLoaded = true;
       print('Loaded ${_seksiData.length} Seksi records');
@@ -276,7 +276,7 @@ class SettingDataService {
   /// Load Pegawai data
   Future<void> loadPegawaiData() async {
     try {
-      final result = await DatabaseService.rawQuery('SELECT a.kantor, a.nip, a.nip2, a.nama, a.seksi, a.jabatan, b.nama as nmseksi FROM pegawai a left join seksi b on a.seksi=b.id ORDER BY nip');
+      final result = await DatabaseService.rawQuery('SELECT a.kantor, a.nip, a.nip2, a.nama, a.seksi, a.jabatan, b.nama as nmseksi FROM pegawai a left join seksi b on a.seksi=b.tipe ORDER BY nip');
       _pegawaiData = result.map((json) => PegawaiModel.fromMap(json)).toList();
       _isPegawaiLoaded = true;
       print('Loaded ${_pegawaiData.length} Pegawai records');
@@ -311,7 +311,7 @@ class SettingDataService {
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final query = searchQuery.toLowerCase().trim();
       filtered = filtered.where((seksi) =>
-        seksi.kode.toLowerCase().contains(query) ||
+        seksi.kantor.toLowerCase().contains(query) ||
         seksi.nama.toLowerCase().contains(query)
       ).toList();
     }

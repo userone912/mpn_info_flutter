@@ -37,4 +37,8 @@ class OfficeSettingsModel {
       'kota': kota,
     };
   }
+  @override
+  String toString() {
+    return 'OfficeSettingsModel(kode: $kode, wpj: $wpj, kp: $kp, alamat: $alamat, telepon: $telepon, kota: $kota)';
+  }
 }

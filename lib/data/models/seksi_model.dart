@@ -1,21 +1,17 @@
 class SeksiModel {
   final int? id;
-  final String kode;
+  final String kantor;
   final String nama;
   final int tipe;
-  final String telp;
-  final String kantor;
 
-  SeksiModel({this.id, required this.kode, required this.nama, required this.tipe, required this.telp, required this.kantor});
+  SeksiModel({this.id, required this.kantor, required this.nama, required this.tipe});
 
-  SeksiModel copyWith({int? id, String? kode, String? nama, int? tipe, String? telp}) {
+  SeksiModel copyWith({int? id, String? kantor, String? nama, int? tipe, String? telp}) {
     return SeksiModel(
       id: id ?? this.id,
-      kode: kode ?? this.kode,
+      kantor: kantor ?? this.kantor,
       nama: nama ?? this.nama,
       tipe: tipe ?? this.tipe,
-      telp: telp ?? this.telp,
-      kantor: this.kantor,
     );
   }
 
@@ -27,22 +23,18 @@ class SeksiModel {
     }
     return SeksiModel(
       id: map['id'] as int?,
-      kode: parseStringField(map['kode']),
+      kantor: parseStringField(map['kantor']),
       nama: parseStringField(map['nama']),
       tipe: map['tipe'] is int ? map['tipe'] as int : int.tryParse(map['tipe']?.toString() ?? '') ?? 0,
-      telp: parseStringField(map['telp']),
-      kantor: parseStringField(map['kantor']),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'kode': kode,
+      'kantor': kantor,
       'nama': nama,
       'tipe': tipe,
-      'telp': telp,
-      'kantor': kantor,
     };
   }
 }

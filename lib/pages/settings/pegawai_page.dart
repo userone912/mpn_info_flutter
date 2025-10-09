@@ -26,12 +26,13 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
   int? _pangkat;
   int? _jabatan;
   int? _tahun;
-  String? _plh;
+  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _horizontalScrollController = ScrollController();
 
   @override
   void initState() {
-  super.initState();
-  _loadSeksiOptions().then((_) => _loadPegawai());
+    super.initState();
+    _loadSeksiOptions().then((_) => _loadPegawai());
   }
 
   Future<void> _loadPegawai() async {
@@ -45,7 +46,9 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
   }
 
   Future<void> _loadSeksiOptions() async {
-    final result = await DatabaseService.rawQuery('SELECT id, nama FROM seksi ORDER BY nama');
+    final result = await DatabaseService.rawQuery(
+      'SELECT tipe, nama FROM seksi ORDER BY nama',
+    );
     setState(() {
       _seksiOptions = result;
     });
@@ -63,7 +66,6 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
       _pangkat = p.pangkat;
       _jabatan = p.jabatan;
       _tahun = p.tahun;
-      _plh = p.plh;
       // nmseksi is not part of PegawaiModel, so do not set it here
     });
   }
@@ -79,7 +81,6 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
       _pangkat = null;
       _jabatan = null;
       _tahun = null;
-      _plh = null;
     });
   }
 
@@ -96,7 +97,6 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
         seksi: _seksi,
         jabatan: _jabatan ?? 0,
         tahun: _tahun ?? 0,
-        plh: _plh,
       );
       if (_editingIndex != null) {
         await settingService.updatePegawai(pegawai);
@@ -115,7 +115,6 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
         _pangkat = null;
         _jabatan = null;
         _tahun = null;
-        _plh = null;
       });
     }
   }
@@ -139,14 +138,19 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
   }
 
   @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    _horizontalScrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: 900,
-          maxHeight: 700,
-        ),
+        constraints: BoxConstraints(maxWidth: 900, maxHeight: 700),
         margin: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -165,9 +169,7 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
             // Header bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.indigo.shade700,
-              ),
+              decoration: BoxDecoration(color: Colors.indigo.shade700),
               child: Row(
                 children: [
                   const Icon(Icons.people, color: Colors.white, size: 20),
@@ -183,20 +185,34 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     onPressed: () async {
                       await _loadPegawai();
                     },
                     tooltip: 'Refresh Data',
                     padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                     tooltip: 'Close',
                     padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -206,12 +222,10 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade300),
-                ),
+                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
               child: Column(
-                children:[
+                children: [
                   Row(
                     children: [
                       Expanded(
@@ -219,7 +233,7 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             labelText: 'Cari Data Pegawai',
-                            prefixIcon: const Icon(Icons.search,size: 18),
+                            prefixIcon: const Icon(Icons.search, size: 18),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 18),
@@ -230,7 +244,10 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -240,86 +257,139 @@ class _PegawaiManageDialogState extends State<PegawaiManageDialog> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-              const SizedBox(height: 12),
-              
-            ],
-          ),
-        ),
-        Expanded(
-          child: Container(
-            color: Colors.white,
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('NIP')),
-                            DataColumn(label: Text('Nama')),
-                            DataColumn(label: Text('Seksi')),
-                            DataColumn(label: Text('NIP2')),
-                            DataColumn(label: Text('Pangkat')),
-                            DataColumn(label: Text('Jabatan')),
-                            DataColumn(label: Text('Tahun')),
-                            DataColumn(label: Text('PLH')),
-                            DataColumn(label: Text('Aksi')),
-                          ],
-                          rows: _pegawaiList
-                              .where((pegawai) {
-                                final q = _searchQuery.toLowerCase();
-                                if (q.isEmpty) return true;
-                                String seksiDisplay = '-';
-                                if (pegawai.seksi != null) {
-                                  final match = _seksiOptions.firstWhere(
-                                    (opt) => opt['id'] == pegawai.seksi,
-                                    orElse: () => {},
-                                  );
-                                  seksiDisplay = match['nama']?.toString() ?? pegawai.seksi.toString();
-                                }
-                                return pegawai.nip.toLowerCase().contains(q) ||
-                                    pegawai.nama.toLowerCase().contains(q) ||
-                                    seksiDisplay.toLowerCase().contains(q) ||
-                                    (pegawai.nip2?.toLowerCase().contains(q) ?? false) ||
-                                    pegawai.pangkat.toString().contains(q) ||
-                                    pegawai.jabatan.toString().contains(q) ||
-                                    pegawai.tahun.toString().contains(q) ||
-                                    (pegawai.plh?.toLowerCase().contains(q) ?? false);
-                              })
-                              .map((pegawai) {
-                                String seksiDisplay = '-';
-                                if (pegawai.seksi != null) {
-                                  final match = _seksiOptions.firstWhere(
-                                    (opt) => opt['id'] == pegawai.seksi,
-                                    orElse: () => {},
-                                  );
-                                  seksiDisplay = match['nama']?.toString() ?? pegawai.seksi.toString();
-                                }
-                                return DataRow(cells: [
-                                  DataCell(Text(pegawai.nip)),
-                                  DataCell(Text(pegawai.nama)),
-                                  DataCell(Text(seksiDisplay)),
-                                  DataCell(Text(pegawai.nip2 ?? '')),
-                                  DataCell(Text(pegawai.pangkat.toString())),
-                                  DataCell(Text(pegawai.jabatan.toString())),
-                                  DataCell(Text(pegawai.tahun.toString())),
-                                  DataCell(Text(pegawai.plh ?? '')),
-                                  const DataCell(SizedBox()),
-                                ]);
-                              })
-                              .toList(),
+            ),
+            Expanded(
+              child: Container(
+                color: Colors.white,
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Scrollbar(
+                          controller: _horizontalScrollController,
+                          thumbVisibility: true,
+                          child: SingleChildScrollView(
+                            controller: _horizontalScrollController,
+                            scrollDirection: Axis.horizontal,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(minWidth: 700),
+                              child: Scrollbar(
+                                controller: _verticalScrollController,
+                                thumbVisibility: true,
+                                child: SingleChildScrollView(
+                                  controller: _verticalScrollController,
+                                  scrollDirection: Axis.vertical,
+                                  child: DataTable(
+                                    sortAscending: true,
+                                    sortColumnIndex: 1,
+                                    clipBehavior: Clip.none,
+                                    showBottomBorder: true,
+                                    columns: const [
+                                      DataColumn(label: Text('NIP')),
+                                      DataColumn(label: Text('Nama')),
+                                      DataColumn(label: Text('Seksi')),
+                                      DataColumn(label: Text('NIP2')),
+                                      DataColumn(label: Text('Pangkat')),
+                                      DataColumn(label: Text('Jabatan')),
+                                      DataColumn(label: Text('Tahun')),
+                                      DataColumn(label: Text('Aksi')),
+                                    ],
+                                    rows: _pegawaiList
+                                        .where((pegawai) {
+                                          final q = _searchQuery.toLowerCase();
+                                          if (q.isEmpty) return true;
+                                          String seksiDisplay = '-';
+                                          if (pegawai.seksi != null) {
+                                            final match = _seksiOptions
+                                                .firstWhere(
+                                                  (opt) =>
+                                                      opt['tipe'] ==
+                                                      pegawai.seksi,
+                                                  orElse: () => {},
+                                                );
+                                            seksiDisplay =
+                                                match['nama']?.toString() ??
+                                                pegawai.seksi.toString();
+                                          }
+                                          return pegawai.nip
+                                                  .toLowerCase()
+                                                  .contains(q) ||
+                                              pegawai.nama
+                                                  .toLowerCase()
+                                                  .contains(q) ||
+                                              seksiDisplay
+                                                  .toLowerCase()
+                                                  .contains(q) ||
+                                              (pegawai.nip2
+                                                      ?.toLowerCase()
+                                                      .contains(q) ??
+                                                  false) ||
+                                              pegawai.pangkat
+                                                  .toString()
+                                                  .contains(q) ||
+                                              pegawai.jabatan
+                                                  .toString()
+                                                  .contains(q) ||
+                                              pegawai.tahun.toString().contains(
+                                                q,
+                                              );
+                                        })
+                                        .map((pegawai) {
+                                          String seksiDisplay = '-';
+                                          if (pegawai.seksi != null) {
+                                            final match = _seksiOptions
+                                                .firstWhere(
+                                                  (opt) =>
+                                                      opt['tipe'] ==
+                                                      pegawai.seksi,
+                                                  orElse: () => {},
+                                                );
+                                            seksiDisplay =
+                                                match['nama']?.toString() ??
+                                                pegawai.seksi.toString();
+                                          }
+                                          return DataRow(
+                                            cells: [
+                                              DataCell(Text(pegawai.nip)),
+                                              DataCell(Text(pegawai.nama)),
+                                              DataCell(Text(seksiDisplay)),
+                                              DataCell(
+                                                Text(pegawai.nip2 ?? ''),
+                                              ),
+                                              DataCell(
+                                                Text(
+                                                  pegawai.pangkat.toString(),
+                                                ),
+                                              ),
+                                              DataCell(
+                                                Text(
+                                                  pegawai.jabatan.toString(),
+                                                ),
+                                              ),
+                                              DataCell(
+                                                Text(pegawai.tahun.toString()),
+                                              ),
+                                              const DataCell(SizedBox()),
+                                            ],
+                                          );
+                                        })
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-          ),
+              ),
+            ),
+          ],
         ),
-        ],
       ),
-    ));
-}
+    );
+  }
 }

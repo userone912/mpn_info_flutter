@@ -64,7 +64,7 @@ class CsvImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 6) {
+          if (data.length < AppConstants.seksiColumnCount) {
             errors.add('Baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -83,9 +83,7 @@ class CsvImportService {
             'id': int.tryParse(data[0]) ?? 0,
             'kantor': data[1],
             'tipe': int.tryParse(data[2]) ?? 0,
-            'nama': data[3],
-            'kode': data[4],
-            'telp': data[5],
+            'nama': data[3]
           });
 
           successCount++;
@@ -162,7 +160,7 @@ class CsvImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 8) {
+          if (data.length < AppConstants.pegawaiColumnCount) {
             errors.add('Baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -177,15 +175,15 @@ class CsvImportService {
           }
 
           // Validate SEKSI exists (NEW: Foreign key constraint)
-          final seksiId = int.tryParse(data[4]) ?? 0;
+          final seksiId = int.tryParse(data[5]) ?? 0;
           if (seksiId > 0) {
             final seksiExists = await DatabaseService.query(
               AppConstants.tableSeksi,
-              where: 'id = ?',
+              where: 'tipe = ?',
               whereArgs: [seksiId]
             );
             if (seksiExists.isEmpty) {
-              errors.add('Baris ${i + 1}: SEKSI ID $seksiId tidak ditemukan dalam tabel seksi');
+              errors.add('Baris ${i + 1}: SEKSI tipe $seksiId tidak ditemukan dalam tabel seksi');
               errorCount++;
               continue;
             }
@@ -197,8 +195,8 @@ class CsvImportService {
             'nip': data[1],
             'nip2': data[2],
             'nama': data[3],
-            'seksi': int.tryParse(data[4]) ?? 0,
-            'pangkat': int.tryParse(data[5]) ?? 0,
+            'pangkat': int.tryParse(data[4]) ?? 0,
+            'seksi': int.tryParse(data[5]) ?? 0,
             'jabatan': int.tryParse(data[6]) ?? 0,
             'tahun': int.tryParse(data[7]) ?? DateTime.now().year,
           });
@@ -286,7 +284,7 @@ class CsvImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 5) {
+          if (data.length < AppConstants.userColumnCount) {
             errors.add('Baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;
@@ -467,9 +465,6 @@ class CsvImportService {
     }
   }
 
-  /// Import Rencana Penerimaan data from CSV file
-  /// File format: RENPEN-{KODE_KANTOR}-{TAHUN}.csv
-  /// Header: KPP;NIP;KDMAP;BULAN;TAHUN;TARGET
   static Future<ImportResult> importRencanaPenerimaan() async {
     final result = await _pickFile('Import Rencana Penerimaan');
     if (result == null) return ImportResult.cancelled();
@@ -494,7 +489,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^RENPEN-\w{3}-\d{4}\.csv$').hasMatch(fileName)) {
+      if (!RegExp(r'^RENPEN-\w{3}-\d{4}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: RENPEN-{KODE_KANTOR}-{TAHUN}.csv'
@@ -540,7 +535,7 @@ class CsvImportService {
 
         try {
           final data = _parseCsvLine(line);
-          if (data.length < 6) {
+          if (data.length < AppConstants.renpenColumnCount) {
             errors.add('Baris ${i + 1}: Kolom tidak lengkap');
             errorCount++;
             continue;

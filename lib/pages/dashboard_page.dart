@@ -21,7 +21,7 @@ import 'reference/klu_page.dart';
 import 'reference/map_page.dart';
 import '../data/services/reference_data_service.dart';
 import '../data/services/setting_data_service.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import '../charts/monthly_setor_chart.dart';
 
 /// Main dashboard page after login
 class DashboardPage extends ConsumerStatefulWidget {
@@ -32,199 +32,9 @@ class DashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
+  // Chart key to force rebuild and animation
+  int _chartRefreshKey = 0;
 
-  // Syncfusion chart builder for dynamic chart type
-  Widget _buildDynamicChartSf() {
-    List<Map<String, dynamic>> data;
-    String flagKey;
-    if (_selectedDataset == 'PKPM') {
-      data = _dashboardDataService.monthlyFlagPkpmData;
-      flagKey = 'FLAG_PKPM';
-    } else if (_selectedDataset == 'BO') {
-      data = _dashboardDataService.monthlyFlagBoData;
-      flagKey = 'FLAG_BO';
-    } else if (_selectedDataset == 'VOLUNTARY') {
-      data = _dashboardDataService.monthlyVoluntaryData;
-      flagKey = 'VOLUNTARY';
-    } else {
-      data = [];
-      flagKey = '';
-    }
-    if (data.isEmpty) {
-      return const Center(child: Text('Data belum tersedia'));
-    }
-    if (_chartTypeMonthlySetor == 'Bar') {
-      // Bar chart: group by BLN_SETOR, each flag is a series
-      final Map<String, Map<String, double>> grouped = {};
-      final Set<String> flagSet = {};
-      for (var row in data) {
-        final bln = row['BLN_SETOR']?.toString() ?? '';
-        final flag = row[flagKey]?.toString() ?? '';
-        final total = (row['total_setor'] ?? 0).toDouble();
-        flagSet.add(flag);
-        grouped[bln] ??= {};
-        grouped[bln]![flag] = total;
-      }
-      final flagList = flagSet.toList()..sort();
-      final monthNames = AppConstants.indonesianMonthsShort;
-      final blnList = List.generate(12, (i) => (i + 1).toString());
-      // Prepare chart data for each flag
-      List<CartesianSeries<dynamic, String>> series = [];
-      for (int j = 0; j < flagList.length; j++) {
-        final flag = flagList[j];
-        final color = Colors.primaries[j % Colors.primaries.length];
-        final chartData = [
-          for (int i = 0; i < blnList.length; i++)
-            {
-              'month': monthNames[i],
-              'value': grouped[blnList[i]]?[flag] ?? 0.0,
-            },
-        ];
-        series.add(
-          ColumnSeries<dynamic, String>(
-            dataSource: chartData,
-            xValueMapper: (d, _) => d['month'],
-            yValueMapper: (d, _) => d['value'],
-            name: flag,
-            color: color,
-            borderRadius: BorderRadius.circular(8),
-            dataLabelSettings: const DataLabelSettings(isVisible: false),
-          ),
-        );
-      }
-      return SfCartesianChart(
-        legend: Legend(isVisible: true, position: LegendPosition.bottom),
-        zoomPanBehavior: ZoomPanBehavior(
-          enablePinching: true,
-          enablePanning: true,
-          zoomMode: ZoomMode.xy,
-        ),
-        primaryXAxis: CategoryAxis(),
-        primaryYAxis: NumericAxis(
-          labelStyle: const TextStyle(fontSize: 10),
-          axisLabelFormatter: (AxisLabelRenderDetails details) {
-            final value = details.value;
-            String formatted;
-            if (value >= 1000000000) {
-              formatted = 'Rp. ${(value / 1000000000).toStringAsFixed(1)}M';
-            } else if (value >= 1000000) {
-              formatted = 'Rp. ${(value / 1000000).toStringAsFixed(1)}Jt';
-            } else {
-              formatted = 'Rp. ${value.toStringAsFixed(0)}';
-            }
-            return ChartAxisLabel(formatted, const TextStyle(fontSize: 10));
-          },
-        ),
-        series: series,
-        tooltipBehavior: TooltipBehavior(enable: true),
-      );
-    } else if (_chartTypeMonthlySetor == 'Line') {
-      // Line chart: each flag is a line, x-axis is month, y-axis is total_setor
-      final Map<String, Map<String, double>> grouped = {};
-      final Set<String> flagSet = {};
-      for (var row in data) {
-        final bln = row['BLN_SETOR']?.toString() ?? '';
-        final flag = row[flagKey]?.toString() ?? '';
-        final total = (row['total_setor'] ?? 0).toDouble();
-        flagSet.add(flag);
-        grouped[flag] ??= {};
-        grouped[flag]![bln] = total;
-      }
-      final flagList = flagSet.toList()..sort();
-      final monthNames = AppConstants.indonesianMonthsShort;
-      final blnList = List.generate(12, (i) => (i + 1).toString());
-      List<CartesianSeries<dynamic, String>> series = [];
-      for (int f = 0; f < flagList.length; f++) {
-        final flag = flagList[f];
-        final color = Colors.primaries[f % Colors.primaries.length];
-        final chartData = [
-          for (int i = 0; i < blnList.length; i++)
-            {
-              'month': monthNames[i],
-              'value': grouped[flag]?[blnList[i]] ?? 0.0,
-            },
-        ];
-        series.add(
-          LineSeries<dynamic, String>(
-            dataSource: chartData,
-            xValueMapper: (d, _) => d['month'],
-            yValueMapper: (d, _) => d['value'],
-            name: flag,
-            color: color,
-            dataLabelSettings: const DataLabelSettings(isVisible: false),
-            markerSettings: const MarkerSettings(isVisible: false),
-          ),
-        );
-      }
-      return SfCartesianChart(
-        legend: Legend(isVisible: true, position: LegendPosition.bottom),
-        primaryXAxis: CategoryAxis(),
-        primaryYAxis: NumericAxis(
-          labelStyle: const TextStyle(fontSize: 10),
-          axisLabelFormatter: (AxisLabelRenderDetails details) {
-            final value = details.value;
-            String formatted;
-            if (value >= 1000000000) {
-              formatted = 'Rp. ${(value / 1000000000).toStringAsFixed(1)}M';
-            } else if (value >= 1000000) {
-              formatted = 'Rp. ${(value / 1000000).toStringAsFixed(1)}Jt';
-            } else {
-              formatted = 'Rp. ${value.toStringAsFixed(0)}';
-            }
-            return ChartAxisLabel(formatted, const TextStyle(fontSize: 10));
-          },
-        ),
-        series: series,
-        tooltipBehavior: TooltipBehavior(enable: true),
-      );
-    } else if (_chartTypeMonthlySetor == 'Pie') {
-      // Pie chart: sum all total_setor per flag for the year
-      final Map<String, double> flagTotals = {};
-      for (var row in data) {
-        final flag = row[flagKey]?.toString() ?? '';
-        final total = (row['total_setor'] ?? 0).toDouble();
-        flagTotals[flag] = (flagTotals[flag] ?? 0) + total;
-      }
-      final flagList = flagTotals.keys.toList()..sort();
-      double totalAll = flagTotals.values.fold(0, (a, b) => a + b);
-      final chartData = [
-        for (int i = 0; i < flagList.length; i++)
-          {
-            'flag': flagList[i],
-            'value': flagTotals[flagList[i]] ?? 0.0,
-            'percent': totalAll > 0
-                ? (flagTotals[flagList[i]]! / totalAll * 100)
-                : 0.0,
-          },
-      ];
-      return SfCircularChart(
-        legend: Legend(isVisible: true, position: LegendPosition.bottom),
-        series: [
-          PieSeries<dynamic, String>(
-            dataSource: chartData,
-            xValueMapper: (d, _) => d['flag'],
-            yValueMapper: (d, _) => d['value'],
-            dataLabelMapper: (d, _) =>
-                '${d['flag']}\n${d['percent'].toStringAsFixed(1)}%',
-            pointColorMapper: (d, i) =>
-                Colors.primaries[i % Colors.primaries.length],
-            radius: '60%',
-            dataLabelSettings: const DataLabelSettings(
-              isVisible: true,
-              textStyle: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-        tooltipBehavior: TooltipBehavior(enable: true),
-      );
-    } else {
-      return const Center(child: Text('Unknown Chart Type'));
-    }
-  }
   // Dashboard data service instance
   final DashboardDataService _dashboardDataService = DashboardDataService();
 
@@ -249,38 +59,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(referenceDataProvider);
+      final referenceData = ref.read(referenceDataProvider);
+      print('[DashboardPage] referenceDataProvider cache: $referenceData');
+      final settingData = ref.read(settingDataProvider);
+      print('[DashboardPage] settingDataProvider cache: $settingData');
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(settingDataProvider);
-    });
-  _initKantorDropdown();
-  _initTahunDropdown();
+    _refreshDataDashboard();
+  }
+
+  Future<void> _refreshDataDashboard() async {
+    await _initKantorDropdown();
+    await _initTahunDropdown();
+    // Only load dashboard data if both are set
+    if (_selectedKpp != null && _selectedTahun != null) {
+      await _loadAllDashboardData();
+    }
+    // After refresh, check kantorKode again and show config dialog if needed
+    final kantorKode = await SettingDataService.getOfficeCodeFromDatabase();
+    if (kantorKode.isEmpty && mounted) {
+      _navigateToOfficeConfig(context);
+    }
   }
 
   Future<void> _initKantorDropdown() async {
     final kantorKode = await SettingDataService.getOfficeCodeFromDatabase();
-    if (kantorKode.isEmpty) {
-      // kantorKode is mandatory, prompt user to set it up
-      if (mounted) {
-        _navigateToOfficeConfig(context);
-      }
-      return;
-    }
-    // Query kantor table for kpp and nama
+    print('kode kantor : $kantorKode');
     final result = await DatabaseService.rawQuery(
       'SELECT kpp, nama FROM kantor WHERE kpp = ?', [kantorKode],
     );
     if (result.isNotEmpty) {
-      _selectedKpp = result.first['kpp']?.toString();
-      _selectedKppNama = result.first['nama']?.toString();
-      _kantorList = [
-        {'kpp': _selectedKpp ?? '', 'nama': _selectedKppNama ?? ''},
-      ];
-      // Only load data if tahun is already loaded
-      if (_selectedTahun != null) {
-        await _loadAllDashboardData();
-      }
+      setState(() {
+        _selectedKpp = result.first['kpp']?.toString();
+        _selectedKppNama = result.first['nama']?.toString();
+        _kantorList = [
+          {'kpp': _selectedKpp ?? '', 'nama': _selectedKppNama ?? ''},
+        ];
+      });
     }
   }
 
@@ -289,12 +103,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       'SELECT DISTINCT THN_SETOR FROM ppmpkmbo ORDER BY THN_SETOR DESC',
       [],
     );
-    _tahunOptions = result.map((row) => row['THN_SETOR'].toString()).toList();
-    _selectedTahun = _tahunOptions.isNotEmpty ? _tahunOptions.first : null;
-    // Only load data if kantor is already loaded
-    if (_selectedKpp != null) {
-      await _loadAllDashboardData();
-    }
+    setState(() {
+      _tahunOptions = result.map((row) => row['THN_SETOR'].toString()).toList();
+      _selectedTahun = _tahunOptions.isNotEmpty ? _tahunOptions.first : null;
+    });
   }
 
   Future<void> _loadAllDashboardData() async {
@@ -302,7 +114,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     await _dashboardDataService.loadMonthlyFlagPkpmData(_selectedKpp ?? '', _selectedTahun);
     await _dashboardDataService.loadMonthlyFlagBoData(_selectedKpp ?? '', _selectedTahun);
     await _dashboardDataService.loadMonthlyVoluntaryData(_selectedKpp ?? '', _selectedTahun);
-    setState(() {});
+    setState(() {
+      _chartRefreshKey++;
+    });
   }
 
   @override
@@ -455,7 +269,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 IntrinsicWidth(
                   child: _tahunOptions.isEmpty
                       ? DropdownButtonFormField<String>(
-                          value: DateTime.now().year.toString(),
+                          value: null,
                           decoration: const InputDecoration(
                             labelText: 'Tahun Pembayaran',
                             border: OutlineInputBorder(),
@@ -464,8 +278,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           ),
                           items: [
                             DropdownMenuItem(
-                              value: DateTime.now().year.toString(),
-                              child: Text(DateTime.now().year.toString(), style: TextStyle(color: Colors.red)),
+                              value: null,
+                              child: Text('Table PKPMBO kosong!', style: TextStyle(color: Colors.red)),
                             ),
                           ],
                           onChanged: null,
@@ -519,10 +333,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ElevatedButton.icon(
                   onPressed: () async {
                     _dashboardDataService.clearCache();
-                    await _dashboardDataService.loadMonthlyFlagPkpmData(_selectedKpp ?? '');
-                    await _dashboardDataService.loadMonthlyFlagBoData(_selectedKpp ?? '');
-                    await _dashboardDataService.loadMonthlyVoluntaryData(_selectedKpp ?? '');
-                    setState(() {});
+                    await _refreshDataDashboard();
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('Refresh Data'),
@@ -621,110 +432,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     flex: 2,
                     child: Column(
                       children: [
-                        // Accumulation comparison chart with zoom/pan controls
-                        Expanded(
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        'Penerimaan Per Bulan',
-                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      GestureDetector(
-                                        key: const ValueKey('chartTypeSwitchMonthlySetor'),
-                                        onTap: () {
-                                          setState(() {
-                                            final idx = _chartTypes.indexOf(_chartTypeMonthlySetor);
-                                            _chartTypeMonthlySetor = _chartTypes[(idx + 1) % _chartTypes.length];
-                                          });
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue.shade50,
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(color: Colors.blue.shade200),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                _chartTypeMonthlySetor == 'Bar' ? Icons.bar_chart :
-                                                _chartTypeMonthlySetor == 'Line' ? Icons.show_chart :
-                                                Icons.pie_chart,
-                                                color: Colors.blue.shade700,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(_chartTypeMonthlySetor, style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w500)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      // ...existing code...
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Expanded(
-                                    child: Container(
-                                      height: 320,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: ClipRect(
-                                        child: InteractiveViewer(
-                                          panEnabled: true,
-                                          scaleEnabled: true,
-                                          boundaryMargin: const EdgeInsets.all(50),
-                                          child: _buildDynamicChartSf(),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        ExpansionTile(
+                          title: Text(
+                            'Penerimaan Per Bulan',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
+                          initiallyExpanded: true,
+                          children: [
+                            MonthlySetorChart(
+                              chartRefreshKey: _chartRefreshKey,
+                              chartTypeMonthlySetor: _chartTypeMonthlySetor,
+                              chartTypes: _chartTypes,
+                              selectedDataset: _selectedDataset,
+                              dashboardData: _selectedDataset == 'PKPM'
+                                  ? _dashboardDataService.monthlyFlagPkpmData
+                                  : _selectedDataset == 'BO'
+                                      ? _dashboardDataService.monthlyFlagBoData
+                                      : _dashboardDataService.monthlyVoluntaryData,
+                              onChartTypeChanged: (type) {
+                                setState(() {
+                                  _chartTypeMonthlySetor = type;
+                                });
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Monthly comparison chart
-                        Expanded(
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Perbandingan Penerimaan Per Bulan',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey.shade300),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -975,6 +710,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   void _navigateToPegawai(BuildContext context) {
+    // Refresh Pegawai cache before opening dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(settingDataProvider);
+    });
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -1007,6 +746,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   void _navigateToSeksi(BuildContext context) {
+    // Refresh Seksi cache before opening dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(settingDataProvider);
+    });
     showDialog(
       context: context,
       barrierDismissible: true,

@@ -16,14 +16,12 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
   bool _loading = true;
   int? _editingIndex;
   final _formKey = GlobalKey<FormState>();
-  String _kode = '';
+  String _kantor = '';
   String _nama = '';
   int _tipe = 0;
-  String _telp = '';
-  final TextEditingController _kodeController = TextEditingController();
+  final TextEditingController _kantorController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _tipeController = TextEditingController();
-  final TextEditingController _telpController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -35,7 +33,7 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
 
   Future<void> _loadSeksi() async {
     setState(() => _loading = true);
-    final settingService = ref.read(settingDataServiceProvider);
+    final settingService = SettingDataService();
     if (!settingService.isSeksiLoaded) {
       await settingService.loadSeksiData();
     }
@@ -47,28 +45,24 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
     setState(() {
       _editingIndex = index;
       final seksi = _seksiList[index];
-      _kode = seksi.kode;
+      _kantor = seksi.kantor;
       _nama = seksi.nama;
       _tipe = seksi.tipe;
-      _telp = seksi.telp;
-      _kodeController.text = _kode;
+      _kantorController.text = _kantor;
       _namaController.text = _nama;
       _tipeController.text = _tipe.toString();
-      _telpController.text = _telp;
     });
   }
 
   void _cancelEdit() {
     setState(() {
       _editingIndex = null;
-      _kode = '';
+      _kantor = '';
       _nama = '';
       _tipe = 0;
-      _telp = '';
-      _kodeController.clear();
+      _kantorController.clear();
       _namaController.clear();
       _tipeController.clear();
-      _telpController.clear();
     });
   }
 
@@ -76,42 +70,35 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
     final settingService = ref.read(settingDataServiceProvider);
-      final kode = _kodeController.text;
+      final kantor = _kantorController.text;
       final nama = _namaController.text;
       final tipe = int.tryParse(_tipeController.text) ?? 0;
-      final telp = _telpController.text;
   // Fetch kantor from settings using CsvImportService
-  final kantor = await CsvImportService.getOfficeCodeFromDatabase();
       if (_editingIndex != null) {
         // Update existing
         final updated = SeksiModel(
           id: _seksiList[_editingIndex!].id,
-          kode: kode,
+          kantor: kantor,
           nama: nama,
           tipe: tipe,
-          telp: telp,
-          kantor: kantor,
         );
         await settingService.updateSeksi(updated);
         await settingService.refreshSeksiData();
         _seksiList = settingService.seksiData;
       } else {
         // Add new
-        final newSeksi = SeksiModel(kode: kode, nama: nama, tipe: tipe, telp: telp, kantor: kantor);
+        final newSeksi = SeksiModel( kantor: kantor, nama: nama, tipe: tipe);
         await settingService.addSeksi(newSeksi);
         await settingService.refreshSeksiData();
         _seksiList = settingService.seksiData;
       }
       setState(() {
         _editingIndex = null;
-        _kode = '';
+        _kantor = '';
         _nama = '';
-        _tipe = 0;
-        _telp = '';
-        _kodeController.clear();
+        _kantorController.clear();
         _namaController.clear();
         _tipeController.clear();
-        _telpController.clear();
       });
     }
   }
@@ -243,7 +230,7 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
                     SizedBox(
                       width: 60,
                       child: TextFormField(
-                        controller: _kodeController,
+                        controller: _kantorController,
                         decoration: const InputDecoration(labelText: 'Kode'),
                         maxLength: 2,
                         validator: (v) => v == null || v.isEmpty ? 'Kode wajib diisi' : null,
@@ -268,15 +255,6 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
                         keyboardType: TextInputType.number,
                         maxLength: 11,
                         validator: (v) => v == null || v.isEmpty ? 'Tipe wajib diisi' : null,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 180,
-                      child: TextFormField(
-                        controller: _telpController,
-                        decoration: const InputDecoration(labelText: 'Telp'),
-                        maxLength: 64,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -315,28 +293,25 @@ class _SeksiManageDialogState extends ConsumerState<SeksiManageDialog> {
                           scrollDirection: Axis.vertical,
                           child: DataTable(
                             columns: const [
-                              DataColumn(label: Text('Kode')),
+                              DataColumn(label: Text('Kantor')),
                               DataColumn(label: Text('Nama Seksi')),
                               DataColumn(label: Text('Tipe')),
-                              DataColumn(label: Text('Telp')),
                               DataColumn(label: Text('Aksi')),
                             ],
                             rows: _seksiList
                                 .where((seksi) {
                                   final q = _searchQuery.toLowerCase();
                                   if (q.isEmpty) return true;
-                                  return seksi.kode.toLowerCase().contains(q) ||
+                                  return seksi.kantor.toLowerCase().contains(q) ||
                                       seksi.nama.toLowerCase().contains(q) ||
-                                      seksi.tipe.toString().contains(q) ||
-                                      seksi.telp.toLowerCase().contains(q);
+                                      seksi.tipe.toString().contains(q);
                                 })
                                 .map((seksi) {
                                   final index = _seksiList.indexOf(seksi);
                                   return DataRow(cells: [
-                                    DataCell(Text(seksi.kode)),
+                                    DataCell(Text(seksi.kantor)),
                                     DataCell(Text(seksi.nama)),
                                     DataCell(Text(seksi.tipe.toString())),
-                                    DataCell(Text(seksi.telp)),
                                     DataCell(Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
