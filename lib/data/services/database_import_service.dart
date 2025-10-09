@@ -7,11 +7,11 @@ import 'csv_import_service.dart';
 
 /// Database Import Service
 /// Consolidated import service that scans for CSV files and imports them automatically
-/// Similar to Update Referensi but for database tables (Seksi, Pegawai, User, SPMKP)
+/// Similar to Update Referensi but for database tables (Seksi, Pegawai, User, Renpen)
 class DatabaseImportService {
   
   /// Import all database CSV files from selected directory
-  /// Scans for SEKSI-{KODE}.csv, PEGAWAI-{KODE}.csv, USER.csv, SPMKP-{KODE}-{YEAR}.csv
+  /// Scans for SEKSI-{KODE}.csv, PEGAWAI-{KODE}.csv, USER.csv, RENPEN-{KODE}-{YEAR}.csv
   /// Validates KODE_KANTOR against settings.kantor.kode (Qt legacy behavior)
   static Future<ImportResult> importAllDatabaseFiles({void Function(double progress, int currentRow, int totalRows, String fileName)? onProgress}) async {
   print('[DEBUG] Scanning for PKPM/PPM files...');
@@ -154,10 +154,10 @@ class DatabaseImportService {
         allErrors.addAll(result.errors);
       }
 
-      // 4. Import SPMKP files
-      final spmkpFiles = csvFiles.where((f) => _isSpmkpFile(f.path)).toList();
-      for (final file in spmkpFiles) {
-        final kodeFromFile = _extractKodeFromSpmkpFile(file.path);
+      // 4. Import RENPEN files
+      final renpenFiles = csvFiles.where((f) => _isRenpenFile(f.path)).toList();
+      for (final file in renpenFiles) {
+        final kodeFromFile = _extractKodeFromRenpenFile(file.path);
         final fileName = file.path.split(Platform.pathSeparator).last;
         if (kodeFromFile != kantorKode) {
           results[fileName] = ImportResult.error(
@@ -173,7 +173,7 @@ class DatabaseImportService {
         final totalRows = lines.length - 1;
         if (onProgress != null) onProgress(0.0, 0, totalRows, fileName);
         int currentRow = 0;
-        final result = await _importSpmkpFile(file);
+        final result = await _importRenpenFile(file);
         if (onProgress != null) onProgress(1.0, totalRows, totalRows, fileName);
         results[fileName] = result;
         totalSuccess += result.successCount;
@@ -261,9 +261,9 @@ class DatabaseImportService {
     return RegExp(r'^USER-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName);
   }
 
-  static bool _isSpmkpFile(String path) {
+  static bool _isRenpenFile(String path) {
     final fileName = path.split(Platform.pathSeparator).last;
-    return RegExp(r'^SPMKP-\w{3}-\d{4}\.csv$', caseSensitive: false).hasMatch(fileName);
+    return RegExp(r'^RENPEN-\w{3}-\d{4}\.csv$', caseSensitive: false).hasMatch(fileName);
   }
 
   // Code extraction methods (STRICT: Position-based extraction)
@@ -282,7 +282,7 @@ class DatabaseImportService {
     return fileName.split('-')[1].split('.')[0];
   }
 
-  static String _extractKodeFromSpmkpFile(String path) {
+  static String _extractKodeFromRenpenFile(String path) {
     final fileName = path.split(Platform.pathSeparator).last;
     return fileName.split('-')[1];
   }
@@ -555,7 +555,7 @@ class DatabaseImportService {
     }
   }
 
-  static Future<ImportResult> _importSpmkpFile(File file) async {
+  static Future<ImportResult> _importRenpenFile(File file) async {
     try {
       final content = await file.readAsString();
       final lines = content.split('\n');
@@ -566,10 +566,10 @@ class DatabaseImportService {
 
       // Validate header
       final header = lines[0].trim();
-      if (header != AppConstants.spmkpHeaderFormat) {
+      if (header != AppConstants.renpenHeaderFormat) {
         return ImportResult.error(
-          AppConstants.importErrorHeader, 
-          'Header harus: ${AppConstants.spmkpHeaderFormat}'
+          AppConstants.importErrorHeader,
+          'Header harus: ${AppConstants.renpenHeaderFormat}'
         );
       }
 
@@ -578,9 +578,9 @@ class DatabaseImportService {
       final kodeKantor = parts[1];
       final tahun = int.tryParse(parts[2].split('.')[0]) ?? DateTime.now().year;
 
-      // Delete existing SPMKP data for this office and year (Qt legacy behavior)
+      // Delete existing RENPEN data for this office and year (Qt legacy behavior)
       await DatabaseService.delete(
-        AppConstants.tableSpmkp, 
+        AppConstants.tableRenpen, 
         'admin = ? AND tahun = ?', 
         [kodeKantor, tahun]
       );
@@ -603,15 +603,13 @@ class DatabaseImportService {
           }
 
           // Insert into database with admin field from filename (Qt legacy behavior)
-          await DatabaseService.insert(AppConstants.tableSpmkp, {
-            'admin': kodeKantor,  // From filename, not from CSV data
-            'npwp': data[0],      // NPWP field
-            'kpp': data[1],       // KPP field
-            'cabang': data[2],    // CABANG field
-            'kdmap': data[3],     // KDMAP field
-            'bulan': int.tryParse(data[4]) ?? 1,
-            'tahun': int.tryParse(data[5]) ?? tahun,
-            'nominal': double.tryParse(data[6]) ?? 0.0,
+          await DatabaseService.insert(AppConstants.tableRenpen, {
+            'kpp': kodeKantor,  // From filename, not from CSV data
+            'nip': data[0],      // NPWP field
+            'kdmap': data[1],       // KPP field
+            'bulan': data[2],    // CABANG field
+            'tahun': int.tryParse(data[3])?? tahun,     // KDMAP field
+            'target': int.tryParse(data[4]) ?? 0.0
           });
 
           successCount++;

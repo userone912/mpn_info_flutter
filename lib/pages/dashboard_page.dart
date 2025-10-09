@@ -51,7 +51,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       flagKey = '';
     }
     if (data.isEmpty) {
-      return const Center(child: Text('Data sedang dimuat...'));
+      return const Center(child: Text('Data belum tersedia'));
     }
     if (_chartTypeMonthlySetor == 'Bar') {
       // Bar chart: group by BLN_SETOR, each flag is a series
@@ -66,20 +66,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         grouped[bln]![flag] = total;
       }
       final flagList = flagSet.toList()..sort();
-      final monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
+      final monthNames = AppConstants.indonesianMonthsShort;
       final blnList = List.generate(12, (i) => (i + 1).toString());
       // Prepare chart data for each flag
       List<CartesianSeries<dynamic, String>> series = [];
@@ -144,20 +131,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         grouped[flag]![bln] = total;
       }
       final flagList = flagSet.toList()..sort();
-      final monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
+      final monthNames = AppConstants.indonesianMonthsShort;
       final blnList = List.generate(12, (i) => (i + 1).toString());
       List<CartesianSeries<dynamic, String>> series = [];
       for (int f = 0; f < flagList.length; f++) {

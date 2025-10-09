@@ -470,31 +470,28 @@ class DatabaseMigrationService {
         print('Detected CSV delimiter: semicolon (;)');
       }
       
-      final List<List<dynamic>> csvTable = CsvToListConverter(
-        fieldDelimiter: delimiter,
-        eol: '\n',
-      ).convert(csvData);
-      
-      if (csvTable.isEmpty) return 0;
-      
-      // First row is header
-      final headers = csvTable[0].map((e) => e.toString().trim()).toList();
-      
+      // Manual CSV parsing to preserve leading zeros
+      final lines = csvData.split('\n').where((line) => line.trim().isNotEmpty).toList();
+      if (lines.isEmpty) return 0;
+
+      // Parse header
+      final headers = lines[0].split(delimiter).map((e) => e.trim()).toList();
+
       // Clear existing data
       await DatabaseService.rawQuery('DELETE FROM `$csvFileName`');
-      
+
       // Insert new data
       int recordsInserted = 0;
-      for (int i = 1; i < csvTable.length; i++) {
-        final row = csvTable[i];
+      for (int i = 1; i < lines.length; i++) {
+        final row = lines[i].split(delimiter);
         if (row.isEmpty) continue;
-        
+
         final data = <String, dynamic>{};
         for (int j = 0; j < headers.length && j < row.length; j++) {
-          // Trim data values to remove trailing whitespace/newlines
-          data[headers[j]] = row[j]?.toString().trim() ?? '';
+          // Preserve leading zeros by treating all as String
+          data[headers[j]] = row[j].trim();
         }
-        
+
         // Use raw SQL to avoid automatic timestamp columns during migration
         final fields = data.keys.map((key) => '`$key`').join(', ');
         final placeholders = List.filled(data.length, '?').join(', ');
@@ -504,7 +501,7 @@ class DatabaseMigrationService {
         );
         recordsInserted++;
       }
-      
+
       print('Loaded $recordsInserted records into $csvFileName table');
       return recordsInserted;
       

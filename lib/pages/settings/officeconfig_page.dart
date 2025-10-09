@@ -5,6 +5,8 @@ import '../../data/services/setting_data_service.dart';
 import '../../data/services/reference_data_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dashboard_page.dart';
+
 class OfficeConfigDialog extends ConsumerStatefulWidget {
   const OfficeConfigDialog({Key? key}) : super(key: key);
 
@@ -136,7 +138,18 @@ class _OfficeConfigDialogState extends ConsumerState<OfficeConfigDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pengaturan kantor berhasil disimpan.'), backgroundColor: Colors.green),
       );
+      // Close dialog first, then navigate to dashboard after frame
       Navigator.of(context).pop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+            (route) => false,
+          );
+        } catch (e) {
+          print('[OfficeConfigDialog] Error refreshing app data: $e');
+        }
+      });
     }
   }
 
