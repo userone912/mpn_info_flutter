@@ -8,7 +8,9 @@ class MonthlySetorChart extends StatelessWidget {
   final String chartTypeMonthlySetor;
   final List<String> chartTypes;
   final String selectedDataset;
+  final String selectedDatasetLabel;
   final List<Map<String, dynamic>> dashboardData;
+  final List<Map<String, dynamic>> monthlyRenpenData;
   final Function(String) onChartTypeChanged;
 
   const MonthlySetorChart({
@@ -17,7 +19,9 @@ class MonthlySetorChart extends StatelessWidget {
     required this.chartTypeMonthlySetor,
     required this.chartTypes,
     required this.selectedDataset,
+    required this.selectedDatasetLabel,
     required this.dashboardData,
+    required this.monthlyRenpenData,
     required this.onChartTypeChanged,
   }) : super(key: key);
 
@@ -25,6 +29,7 @@ class MonthlySetorChart extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use dashboardData and selectedDataset to determine chart data
     List<Map<String, dynamic>> data = dashboardData;
+    List<Map<String, dynamic>> renpenData = monthlyRenpenData;
     String flagKey;
     if (selectedDataset == 'PKPM') {
       flagKey = 'FLAG_PKPM';
@@ -36,7 +41,8 @@ class MonthlySetorChart extends StatelessWidget {
       flagKey = '';
     }
     Widget chartWidget;
-    if (data.isEmpty) {
+    // Safe checks for empty or mismatched data
+    if (data.isEmpty && renpenData.isEmpty) {
       chartWidget = const Center(child: Text('Data belum tersedia'));
     } else if (chartTypeMonthlySetor == 'Bar') {
       final Map<String, Map<String, double>> grouped = {};
@@ -49,16 +55,24 @@ class MonthlySetorChart extends StatelessWidget {
         grouped[bln]![flag] = total;
         flagTotals[flag] = (flagTotals[flag] ?? 0) + total;
       }
-      final flagList = flagTotals.keys.toList()
+      // Prepare Renpen monthly map: {bln: total_target}
+      final Map<String, double> renpenMonthly = {};
+      for (var row in renpenData) {
+        final bln = row['BLN_SETOR']?.toString() ?? '';
+        final total = (row['total_target'] ?? 0).toDouble();
+        renpenMonthly[bln] = total;
+      }
+      final flagList = flagTotals.keys.where((e) => e.isNotEmpty).toList()
         ..sort((a, b) => flagTotals[a]!.compareTo(flagTotals[b]!));
       final monthNames = AppConstants.indonesianMonthsShort;
       final blnList = List.generate(12, (i) => (i + 1).toString());
       final chartData = [
-        for (int i = 0; i < blnList.length; i++)
+        for (int i = 0; i < blnList.length && i < monthNames.length; i++)
           {
             'month': monthNames[i],
             for (final flag in flagList)
               flag: grouped[blnList[i]]?[flag] ?? 0.0,
+            'REN': renpenMonthly[blnList[i]] ?? 0.0,
           }
       ];
       String formatCurrency(num val) {
@@ -93,26 +107,44 @@ class MonthlySetorChart extends StatelessWidget {
         ),
         series: [
           for (int j = 0; j < flagList.length; j++)
-            StackedColumnSeries<dynamic, String>(
-              dataSource: chartData,
-              xValueMapper: (d, _) => d['month'],
-              yValueMapper: (d, _) => d[flagList[j]],
-              name: flagList[j],
-              color: Colors.primaries[j % Colors.primaries.length],
-              dataLabelSettings: const DataLabelSettings(isVisible: false),
-            ),
+            if (j >= 0 && j < flagList.length)
+              StackedColumnSeries<dynamic, String>(
+                dataSource: chartData,
+                xValueMapper: (d, _) => d['month'],
+                yValueMapper: (d, _) => d[flagList[j]],
+                name: flagList[j],
+                color: Colors.primaries[j % Colors.primaries.length],
+                dataLabelSettings: const DataLabelSettings(isVisible: false),
+              ),
+          // Renpen series (always last, distinct color)
+          ColumnSeries<dynamic, String>(
+            dataSource: chartData,
+            xValueMapper: (d, _) => d['month'],
+            yValueMapper: (d, _) => d['REN'],
+            name: 'Renpen',
+            color: Colors.deepPurple,
+            dataLabelSettings: const DataLabelSettings(isVisible: false),
+          ),
         ],
         tooltipBehavior: TooltipBehavior(
           enable: true,
           format: null,
           builder: (dynamic data, dynamic point, dynamic series, int pointIndex, int seriesIndex) {
             final month = data['month'];
-            final flag = flagList[seriesIndex];
-            final value = data[flag] ?? 0.0;
+            String flag = '';
+            double value = 0.0;
+            if (seriesIndex < flagList.length) {
+              flag = flagList[seriesIndex];
+              value = flag.isNotEmpty ? (data[flag] ?? 0.0) : 0.0;
+            } else if (seriesIndex == flagList.length) {
+              flag = 'Renpen';
+              value = data['REN'] ?? 0.0;
+            }
             double totalBar = 0.0;
             for (final f in flagList) {
               totalBar += data[f] ?? 0.0;
             }
+            totalBar += data['REN'] ?? 0.0;
             final percent = totalBar > 0 ? (value / totalBar * 100) : 0.0;
             return Container(
               padding: const EdgeInsets.all(8),
@@ -126,8 +158,8 @@ class MonthlySetorChart extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('$month', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text('$flag: ${formatCurrency(value)}'),
-                  Text('(${percent.toStringAsFixed(1)}% dari total)'),
+                  Text(flag.isNotEmpty ? '$flag: ${formatCurrency(value)}' : ''),
+                  Text(flag.isNotEmpty ? '(${percent.toStringAsFixed(1)}% dari total)' : ''),
                 ],
               ),
             );
@@ -141,36 +173,64 @@ class MonthlySetorChart extends StatelessWidget {
         final bln = row['BLN_SETOR']?.toString() ?? '';
         final flag = row[flagKey]?.toString() ?? '';
         final total = (row['total_setor'] ?? 0).toDouble();
-        flagSet.add(flag);
+        if (flag.isNotEmpty) flagSet.add(flag);
         grouped[flag] ??= {};
         grouped[flag]![bln] = total;
+      }
+      // Prepare Renpen monthly map: {bln: total_target}
+      final Map<String, double> renpenMonthly = {};
+      for (var row in renpenData) {
+        final bln = row['BLN_SETOR']?.toString() ?? '';
+        final total = (row['total_target'] ?? 0).toDouble();
+        renpenMonthly[bln] = total;
       }
       final flagList = flagSet.toList()..sort();
       final monthNames = AppConstants.indonesianMonthsShort;
       final blnList = List.generate(12, (i) => (i + 1).toString());
       List<CartesianSeries<dynamic, String>> series = [];
       for (int f = 0; f < flagList.length; f++) {
-        final flag = flagList[f];
-        final color = Colors.primaries[f % Colors.primaries.length];
-        final chartData = [
-          for (int i = 0; i < blnList.length; i++)
-            {
-              'month': monthNames[i],
-              'value': grouped[flag]?[blnList[i]] ?? 0.0,
-            },
-        ];
-        series.add(
-          LineSeries<dynamic, String>(
-            dataSource: chartData,
-            xValueMapper: (d, _) => d['month'],
-            yValueMapper: (d, _) => d['value'],
-            name: flag,
-            color: color,
-            dataLabelSettings: const DataLabelSettings(isVisible: false),
-            markerSettings: const MarkerSettings(isVisible: false),
-          ),
-        );
+        if (f >= 0 && f < flagList.length) {
+          final flag = flagList[f];
+          final color = Colors.primaries[f % Colors.primaries.length];
+          final chartData = [
+            for (int i = 0; i < blnList.length && i < monthNames.length; i++)
+              {
+                'month': monthNames[i],
+                'value': grouped[flag]?[blnList[i]] ?? 0.0,
+              },
+          ];
+          series.add(
+            LineSeries<dynamic, String>(
+              dataSource: chartData,
+              xValueMapper: (d, _) => d['month'],
+              yValueMapper: (d, _) => d['value'],
+              name: flag,
+              color: color,
+              dataLabelSettings: const DataLabelSettings(isVisible: false),
+              markerSettings: const MarkerSettings(isVisible: false),
+            ),
+          );
+        }
       }
+      // Renpen line series
+      final renpenChartData = [
+        for (int i = 0; i < blnList.length && i < monthNames.length; i++)
+          {
+            'month': monthNames[i],
+            'value': renpenMonthly[blnList[i]] ?? 0.0,
+          },
+      ];
+      series.add(
+        LineSeries<dynamic, String>(
+          dataSource: renpenChartData,
+          xValueMapper: (d, _) => d['month'],
+          yValueMapper: (d, _) => d['value'],
+          name: 'Renpen',
+          color: Colors.deepPurple,
+          dataLabelSettings: const DataLabelSettings(isVisible: false),
+          markerSettings: const MarkerSettings(isVisible: false),
+        ),
+      );
       chartWidget = SfCartesianChart(
         key: ValueKey(chartRefreshKey),
         legend: Legend(isVisible: true, position: LegendPosition.bottom),
@@ -204,7 +264,7 @@ class MonthlySetorChart extends StatelessWidget {
       for (var row in data) {
         final flag = row[flagKey]?.toString() ?? '';
         final total = (row['total_setor'] ?? 0).toDouble();
-        flagTotals[flag] = (flagTotals[flag] ?? 0) + total;
+        if (flag.isNotEmpty) flagTotals[flag] = (flagTotals[flag] ?? 0) + total;
       }
       final flagList = flagTotals.keys.toList()..sort();
       double totalAll = flagTotals.values.fold(0, (a, b) => a + b);
@@ -282,6 +342,18 @@ class MonthlySetorChart extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                // Show selected dataset label in chart header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    selectedDatasetLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13, color: Colors.black87),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

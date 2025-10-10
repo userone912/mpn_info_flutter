@@ -247,7 +247,7 @@ class CsvImportService {
 
       // Validate filename format (STRICT: Exact pattern for function detection)
       final fileName = result.files.single.name;
-      if (!RegExp(r'^USER-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName)) {
+      if (!RegExp(r'^USERS-\w{3}\.csv$', caseSensitive: false).hasMatch(fileName)) {
         return ImportResult.error(
           AppConstants.importErrorFilename,
           'Format nama file: ${AppConstants.userFilePattern}'

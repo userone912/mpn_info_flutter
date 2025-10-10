@@ -87,6 +87,7 @@ enum MenuAction {
   updateDatabase,
   navigateKlu,
   navigateMap,
+  navigatePenerimaan,
   updateReferenceData,
   aboutDialog,
   comingSoon,
@@ -117,6 +118,8 @@ extension MenuActionExtension on MenuAction {
         return MenuAction.navigateKlu;
       case 'navigate_map':
         return MenuAction.navigateMap;
+      case 'navigate_penerimaan':
+        return MenuAction.navigatePenerimaan;
       case 'update_reference_data':
         return MenuAction.updateReferenceData;
       case 'about_dialog':

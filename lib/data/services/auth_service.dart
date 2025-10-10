@@ -249,8 +249,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Logout user
-  void logout() {
+  Future<void> logout() async {
+    state = state.copyWith(isLoading: true);
+    await Future.delayed(const Duration(milliseconds: 100));
     state = const AuthState();
   }
 

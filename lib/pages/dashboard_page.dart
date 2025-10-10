@@ -6,6 +6,7 @@ import '../data/services/dashboard_data_service.dart';
 import '../data/services/database_import_service.dart';
 import '../data/services/database_service.dart';
 import '../data/services/menu_service.dart';
+import 'penerimaan_page.dart';
 import '../data/models/user_model.dart';
 import '../data/models/import_result.dart';
 import '../data/models/menu_models.dart';
@@ -13,6 +14,7 @@ import '../core/constants/app_constants.dart';
 import '../shared/widgets/app_logo.dart';
 import '../shared/dialogs/about_dialog.dart' as app_about;
 import '../shared/utils/menu_icon_helper.dart';
+import '../shared/widgets/stat_gauge.dart';
 import 'settings/seksi_page.dart';
 import 'settings/pegawai_page.dart';
 import 'settings/officeconfig_page.dart';
@@ -55,6 +57,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   String _selectedDataset = 'PKPM';
   final List<String> _datasetOptions = ['PKPM', 'BO', 'VOLUNTARY'];
 
+  // Animation trigger for statistics and gauge
+  bool _animateStats = false;
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +78,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     // Only load dashboard data if both are set
     if (_selectedKpp != null && _selectedTahun != null) {
       await _loadAllDashboardData();
+      setState(() {
+        _animateStats = false;
+      });
+      // Trigger animation after data is loaded
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) setState(() => _animateStats = true);
+      });
     }
     // After refresh, check kantorKode again and show config dialog if needed
     final kantorKode = await SettingDataService.getOfficeCodeFromDatabase();
@@ -85,7 +97,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final kantorKode = await SettingDataService.getOfficeCodeFromDatabase();
     print('kode kantor : $kantorKode');
     final result = await DatabaseService.rawQuery(
-      'SELECT kpp, nama FROM kantor WHERE kpp = ?', [kantorKode],
+      'SELECT kpp, nama FROM kantor WHERE kpp = ?',
+      [kantorKode],
     );
     if (result.isNotEmpty) {
       setState(() {
@@ -111,19 +124,63 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Future<void> _loadAllDashboardData() async {
     // Load all datasets using selected kantor and tahun
-    await _dashboardDataService.loadMonthlyFlagPkpmData(_selectedKpp ?? '', _selectedTahun);
-    await _dashboardDataService.loadMonthlyFlagBoData(_selectedKpp ?? '', _selectedTahun);
-    await _dashboardDataService.loadMonthlyVoluntaryData(_selectedKpp ?? '', _selectedTahun);
+    await _dashboardDataService.loadMonthlyFlagPkpmData(
+      _selectedKpp ?? '',
+      _selectedTahun,
+    );
+    await _dashboardDataService.loadMonthlyFlagBoData(
+      _selectedKpp ?? '',
+      _selectedTahun,
+    );
+    await _dashboardDataService.loadMonthlyVoluntaryData(
+      _selectedKpp ?? '',
+      _selectedTahun,
+    );
+    await _dashboardDataService.loadMonthlyRenpenData(
+      _selectedKpp ?? '',
+      _selectedTahun,
+    );
+    await _loadStatistics();
+    await _dashboardDataService.loadRevenueData(_selectedKpp.toString());
     setState(() {
       _chartRefreshKey++;
     });
+  }
+
+  Future<void> _loadStatistics() async {
+    if (_selectedKpp == null || _selectedTahun == null) {
+      setState(() {});
+      return;
+    }
+    final kpp = _selectedKpp!;
+    final tahun = _selectedTahun!;
+    await _dashboardDataService.loadStatistics(kpp, tahun);
+    setState(() {});
+  }
+
+  String _formatCurrency(num val) {
+    String s = val.toStringAsFixed(0);
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    s = s.replaceAllMapped(
+      reg,
+      (Match m) => '${m[1]}${AppConstants.thousandSeparator}',
+    );
+    return '${AppConstants.currencySymbol} $s';
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final menuConfig = ref.watch(userMenuProvider);
-    
+
+    // Prevent null user access and handle unauthenticated state
+    if (!authState.isAuthenticated || authState.user == null) {
+      // Optionally show a loading indicator or blank page
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -144,7 +201,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             onSelected: (value) {
               switch (value) {
                 case 'profile':
-                  _showProfile(context, authState.user!);
+                  if (authState.user != null) {
+                    _showProfile(context, authState.user!);
+                  }
                   break;
                 case 'logout':
                   _handleLogout(context, ref);
@@ -169,7 +228,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     Icon(Icons.logout, color: Colors.red.shade700),
                     const SizedBox(width: 8),
-                    Text('Logout', style: TextStyle(color: Colors.red.shade700)),
+                    Text(
+                      'Logout',
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
                   ],
                 ),
               ),
@@ -183,7 +245,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     backgroundColor: Colors.white,
                     radius: 16,
                     child: Text(
-                      authState.user?.fullname.substring(0, 1).toUpperCase() ?? 'U',
+                      authState.user?.fullname.substring(0, 1).toUpperCase() ??
+                          'U',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontWeight: FontWeight.bold,
@@ -224,7 +287,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top toolbar with office, year, and chart type selection
             Row(
               children: [
                 IntrinsicWidth(
@@ -235,12 +297,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             labelText: 'Kantor',
                             border: OutlineInputBorder(),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                           items: [
                             DropdownMenuItem(
                               value: null,
-                              child: Text('Silakan lakukan pengaturan Kantor', style: TextStyle(color: Colors.red)),
+                              child: Text(
+                                'Silakan lakukan pengaturan Kantor',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                           ],
                           onChanged: null,
@@ -251,12 +319,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             labelText: 'Kantor',
                             border: OutlineInputBorder(),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
-                          items: _kantorList.map((item) => DropdownMenuItem(
-                            value: item['kpp'],
-                            child: Text(item['nama'] ?? item['kpp'] ?? ''),
-                          )).toList(),
+                          items: _kantorList
+                              .map(
+                                (item) => DropdownMenuItem(
+                                  value: item['kpp'],
+                                  child: Text(
+                                    item['nama'] ?? item['kpp'] ?? '',
+                                  ),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (value) async {
                             setState(() {
                               _selectedKpp = value;
@@ -274,12 +351,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             labelText: 'Tahun Pembayaran',
                             border: OutlineInputBorder(),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                           items: [
                             DropdownMenuItem(
                               value: null,
-                              child: Text('Table PKPMBO kosong!', style: TextStyle(color: Colors.red)),
+                              child: Text(
+                                'Table Penerimaan kosong!',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                           ],
                           onChanged: null,
@@ -290,12 +373,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             labelText: 'Tahun Pembayaran',
                             border: OutlineInputBorder(),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
-                          items: _tahunOptions.map((tahun) => DropdownMenuItem(
-                            value: tahun,
-                            child: Text(tahun),
-                          )).toList(),
+                          items: _tahunOptions
+                              .map(
+                                (tahun) => DropdownMenuItem(
+                                  value: tahun,
+                                  child: Text(tahun),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (value) async {
                             setState(() {
                               _selectedTahun = value;
@@ -314,12 +404,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       labelText: 'Dataset',
                       border: OutlineInputBorder(),
                       isDense: true,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
-                    items: _datasetOptions.map((opt) => DropdownMenuItem(
-                      value: opt,
-                      child: Text(opt),
-                    )).toList(),
+                    items: _datasetOptions
+                        .map(
+                          (opt) => DropdownMenuItem(
+                            value: opt,
+                            child: Text(AppConstants.datasetLabels[opt] ?? opt),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() {
@@ -337,11 +434,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('Refresh Data'),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 24),
-
             // Main content area
             Expanded(
               child: Row(
@@ -349,95 +445,112 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 children: [
                   // Left panel with gauge and statistics
                   Expanded(
-                    flex: 1,
+                    flex: 3,
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
                           // Gauge widget
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  // Placeholder for gauge - will implement with custom painter later
-                                  Container(
-                                    width: 200,
-                                    height: 200,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.grey.shade300, width: 2),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Center(
-                                          child: Container(
-                                            width: 180,
-                                            height: 180,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient: RadialGradient(
-                                                colors: [Colors.grey.shade100, Colors.grey.shade300],
-                                              ),
-                                            ),
-                                            child: const Center(
-                                              child: Text(
-                                                '0%',
-                                                style: TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                          Container(
+                            width: double.infinity,
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    // Placeholder for gauge - will implement with custom painter later
+                                    Container(
+                                      child: Stack(
+                                        children: [
+                                          Center(
+                                            child: Container(
+                                              child: StatGauge(
+                                                value: _animateStats
+                                                    ? _dashboardDataService
+                                                          .statPencapaian
+                                                    : 0.0,
                                               ),
                                             ),
                                           ),
-                                        ),
-                                    ],
-                                  ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Statistics table
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildStatRow('Total Penerimaan', '0,00'),
-                                _buildStatRow('Total SPMKP dan SPMPP', '0,00'),
-                                _buildStatRow('Total PBK', '0,00'),
-                                _buildStatRow('Total Netto', '0,00'),
-                                _buildStatRow('Total Renpen', '0,00'),
-                                _buildStatRow('Pencapaian', '0,00%'),
-                                _buildStatRow('Pertumbuhan', 'nan%'),
-                                const Divider(),
-                                _buildStatRow('Data MPN:', ''),
-                                _buildStatRow('Data SPM:', ''),
-                                _buildStatRow('MPN-Info v0.14.0', ''),
-                              ],
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 8.0,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildStatRowAnimated(
+                                      'Total Penerimaan',
+                                      _dashboardDataService.statPenerimaan,
+                                      formatter: _formatCurrency,
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Total SPMKP',
+                                      _dashboardDataService.statSpmkp,
+                                      formatter: _formatCurrency,
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Total PBK',
+                                      _dashboardDataService.statPBK,
+                                      formatter: _formatCurrency,
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Total Netto',
+                                      _dashboardDataService.statNetto,
+                                      formatter: _formatCurrency,
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Total Renpen',
+                                      _dashboardDataService.statRenpen,
+                                      formatter: _formatCurrency,
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Pencapaian',
+                                      _dashboardDataService.statPencapaian,
+                                      formatter: (v) =>
+                                          '${v.toStringAsFixed(2)}%',
+                                    ),
+                                    _buildStatRowAnimated(
+                                      'Pertumbuhan',
+                                      _dashboardDataService
+                                              .statPertumbuhan
+                                              .isNaN
+                                          ? 0.0
+                                          : _dashboardDataService
+                                                .statPertumbuhan,
+                                      formatter: (v) =>
+                                          '${v.toStringAsFixed(2)}%',
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
                   const SizedBox(width: 16),
-
-                  // Right panel with charts
                   Expanded(
-                    flex: 2,
+                    flex: 7,
                     child: Column(
                       children: [
                         ExpansionTile(
                           title: Text(
                             'Penerimaan Per Bulan',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           initiallyExpanded: true,
                           children: [
@@ -446,11 +559,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                               chartTypeMonthlySetor: _chartTypeMonthlySetor,
                               chartTypes: _chartTypes,
                               selectedDataset: _selectedDataset,
+                              selectedDatasetLabel:
+                                  AppConstants
+                                      .datasetLabels[_selectedDataset] ??
+                                  _selectedDataset,
                               dashboardData: _selectedDataset == 'PKPM'
                                   ? _dashboardDataService.monthlyFlagPkpmData
                                   : _selectedDataset == 'BO'
-                                      ? _dashboardDataService.monthlyFlagBoData
-                                      : _dashboardDataService.monthlyVoluntaryData,
+                                  ? _dashboardDataService.monthlyFlagBoData
+                                  : _dashboardDataService.monthlyVoluntaryData,
+                              monthlyRenpenData:
+                                  _dashboardDataService.monthlyRenpenData,
                               onChartTypeChanged: (type) {
                                 setState(() {
                                   _chartTypeMonthlySetor = type;
@@ -472,7 +591,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-   Widget _buildAppBarMenu(BuildContext context, String title, List<PopupMenuEntry<VoidCallback>> items) {
+  Widget _buildAppBarMenu(
+    BuildContext context,
+    String title,
+    List<PopupMenuEntry<VoidCallback>> items,
+  ) {
     return PopupMenuButton<VoidCallback>(
       onSelected: (callback) => callback(),
       itemBuilder: (context) => items,
@@ -490,7 +613,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  PopupMenuItem<VoidCallback> _buildMenuItem(String title, IconData icon, VoidCallback onTap) {
+  PopupMenuItem<VoidCallback> _buildMenuItem(
+    String title,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return PopupMenuItem<VoidCallback>(
       value: onTap,
       child: Row(
@@ -503,22 +630,32 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildStatRow(String label, String value) {
+  Widget _buildStatRowAnimated(
+    String label,
+    num value, {
+    String Function(num)? formatter,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+          Text(label, style: const TextStyle(fontSize: 12)),
+          TweenAnimationBuilder<num>(
+            tween: Tween<num>(begin: _animateStats ? 0 : value, end: value),
+            duration: const Duration(milliseconds: 500),
+            builder: (context, animatedValue, child) {
+              final display = formatter != null
+                  ? formatter(animatedValue)
+                  : animatedValue.toString();
+              return Text(
+                display,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -537,7 +674,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             _buildProfileRow('Username', user.username),
             _buildProfileRow('Nama Lengkap', user.fullname),
             _buildProfileRow('Role', user.userGroup.displayName),
-            _buildProfileRow('Dibuat', user.createdAt?.toString().split(' ')[0] ?? '-'),
+            _buildProfileRow(
+              'Dibuat',
+              user.createdAt?.toString().split(' ')[0] ?? '-',
+            ),
           ],
         ),
         actions: [
@@ -581,12 +721,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
-              );
+            onPressed: () async {
+              Navigator.of(context).pop(); // close dialog first
+              await ref.read(authProvider.notifier).logout();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -638,9 +781,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     await _performImport(
       context,
       'Update Database',
-      ({onProgress}) => DatabaseImportService.importAllDatabaseFiles(
-        onProgress: onProgress,
-      ),
+      ({onProgress}) =>
+          DatabaseImportService.importAllDatabaseFiles(onProgress: onProgress),
     );
   }
 
@@ -812,11 +954,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ),
     );
   }
+
   /// Generic import handler with progress dialog
   Future<void> _performImport(
     BuildContext context,
     String title,
-  Future<ImportResult> Function({void Function(double progress, int currentRow, int totalRows, String fileName)? onProgress}) importFunction,
+    Future<ImportResult> Function({
+      void Function(
+        double progress,
+        int currentRow,
+        int totalRows,
+        String fileName,
+      )?
+      onProgress,
+    })
+    importFunction,
   ) async {
     double progress = 0.0;
     int currentRow = 0;
@@ -841,12 +993,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     Text('$title...', style: const TextStyle(fontSize: 15)),
                     if (currentFile.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Text('File: $currentFile', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                      Text(
+                        'File: $currentFile',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 18),
                     LinearProgressIndicator(value: progress, minHeight: 8),
                     const SizedBox(height: 12),
-                    Text('${(progress * 100).toStringAsFixed(0)}%  ($currentRow/$totalRows)', style: const TextStyle(fontSize: 13)),
+                    Text(
+                      '${(progress * 100).toStringAsFixed(0)}%  ($currentRow/$totalRows)',
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -857,13 +1018,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
 
     try {
-      final result = await importFunction(onProgress: (p, row, total, file) {
-        progress = p;
-        currentRow = row;
-        totalRows = total;
-        currentFile = file;
-        setDialogState(() {});
-      });
+      final result = await importFunction(
+        onProgress: (p, row, total, file) {
+          progress = p;
+          currentRow = row;
+          totalRows = total;
+          currentFile = file;
+          setDialogState(() {});
+        },
+      );
 
       // Close loading dialog
       if (context.mounted) Navigator.of(context).pop();
@@ -884,7 +1047,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   /// Show import result dialog
-  void _showImportResult(BuildContext context, String title, ImportResult result) {
+  void _showImportResult(
+    BuildContext context,
+    String title,
+    ImportResult result,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -898,10 +1065,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               Row(
                 children: [
                   Icon(
-                    result.isSuccess ? Icons.check_circle : 
-                    result.isCancelled ? Icons.cancel : Icons.error,
-                    color: result.isSuccess ? Colors.green : 
-                           result.isCancelled ? Colors.orange : Colors.red,
+                    result.isSuccess
+                        ? Icons.check_circle
+                        : result.isCancelled
+                        ? Icons.cancel
+                        : Icons.error,
+                    color: result.isSuccess
+                        ? Colors.green
+                        : result.isCancelled
+                        ? Colors.orange
+                        : Colors.red,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -917,17 +1090,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Result summary
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: result.isSuccess ? Colors.green.shade50 : 
-                         result.isCancelled ? Colors.orange.shade50 : Colors.red.shade50,
+                  color: result.isSuccess
+                      ? Colors.green.shade50
+                      : result.isCancelled
+                      ? Colors.orange.shade50
+                      : Colors.red.shade50,
                   border: Border.all(
-                    color: result.isSuccess ? Colors.green.shade200 : 
-                           result.isCancelled ? Colors.orange.shade200 : Colors.red.shade200,
+                    color: result.isSuccess
+                        ? Colors.green.shade200
+                        : result.isCancelled
+                        ? Colors.orange.shade200
+                        : Colors.red.shade200,
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -935,12 +1114,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   result.summary,
                   style: TextStyle(
                     fontSize: 14,
-                    color: result.isSuccess ? Colors.green.shade800 : 
-                           result.isCancelled ? Colors.orange.shade800 : Colors.red.shade800,
+                    color: result.isSuccess
+                        ? Colors.green.shade800
+                        : result.isCancelled
+                        ? Colors.orange.shade800
+                        : Colors.red.shade800,
                   ),
                 ),
               ),
-              
+
               // Error details (compact)
               if (result.hasErrors && result.errors.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -989,16 +1171,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     ),
                   ),
               ],
-              
+
               const SizedBox(height: 16),
-              
+
               // Action button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: result.isSuccess ? Colors.green : Colors.grey,
+                    backgroundColor: result.isSuccess
+                        ? Colors.green
+                        : Colors.grey,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -1040,7 +1224,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Error message
               Container(
                 width: double.infinity,
@@ -1052,15 +1236,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 child: Text(
                   error,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.red.shade800,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.red.shade800),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Action button
               SizedBox(
                 width: double.infinity,
@@ -1098,8 +1279,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   /// Unified Update All Reference Data (replaces 6 separate functions)
   Future<void> _updateAllReferenceData(BuildContext context) async {
     await _performDatabaseSync(
-      context, 
-      'Update Semua Data Referensi', 
+      context,
+      'Update Semua Data Referensi',
       () => ReferenceDataService.updateAllReferenceData(),
     );
   }
@@ -1128,10 +1309,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
     try {
       final result = await syncFunction();
-      
+
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        
+
         if (result.success) {
           _showSuccessDialog(context, operationName, result.message);
         } else {
@@ -1183,7 +1364,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   /// Build menu items from JSON configuration
-  List<PopupMenuEntry<VoidCallback>> _buildMenuItems(BuildContext context, List<MenuItem> items) {
+  List<PopupMenuEntry<VoidCallback>> _buildMenuItems(
+    BuildContext context,
+    List<MenuItem> items,
+  ) {
     return items.map<PopupMenuEntry<VoidCallback>>((item) {
       if (item.isDivider) {
         return const PopupMenuDivider();
@@ -1203,6 +1387,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final action = menuService.getMenuAction(actionString);
 
     switch (action) {
+      case MenuAction.navigatePenerimaan:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => const PenerimaanPage()));
+        break;
       case MenuAction.logout:
         _handleLogout(context, ref);
         break;
@@ -1266,7 +1455,5 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         _showComingSoon(context, actionString ?? 'Unknown Action');
         break;
     }
-
-  // Scaffolded management dialogs/pages
   }
 }

@@ -471,6 +471,13 @@ class MenuConfigurations {
         icon: 'dataset',
         items: [
           MenuItem(
+            id: 'data_penerimaan',
+            title: 'Data Penerimaan',
+            icon: 'table_chart',
+            action: 'navigate_penerimaan',
+            enabled: true,
+          ),
+          MenuItem(
             id: 'spmkp',
             title: 'SPMKP',
             icon: 'description',

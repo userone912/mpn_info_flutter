@@ -2,6 +2,12 @@
 /// Migrated from Qt define.h file
 
 class AppConstants {
+  // Dataset labels for dashboard dropdown
+  static const Map<String, String> datasetLabels = {
+    'PKPM': 'PPM / PKM',
+    'BO': 'Bussiness Owner',
+    'VOLUNTARY': 'PKM Lainnya',
+  };
     // Database Configuration
   static const String databaseName = 'data.db';
   static const int databaseVersion = 1;

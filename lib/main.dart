@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/login_page.dart';
 import 'core/constants/app_constants.dart';
 import 'data/services/database_helper.dart';
+import 'pages/test_gauge.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,14 @@ void main() async {
   
   runApp(const ProviderScope(child: MyApp()));
 }
+
+
+// void main() {
+//   runApp(const MaterialApp(
+//     home: TestGaugePage(),
+//     debugShowCheckedModeBanner: false,
+//   ));
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
