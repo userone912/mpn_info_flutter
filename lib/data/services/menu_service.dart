@@ -34,14 +34,12 @@ final menuServiceProvider = Provider<MenuService>((ref) {
 });
 
 /// Provider for current user's menu configuration
-final userMenuProvider = Provider.autoDispose<MenuConfig>((ref) {
+final userMenuProvider = Provider.autoDispose<MenuConfig?>((ref) {
   final menuService = ref.read(menuServiceProvider);
-  
   // Get current user from auth provider
   final authState = ref.watch(authProvider);
   if (authState.user == null) {
-    throw Exception('No authenticated user');
+    return null;
   }
-  
   return menuService.loadMenuForUser(authState.user!);
 });

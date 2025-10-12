@@ -43,7 +43,7 @@ class MonthlySetorChart extends StatelessWidget {
     Widget chartWidget;
     // Safe checks for empty or mismatched data
     if (data.isEmpty && renpenData.isEmpty) {
-      chartWidget = const Center(child: Text('Data belum tersedia'));
+      chartWidget = const Center(child: CircularProgressIndicator());
     } else if (chartTypeMonthlySetor == 'Bar') {
       final Map<String, Map<String, double>> grouped = {};
       final Map<String, double> flagTotals = {};

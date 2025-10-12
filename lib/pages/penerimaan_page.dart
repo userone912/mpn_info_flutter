@@ -190,6 +190,13 @@ class _PenerimaanPageState extends ConsumerState<PenerimaanPage> {
       );
     }
 
+    // If menuConfig is null, show a loading indicator or blank page
+    if (menuConfig == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(

@@ -175,7 +175,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
     // Prevent null user access and handle unauthenticated state
     if (!authState.isAuthenticated || authState.user == null) {
+      // Only navigate if not already on LoginPage
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (ModalRoute.of(context)?.settings.name != '/login') {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      });
       // Optionally show a loading indicator or blank page
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // If menuConfig is null, show a loading indicator or blank page
+    if (menuConfig == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -724,12 +740,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             onPressed: () async {
               Navigator.of(context).pop(); // close dialog first
               await ref.read(authProvider.notifier).logout();
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false,
-                );
-              });
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

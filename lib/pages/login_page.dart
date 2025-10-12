@@ -21,6 +21,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  dynamic user;
 
   @override
   void dispose() {
@@ -29,9 +30,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+
   @override
   void initState() {
     super.initState();
+    user = null;
     // Check if settings.ini exists, if not show database config dialog
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSettingsAndShowConfig();
