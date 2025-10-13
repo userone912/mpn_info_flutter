@@ -6,8 +6,15 @@ class AppConstants {
   static const Map<String, String> datasetLabels = {
     'PKPM': 'PPM / PKM',
     'BO': 'Bussiness Owner',
-    'VOLUNTARY': 'PKM Lainnya',
+    'VOLUNTARY': 'Lainnya (Voluntary)',
   };
+
+  // VOLUNTARY flag labels for chart and DataTable
+  static const List<String> voluntaryFlagLabels = [
+    'WRA',
+    'Aktivitas',
+    'Pengawasan Lainnya',
+  ];
     // Database Configuration
   static const String databaseName = 'data.db';
   static const int databaseVersion = 1;

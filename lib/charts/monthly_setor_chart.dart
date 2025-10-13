@@ -11,7 +11,9 @@ class MonthlySetorChart extends StatelessWidget {
   final String selectedDatasetLabel;
   final List<Map<String, dynamic>> dashboardData;
   final List<Map<String, dynamic>> monthlyRenpenData;
+  final String? selectedBusinessOwner;
   final Function(String) onChartTypeChanged;
+
 
   const MonthlySetorChart({
     Key? key,
@@ -22,6 +24,7 @@ class MonthlySetorChart extends StatelessWidget {
     required this.selectedDatasetLabel,
     required this.dashboardData,
     required this.monthlyRenpenData,
+    required this.selectedBusinessOwner,
     required this.onChartTypeChanged,
   }) : super(key: key);
 
@@ -29,12 +32,13 @@ class MonthlySetorChart extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use dashboardData and selectedDataset to determine chart data
     List<Map<String, dynamic>> data = dashboardData;
+    if (selectedBusinessOwner != null && selectedBusinessOwner!.isNotEmpty) {
+      data = data.where((row) => row['FLAG_BO'] == selectedBusinessOwner).toList();
+    }
     List<Map<String, dynamic>> renpenData = monthlyRenpenData;
     String flagKey;
     if (selectedDataset == 'PKPM') {
       flagKey = 'FLAG_PKPM';
-    } else if (selectedDataset == 'BO') {
-      flagKey = 'FLAG_BO';
     } else if (selectedDataset == 'VOLUNTARY') {
       flagKey = 'VOLUNTARY';
     } else {
@@ -112,7 +116,16 @@ class MonthlySetorChart extends StatelessWidget {
                 dataSource: chartData,
                 xValueMapper: (d, _) => d['month'],
                 yValueMapper: (d, _) => d[flagList[j]],
-                name: flagList[j],
+                name: (() {
+                  String label = flagList[j];
+                  if (selectedDataset == 'VOLUNTARY') {
+                    // Use AppConstants.voluntaryFlagLabels for legend
+                    if (label == 'W') label = AppConstants.voluntaryFlagLabels[0];
+                    else if (label == 'N') label = AppConstants.voluntaryFlagLabels[1];
+                    else if (label == 'Y') label = AppConstants.voluntaryFlagLabels[2];
+                  }
+                  return label;
+                })(),
                 color: Colors.primaries[j % Colors.primaries.length],
                 dataLabelSettings: const DataLabelSettings(isVisible: false),
               ),
@@ -132,7 +145,7 @@ class MonthlySetorChart extends StatelessWidget {
           builder: (dynamic data, dynamic point, dynamic series, int pointIndex, int seriesIndex) {
             final month = data['month'];
             String flag = '';
-            double value = 0.0;
+            double value = 0.00;
             if (seriesIndex < flagList.length) {
               flag = flagList[seriesIndex];
               value = flag.isNotEmpty ? (data[flag] ?? 0.0) : 0.0;
@@ -145,7 +158,7 @@ class MonthlySetorChart extends StatelessWidget {
               totalBar += data[f] ?? 0.0;
             }
             totalBar += data['REN'] ?? 0.0;
-            final percent = totalBar > 0 ? (value / totalBar * 100) : 0.0;
+              final percent = totalBar > 0 ? (value / totalBar * 100) : 0.0;
             return Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -159,12 +172,106 @@ class MonthlySetorChart extends StatelessWidget {
                 children: [
                   Text('$month', style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(flag.isNotEmpty ? '$flag: ${formatCurrency(value)}' : ''),
-                  Text(flag.isNotEmpty ? '(${percent.toStringAsFixed(1)}% dari total)' : ''),
+                    Text(flag.isNotEmpty ? '(${percent.toStringAsFixed(4)}% dari total)' : ''),
                 ],
               ),
             );
           },
         ),
+      );
+      // Add a DataTable below the chart for tabulated data
+      chartWidget = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chart only (zoomable via Syncfusion internal controls)
+          chartWidget,
+          const SizedBox(height: 16),
+          // DataTable for tabulated chart data (not zoomable)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: [
+                    DataColumn(label: Text('Bulan')),
+                    ...flagList.map((flag) {
+                      String label = flag;
+                      if (selectedDataset == 'VOLUNTARY') {
+                        // Use AppConstants.voluntaryFlagLabels for DataTable
+                        if (flag == 'W') label = AppConstants.voluntaryFlagLabels[0];
+                        else if (flag == 'N') label = AppConstants.voluntaryFlagLabels[1];
+                        else if (flag == 'Y') label = AppConstants.voluntaryFlagLabels[2];
+                      }
+                      return DataColumn(label: Text(label));
+                    }),
+                    DataColumn(label: Text('Renpen')),
+                    DataColumn(label: Text('% dari Renpen')),
+                  ],
+                  rows: [
+                    for (final row in chartData)
+                      (() {
+                        final renpen = (row['REN'] is num ? row['REN'] : 0.0) as num;
+                        final sumOther = flagList.fold<num>(0.0, (sum, flag) => sum + ((row[flag] is num ? row[flag] : 0.0) as num));
+                        final percent = renpen > 0 ? (sumOther / renpen * 100) : 0.0;
+                        TextStyle rightAlign = const TextStyle(fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87);
+                        return DataRow(cells: [
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text((row['month'] ?? '').toString(), style: rightAlign),
+                          )),
+                          ...flagList.map((flag) => DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(formatCurrency((row[flag] is num ? row[flag] : 0.0) as num), style: rightAlign),
+                          ))),
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(formatCurrency(renpen), style: rightAlign),
+                          )),
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text('${percent.toStringAsFixed(4)}%', style: rightAlign),
+                          )),
+                        ]);
+                      })(),
+                    // Grand Total row
+                    (() {
+                      TextStyle boldRight = const TextStyle(fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black);
+                      final totalFlagValues = {
+                        for (final flag in flagList)
+                          flag: chartData.fold<num>(0.0, (sum, row) => sum + ((row[flag] is num ? row[flag] : 0.0) as num)),
+                      };
+                      final totalRenpen = chartData.fold<num>(0.0, (sum, row) => sum + ((row['REN'] is num ? row['REN'] : 0.0) as num));
+                      final totalOther = flagList.fold<num>(0.0, (sum, flag) => sum + totalFlagValues[flag]!);
+                      final percentTotal = totalRenpen > 0 ? (totalOther / totalRenpen * 100) : 0.0;
+                      return DataRow(
+                        color: MaterialStateProperty.resolveWith((states) => Colors.grey.shade200),
+                        cells: [
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text('Grand Total', style: boldRight),
+                          )),
+                          ...flagList.map((flag) => DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(formatCurrency(totalFlagValues[flag]!), style: boldRight),
+                          ))),
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(formatCurrency(totalRenpen), style: boldRight),
+                          )),
+                          DataCell(Align(
+                            alignment: Alignment.centerRight,
+                            child: Text('${percentTotal.toStringAsFixed(3)}%', style: boldRight),
+                          )),
+                        ],
+                      );
+                    })(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       );
     } else if (chartTypeMonthlySetor == 'Line') {
       final Map<String, Map<String, double>> grouped = {};
@@ -199,12 +306,18 @@ class MonthlySetorChart extends StatelessWidget {
                 'value': grouped[flag]?[blnList[i]] ?? 0.0,
               },
           ];
+          String legendLabel = flag;
+          if (selectedDataset == 'VOLUNTARY') {
+            if (flag == 'W') legendLabel = AppConstants.voluntaryFlagLabels[0];
+            else if (flag == 'N') legendLabel = AppConstants.voluntaryFlagLabels[1];
+            else if (flag == 'Y') legendLabel = AppConstants.voluntaryFlagLabels[2];
+          }
           series.add(
             LineSeries<dynamic, String>(
               dataSource: chartData,
               xValueMapper: (d, _) => d['month'],
               yValueMapper: (d, _) => d['value'],
-              name: flag,
+              name: legendLabel,
               color: color,
               dataLabelSettings: const DataLabelSettings(isVisible: false),
               markerSettings: const MarkerSettings(isVisible: false),
@@ -271,7 +384,15 @@ class MonthlySetorChart extends StatelessWidget {
       final chartData = [
         for (int i = 0; i < flagList.length; i++)
           {
-            'flag': flagList[i],
+            'flag': (() {
+              String legendLabel = flagList[i];
+              if (selectedDataset == 'VOLUNTARY') {
+                if (legendLabel == 'W') legendLabel = AppConstants.voluntaryFlagLabels[0];
+                else if (legendLabel == 'N') legendLabel = AppConstants.voluntaryFlagLabels[1];
+                else if (legendLabel == 'Y') legendLabel = AppConstants.voluntaryFlagLabels[2];
+              }
+              return legendLabel;
+            })(),
             'value': flagTotals[flagList[i]] ?? 0.0,
             'percent': totalAll > 0
                 ? (flagTotals[flagList[i]]! / totalAll * 100)
@@ -286,21 +407,74 @@ class MonthlySetorChart extends StatelessWidget {
             xValueMapper: (d, _) => d['flag'],
             yValueMapper: (d, _) => d['value'],
             dataLabelMapper: (d, _) =>
-                '${d['flag']}\n${d['percent'].toStringAsFixed(1)}%',
+                '${d['flag']}\n${d['percent'].toStringAsFixed(4)}%',
             pointColorMapper: (d, i) =>
                 Colors.primaries[i % Colors.primaries.length],
             radius: '60%',
-            dataLabelSettings: const DataLabelSettings(
+            dataLabelSettings: DataLabelSettings(
               isVisible: true,
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: Colors.white,
               ),
+              // Dynamic color: white if label is inside, black if outside
+              labelPosition: ChartDataLabelPosition.inside,
+              // Use builder for dynamic color
+              builder: (dynamic data, dynamic point, dynamic series, int pointIndex, int seriesIndex) {
+                final percent = data['percent'] ?? 0.0;
+                // If percent > 10, assume label is inside, else outside (tweak as needed)
+                final isInside = percent > 10.0;
+                final textColor = isInside ? Colors.white : Colors.black;
+                return Text(
+                  '${data['flag']}\n${percent.toStringAsFixed(4)}%',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
+                  textAlign: TextAlign.center,
+                );
+              },
             ),
           ),
         ],
-        tooltipBehavior: TooltipBehavior(enable: true),
+        tooltipBehavior: TooltipBehavior(
+          enable: true,
+          format: null,
+          builder: (dynamic data, dynamic point, dynamic series, int pointIndex, int seriesIndex) {
+            String flag = data['flag'] ?? '';
+            if (selectedDataset == 'VOLUNTARY') {
+              if (flag == 'W') flag = AppConstants.voluntaryFlagLabels[0];
+              else if (flag == 'N') flag = AppConstants.voluntaryFlagLabels[1];
+              else if (flag == 'Y') flag = AppConstants.voluntaryFlagLabels[2];
+            }
+            double value = data['value'] ?? 0.0;
+            double percent = data['percent'] ?? 0.0;
+            String formatCurrency(num val) {
+              String s = val.toStringAsFixed(0);
+              final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+              s = s.replaceAllMapped(reg, (Match m) => '${m[1]}${AppConstants.thousandSeparator}');
+              return '${AppConstants.currencySymbol} $s';
+            }
+            return Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(flag, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Nilai: ${formatCurrency(value)}'),
+                  Text('(${percent.toStringAsFixed(4)}% dari total)'),
+                ],
+              ),
+            );
+          },
+        ),
       );
     } else {
       chartWidget = const Center(child: Text('Unknown Chart Type'));
@@ -308,8 +482,9 @@ class MonthlySetorChart extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
           children: [
             Row(
               children: [
@@ -357,17 +532,7 @@ class MonthlySetorChart extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 320,
-              child: ClipRect(
-                child: InteractiveViewer(
-                  panEnabled: true,
-                  scaleEnabled: true,
-                  boundaryMargin: const EdgeInsets.all(50),
-                  child: chartWidget,
-                ),
-              ),
-            ),
+            chartWidget,
           ],
         ),
       ),

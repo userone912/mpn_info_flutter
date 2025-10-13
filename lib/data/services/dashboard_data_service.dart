@@ -39,6 +39,7 @@ class DashboardDataService {
 		};
 	}
 	/// Filter PKPMBO data for Data Penerimaan page
+  /// 
 	List<Map<String, dynamic>> filterPenerimaanData({
 		String? npwp,
 		String? nama,
@@ -230,7 +231,7 @@ class DashboardDataService {
 	bool _isLoaded = false;
 
 	/// Load and cache revenue data at startup
-	Future<void> loadRevenueData(String kantorKode) async {
+	Future<void> loadRevenueData(String kantorKode, [String? tahun]) async {
 		// Query ppmpkmbo, filter by KPPADM, group and aggregate
 		final result = await DatabaseService.rawQuery(
 			'''

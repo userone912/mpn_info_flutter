@@ -37,6 +37,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   // Chart key to force rebuild and animation
   int _chartRefreshKey = 0;
 
+  // Business Owner dropdown state
+  List<String> _businessOwnerOptions = [];
+  String? _selectedBusinessOwner;
+
+  List<String> _kodeMapOptions = [];
+  String? _selectedKodeMap;
   // Dashboard data service instance
   final DashboardDataService _dashboardDataService = DashboardDataService();
 
@@ -55,7 +61,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   // Dataset selection state
   String _selectedDataset = 'PKPM';
-  final List<String> _datasetOptions = ['PKPM', 'BO', 'VOLUNTARY'];
+  final List<String> _datasetOptions = ['PKPM', 'VOLUNTARY'];
 
   // Animation trigger for statistics and gauge
   bool _animateStats = false;
@@ -75,6 +81,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   Future<void> _refreshDataDashboard() async {
     await _initKantorDropdown();
     await _initTahunDropdown();
+    await _initBusinessOwnerDropdown();
+    await _initKodeMapDropdown();
     // Only load dashboard data if both are set
     if (_selectedKpp != null && _selectedTahun != null) {
       await _loadAllDashboardData();
@@ -122,13 +130,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     });
   }
 
+  Future<void> _initBusinessOwnerDropdown() async {
+    final cache = await _dashboardDataService.getPenerimaanCache();
+    setState(() {
+      _businessOwnerOptions = cache['flagBoOptions'] ?? [];
+      _selectedBusinessOwner = null;
+    });
+  }
+
+  Future<void> _initKodeMapDropdown() async {
+    final cache = await _dashboardDataService.getPenerimaanCache();
+    setState(() {
+      _kodeMapOptions = cache['kdMapOptions'] ?? [];
+      _selectedKodeMap = null;
+    });
+  }
+
   Future<void> _loadAllDashboardData() async {
     // Load all datasets using selected kantor and tahun
     await _dashboardDataService.loadMonthlyFlagPkpmData(
-      _selectedKpp ?? '',
-      _selectedTahun,
-    );
-    await _dashboardDataService.loadMonthlyFlagBoData(
       _selectedKpp ?? '',
       _selectedTahun,
     );
@@ -141,7 +161,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       _selectedTahun,
     );
     await _loadStatistics();
-    await _dashboardDataService.loadRevenueData(_selectedKpp.toString());
+    await _dashboardDataService.loadRevenueData(
+      _selectedKpp.toString(),
+      _selectedTahun.toString(),
+    );
     setState(() {
       _chartRefreshKey++;
     });
@@ -185,16 +208,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         }
       });
       // Optionally show a loading indicator or blank page
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // If menuConfig is null, show a loading indicator or blank page
     if (menuConfig == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -442,6 +461,58 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     },
                   ),
                 ),
+                const SizedBox(width: 16),
+                IntrinsicWidth(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedBusinessOwner,
+                    decoration: const InputDecoration(
+                      labelText: 'Business Owner',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('KPP')),
+                      ..._businessOwnerOptions.map(
+                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBusinessOwner = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                IntrinsicWidth(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedKodeMap,
+                    decoration: const InputDecoration(
+                      labelText: 'Kode MAP',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Semua Kode MAP')),
+                      ..._kodeMapOptions.map(
+                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedKodeMap = value;
+                      });
+                    },
+                  ),
+                ),
                 const Spacer(),
                 ElevatedButton.icon(
                   onPressed: () async {
@@ -560,42 +631,52 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     flex: 7,
-                    child: Column(
-                      children: [
-                        ExpansionTile(
-                          title: Text(
-                            'Penerimaan Per Bulan',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          initiallyExpanded: true,
-                          children: [
-                            MonthlySetorChart(
-                              chartRefreshKey: _chartRefreshKey,
-                              chartTypeMonthlySetor: _chartTypeMonthlySetor,
-                              chartTypes: _chartTypes,
-                              selectedDataset: _selectedDataset,
-                              selectedDatasetLabel:
-                                  AppConstants
-                                      .datasetLabels[_selectedDataset] ??
-                                  _selectedDataset,
-                              dashboardData: _selectedDataset == 'PKPM'
-                                  ? _dashboardDataService.monthlyFlagPkpmData
-                                  : _selectedDataset == 'BO'
-                                  ? _dashboardDataService.monthlyFlagBoData
-                                  : _dashboardDataService.monthlyVoluntaryData,
-                              monthlyRenpenData:
-                                  _dashboardDataService.monthlyRenpenData,
-                              onChartTypeChanged: (type) {
-                                setState(() {
-                                  _chartTypeMonthlySetor = type;
-                                });
-                              },
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ExpansionTile(
+                            title: Text(
+                              'Penerimaan Per Bulan',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                            initiallyExpanded: true,
+                            backgroundColor: Colors.blue.shade50,
+                            collapsedBackgroundColor: Colors.blue.shade100,
+                            children: [
+                              MonthlySetorChart(
+                                chartRefreshKey: _chartRefreshKey,
+                                chartTypeMonthlySetor: _chartTypeMonthlySetor,
+                                chartTypes: _chartTypes,
+                                selectedDataset: _selectedDataset,
+                                selectedDatasetLabel:
+                                    _selectedBusinessOwner != null &&
+                                        _selectedBusinessOwner!.isNotEmpty
+                                    ? (AppConstants
+                                              .datasetLabels[_selectedDataset] ??
+                                          _selectedDataset) +
+                                      ' - ' +
+                                      _selectedBusinessOwner!
+                                    : (AppConstants
+                                          .datasetLabels[_selectedDataset] ??
+                                      _selectedDataset),
+                                dashboardData: _selectedDataset == 'PKPM'
+                                    ? _dashboardDataService.monthlyFlagPkpmData
+                                    : _dashboardDataService.monthlyVoluntaryData,
+                                monthlyRenpenData:
+                                    _dashboardDataService.monthlyRenpenData,
+                                selectedBusinessOwner: _selectedBusinessOwner,
+                                onChartTypeChanged: (type) {
+                                  setState(() {
+                                    _chartTypeMonthlySetor = type;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ],

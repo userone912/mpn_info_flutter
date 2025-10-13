@@ -31,7 +31,6 @@ dependencies:
   json_annotation: ^4.9.0
   
   # Charts & Data Visualization
-  fl_chart: ^1.1.1
   syncfusion_flutter_charts: 31.1.22
   
   # File Operations
