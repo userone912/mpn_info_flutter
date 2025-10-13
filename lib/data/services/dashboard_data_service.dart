@@ -147,7 +147,7 @@ class DashboardDataService {
 			/// Load and cache monthly revenue data grouped by BLN_SETOR and FLAG_PKPM
 			Future<void> loadMonthlyFlagPkpmData(String kantorKode, [String? tahun]) async {
 				String sql = '''
-					SELECT BLN_SETOR, FLAG_PKPM, SUM(JML_SETOR) AS total_setor
+					SELECT BLN_SETOR, FLAG_PKPM, FLAG_BO, SUM(JML_SETOR) AS total_setor
 					FROM ppmpkmbo
 					WHERE KPPADM = ?''';
 				List<dynamic> params = [kantorKode];
@@ -156,8 +156,8 @@ class DashboardDataService {
 					params.add(tahun);
 				}
 				sql += '''
-					GROUP BY BLN_SETOR, FLAG_PKPM
-					ORDER BY BLN_SETOR, FLAG_PKPM
+					GROUP BY BLN_SETOR, FLAG_PKPM, FLAG_BO
+					ORDER BY BLN_SETOR, FLAG_PKPM, FLAG_BO
 				''';
 				final result = await DatabaseService.rawQuery(sql, params);
 				_monthlyFlagPkpmCache = result;
@@ -204,7 +204,7 @@ class DashboardDataService {
 		/// Load and cache monthly revenue data grouped by BLN_SETOR and VOLUNTARY
 		Future<void> loadMonthlyVoluntaryData(String kantorKode, [String? tahun]) async {
 			String sql = '''
-				SELECT BLN_SETOR, VOLUNTARY, SUM(JML_SETOR) AS total_setor
+				SELECT BLN_SETOR, VOLUNTARY, FLAG_BO, SUM(JML_SETOR) AS total_setor
 				FROM ppmpkmbo
 				WHERE KPPADM = ?''';
 			List<dynamic> params = [kantorKode];
@@ -213,8 +213,8 @@ class DashboardDataService {
 				params.add(tahun);
 			}
 			sql += '''
-				GROUP BY BLN_SETOR, VOLUNTARY
-				ORDER BY BLN_SETOR, VOLUNTARY
+				GROUP BY BLN_SETOR, VOLUNTARY, FLAG_BO
+				ORDER BY BLN_SETOR, VOLUNTARY, FLAG_BO
 			''';
 			final result = await DatabaseService.rawQuery(sql, params);
 			_monthlyVoluntaryCache = result;

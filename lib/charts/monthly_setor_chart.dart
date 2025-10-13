@@ -186,10 +186,6 @@ class MonthlySetorChart extends StatelessWidget {
           // Chart only (zoomable via Syncfusion internal controls)
           chartWidget,
           const SizedBox(height: 16),
-          // DataTable for tabulated chart data (not zoomable)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
@@ -269,8 +265,6 @@ class MonthlySetorChart extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
         ],
       );
     } else if (chartTypeMonthlySetor == 'Line') {

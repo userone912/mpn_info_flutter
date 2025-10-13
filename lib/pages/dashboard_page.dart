@@ -228,92 +228,115 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
-          // Dynamic menu bar based on user role (now synchronous)
-          _buildDynamicMenuBar(context, menuConfig),
-          const SizedBox(width: 16),
-          // User profile section
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'profile':
-                  if (authState.user != null) {
-                    _showProfile(context, authState.user!);
-                  }
-                  break;
-                case 'logout':
-                  _handleLogout(context, ref);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'profile',
-                child: Row(
-                  children: [
-                    Icon(Icons.person, color: Colors.grey.shade700),
-                    const SizedBox(width: 8),
-                    const Text('Profile'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red.shade700),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Logout',
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 16,
-                    child: Text(
-                      authState.user?.fullname.substring(0, 1).toUpperCase() ??
-                          'U',
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Use 600 as breakpoint for mobile/desktop
+              if (constraints.maxWidth < 600) {
+                // Mobile: show hamburger menu
+                return IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    Scaffold.of(context).openEndDrawer();
+                  },
+                );
+              } else {
+                // Desktop/tablet: show menu bar and profile
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
                     children: [
-                      Text(
-                        authState.user?.fullname ?? 'User',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        authState.user?.userGroup.displayName ?? '',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.white70,
+                      _buildDynamicMenuBar(context, menuConfig),
+                      const SizedBox(width: 16),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'profile':
+                              if (authState.user != null) {
+                                _showProfile(context, authState.user!);
+                              }
+                              break;
+                            case 'logout':
+                              _handleLogout(context, ref);
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'profile',
+                            child: Row(
+                              children: [
+                                Icon(Icons.person, color: Colors.grey.shade700),
+                                const SizedBox(width: 8),
+                                const Text('Profile'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'logout',
+                            child: Row(
+                              children: [
+                                Icon(Icons.logout, color: Colors.red.shade700),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Logout',
+                                  style: TextStyle(color: Colors.red.shade700),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.white,
+                                radius: 16,
+                                child: Text(
+                                  authState.user?.fullname
+                                          .substring(0, 1)
+                                          .toUpperCase() ??
+                                      'U',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    authState.user?.fullname ?? 'User',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    authState.user?.userGroup.displayName ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Icon(Icons.arrow_drop_down, size: 16),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const Icon(Icons.arrow_drop_down, size: 16),
-                ],
-              ),
-            ),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -322,207 +345,216 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                IntrinsicWidth(
-                  child: _kantorList.isEmpty
-                      ? DropdownButtonFormField<String>(
-                          value: null,
-                          decoration: const InputDecoration(
-                            labelText: 'Kantor',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: null,
-                              child: Text(
-                                'Silakan lakukan pengaturan Kantor',
-                                style: TextStyle(color: Colors.red),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  IntrinsicWidth(
+                    child: _kantorList.isEmpty
+                        ? DropdownButtonFormField<String>(
+                            value: null,
+                            decoration: const InputDecoration(
+                              labelText: 'Kantor',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
                               ),
                             ),
-                          ],
-                          onChanged: null,
-                        )
-                      : DropdownButtonFormField<String>(
-                          value: _selectedKpp,
-                          decoration: const InputDecoration(
-                            labelText: 'Kantor',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                            items: [
+                              DropdownMenuItem(
+                                value: null,
+                                child: Text(
+                                  'Silakan lakukan pengaturan Kantor',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                            onChanged: null,
+                          )
+                        : DropdownButtonFormField<String>(
+                            value: _selectedKpp,
+                            decoration: const InputDecoration(
+                              labelText: 'Kantor',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
-                          ),
-                          items: _kantorList
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item['kpp'],
-                                  child: Text(
-                                    item['nama'] ?? item['kpp'] ?? '',
+                            items: _kantorList
+                                .map(
+                                  (item) => DropdownMenuItem(
+                                    value: item['kpp'],
+                                    child: Text(
+                                      item['nama'] ?? item['kpp'] ?? '',
+                                    ),
                                   ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) async {
-                            setState(() {
-                              _selectedKpp = value;
-                            });
-                            await _loadAllDashboardData();
-                          },
-                        ),
-                ),
-                const SizedBox(width: 16),
-                IntrinsicWidth(
-                  child: _tahunOptions.isEmpty
-                      ? DropdownButtonFormField<String>(
-                          value: null,
-                          decoration: const InputDecoration(
-                            labelText: 'Tahun Pembayaran',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
+                                )
+                                .toList(),
+                            onChanged: (value) async {
+                              setState(() {
+                                _selectedKpp = value;
+                              });
+                              await _loadAllDashboardData();
+                            },
                           ),
-                          items: [
-                            DropdownMenuItem(
-                              value: null,
-                              child: Text(
-                                'Table Penerimaan kosong!',
-                                style: TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(width: 16),
+                  IntrinsicWidth(
+                    child: _tahunOptions.isEmpty
+                        ? DropdownButtonFormField<String>(
+                            value: null,
+                            decoration: const InputDecoration(
+                              labelText: 'Tahun Pembayaran',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
                               ),
                             ),
-                          ],
-                          onChanged: null,
-                        )
-                      : DropdownButtonFormField<String>(
-                          value: _selectedTahun,
-                          decoration: const InputDecoration(
-                            labelText: 'Tahun Pembayaran',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          items: _tahunOptions
-                              .map(
-                                (tahun) => DropdownMenuItem(
-                                  value: tahun,
-                                  child: Text(tahun),
+                            items: [
+                              DropdownMenuItem(
+                                value: null,
+                                child: Text(
+                                  'Table Penerimaan kosong!',
+                                  style: TextStyle(color: Colors.red),
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (value) async {
-                            setState(() {
-                              _selectedTahun = value;
-                            });
-                            await _loadAllDashboardData();
-                          },
-                        ),
-                ),
-                const SizedBox(width: 16),
-                // Chart type selector moved to chart header below
-                const SizedBox(width: 16),
-                IntrinsicWidth(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDataset,
-                    decoration: const InputDecoration(
-                      labelText: 'Dataset',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    items: _datasetOptions
-                        .map(
-                          (opt) => DropdownMenuItem(
-                            value: opt,
-                            child: Text(AppConstants.datasetLabels[opt] ?? opt),
+                              ),
+                            ],
+                            onChanged: null,
+                          )
+                        : DropdownButtonFormField<String>(
+                            value: _selectedTahun,
+                            decoration: const InputDecoration(
+                              labelText: 'Tahun Pembayaran',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: _tahunOptions
+                                .map(
+                                  (tahun) => DropdownMenuItem(
+                                    value: tahun,
+                                    child: Text(tahun),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) async {
+                              setState(() {
+                                _selectedTahun = value;
+                              });
+                              await _loadAllDashboardData();
+                            },
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
+                  ),
+                  const SizedBox(width: 16),
+                  // Chart type selector moved to chart header below
+                  const SizedBox(width: 16),
+                  IntrinsicWidth(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedDataset,
+                      decoration: const InputDecoration(
+                        labelText: 'Dataset',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: _datasetOptions
+                          .map(
+                            (opt) => DropdownMenuItem(
+                              value: opt,
+                              child: Text(
+                                AppConstants.datasetLabels[opt] ?? opt,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedDataset = value;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  IntrinsicWidth(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedBusinessOwner,
+                      decoration: const InputDecoration(
+                        labelText: 'Business Owner',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('KPP')),
+                        ..._businessOwnerOptions.map(
+                          (opt) =>
+                              DropdownMenuItem(value: opt, child: Text(opt)),
+                        ),
+                      ],
+                      onChanged: (value) {
                         setState(() {
-                          _selectedDataset = value;
+                          _selectedBusinessOwner = value;
                         });
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                IntrinsicWidth(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedBusinessOwner,
-                    decoration: const InputDecoration(
-                      labelText: 'Business Owner',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+                      },
                     ),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('KPP')),
-                      ..._businessOwnerOptions.map(
-                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedBusinessOwner = value;
-                      });
-                    },
                   ),
-                ),
-                const SizedBox(width: 16),
-                IntrinsicWidth(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedKodeMap,
-                    decoration: const InputDecoration(
-                      labelText: 'Kode MAP',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                  const SizedBox(width: 16),
+                  IntrinsicWidth(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedKodeMap,
+                      decoration: const InputDecoration(
+                        labelText: 'Kode MAP',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Semua Kode MAP'),
+                        ),
+                        ..._kodeMapOptions.map(
+                          (opt) =>
+                              DropdownMenuItem(value: opt, child: Text(opt)),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedKodeMap = value;
+                        });
+                      },
                     ),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Semua Kode MAP')),
-                      ..._kodeMapOptions.map(
-                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedKodeMap = value;
-                      });
-                    },
                   ),
-                ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    _dashboardDataService.clearCache();
-                    await _refreshDataDashboard();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Refresh Data'),
-                ),
-              ],
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      _dashboardDataService.clearCache();
+                      await _refreshDataDashboard();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh Data'),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             // Main content area
@@ -653,16 +685,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                     _selectedBusinessOwner != null &&
                                         _selectedBusinessOwner!.isNotEmpty
                                     ? (AppConstants
-                                              .datasetLabels[_selectedDataset] ??
-                                          _selectedDataset) +
-                                      ' - ' +
-                                      _selectedBusinessOwner!
+                                                  .datasetLabels[_selectedDataset] ??
+                                              _selectedDataset) +
+                                          ' - ' +
+                                          _selectedBusinessOwner!
                                     : (AppConstants
-                                          .datasetLabels[_selectedDataset] ??
-                                      _selectedDataset),
+                                              .datasetLabels[_selectedDataset] ??
+                                          _selectedDataset),
                                 dashboardData: _selectedDataset == 'PKPM'
                                     ? _dashboardDataService.monthlyFlagPkpmData
-                                    : _dashboardDataService.monthlyVoluntaryData,
+                                    : _dashboardDataService
+                                          .monthlyVoluntaryData,
                                 monthlyRenpenData:
                                     _dashboardDataService.monthlyRenpenData,
                                 selectedBusinessOwner: _selectedBusinessOwner,
@@ -680,6 +713,47 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue.shade700),
+              child: Row(
+                children: [
+                  const AppLogo.small(fallbackIconColor: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppConstants.appName,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+            ...menuConfig.menus.map(
+              (section) => ExpansionTile(
+                title: Text(section.title),
+                children: _buildMenuItems(context, section.items).map((item) {
+                  if (item is PopupMenuItem<VoidCallback>) {
+                    return ListTile(
+                      leading: item.child is Row
+                          ? (item.child as Row).children.first
+                          : null,
+                      title: item.child is Row
+                          ? ((item.child as Row).children.last as Text)
+                          : null,
+                      onTap: item.value,
+                    );
+                  } else if (item is PopupMenuDivider) {
+                    return const Divider();
+                  }
+                  return const SizedBox.shrink();
+                }).toList(),
               ),
             ),
           ],
@@ -1447,15 +1521,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   /// Build dynamic menu bar from JSON configuration
   Widget _buildDynamicMenuBar(BuildContext context, MenuConfig menuConfig) {
-    return Row(
-      children: menuConfig.menus.map((section) {
-        return _buildAppBarMenu(
+    // Responsive: show menu bar for desktop/tablet, nothing for mobile (all in Drawer)
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    if (isMobile) {
+      // For mobile, return empty (all menu sections in Drawer)
+      return const SizedBox.shrink();
+    }
+    // Desktop/tablet: show all menu sections directly
+    List<Widget> menuWidgets = [
+      ...menuConfig.menus.map(
+        (section) => _buildAppBarMenu(
           context,
           section.title,
           _buildMenuItems(context, section.items),
-        );
-      }).toList(),
-    );
+        ),
+      ),
+    ];
+
+    return Row(children: menuWidgets);
   }
 
   /// Build menu items from JSON configuration
