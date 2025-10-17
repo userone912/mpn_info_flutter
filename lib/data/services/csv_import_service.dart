@@ -597,11 +597,6 @@ class CsvImportService {
     // For progress callback
     final totalRows = lines.length - 1;
 
-    // Calculate SHA-1 hash of the file
-    final fileBytes = await file.readAsBytes();
-    final fileHash = _sha1Hex(fileBytes);
-    print('[DEBUG] Calculated file hash: $fileHash');
-
     // Detect header pattern
     final header = lines[0].replaceAll('"', '').replaceAll("'", '').trim();
     final validHeaders = [
@@ -616,28 +611,12 @@ class CsvImportService {
       return ImportResult.error('IMPORT_ERROR_HEADER', 'Header tidak dikenali: $header');
     }
 
-    // Check if this file hash already exists in ppmpkmbo table
-    final existing = await DatabaseService.query(
-      'ppmpkmbo',
-      where: 'FILE_HASH = ?',
-      whereArgs: [fileHash],
-      limit: 1,
-    );
-    print('[DEBUG] Existing file hash found: ${existing.isNotEmpty}');
-    if (existing.isNotEmpty) {
-      // Show confirmation dialog to user
-      final shouldReimport = await _showReimportConfirmationDialog(fileHash, existing.first['SOURCE'], existing.first['created_at']);
-      print('[DEBUG] Reimport confirmation: $shouldReimport');
-      if (!shouldReimport) {
-        return ImportResult.error('IMPORT_SKIPPED', 'File sudah pernah diimport (hash: $fileHash)');
-      }
-    }
-
     // Map columns based on header
     final isProdukHukum = header.contains('NO PRODUK HUKUM');
     final hasFlagSkp = header.contains('FLAG SKP');
 
     int successCount = 0;
+    int updateCount = 0;
     int errorCount = 0;
     final errors = <String>[];
 
@@ -672,7 +651,12 @@ class CsvImportService {
 
         // Add SOURCE from context (filename or folder)
         row['SOURCE'] = sourceContext;
-        row['FILE_HASH'] = fileHash;
+
+        // Generate composite hash for row (repurpose FILE_HASH)
+        final compositeString = [
+          row['KD_KANWIL'], row['KPPADM'], row['NPWP'], row['NO_PBK'], row['NTPN'], row['TGL_SETOR'], row['KD_MAP'], row['KD_SETOR']
+        ].join('|');
+        row['FILE_HASH'] = _sha1Hex(compositeString.codeUnits);
 
         // Apply rules for VOLUNTARY
         if (row['SOURCE'].toString().toUpperCase().contains('WRA')) {
@@ -708,10 +692,33 @@ class CsvImportService {
           row['FLAG_BO'] = 'EDUKASI';
         }
 
-        // Insert into ppmpkmbo table
-        print('[DEBUG] Inserting row into ppmpkmbo: $row');
-        await DatabaseService.insert('ppmpkmbo', row);
-        successCount++;
+        // Upsert logic: check if row exists by FILE_HASH
+        final existingRow = await DatabaseService.query(
+          'ppmpkmbo',
+          where: 'FILE_HASH = ?',
+          whereArgs: [row['FILE_HASH']],
+          limit: 1,
+        );
+           final nowIso = DateTime.now().toIso8601String();
+           if (existingRow.isNotEmpty) {
+             // Update LAST_UPDATE for existing row to mark reimport time
+             try {
+               await DatabaseService.update(
+                 'ppmpkmbo',
+                 {'LAST_UPDATE': nowIso},
+                 'FILE_HASH = ?',
+                 [row['FILE_HASH']],
+               );
+             } catch (e) {
+               // If update fails, still count as update to avoid breaking import flow
+             }
+             updateCount++;
+           } else {
+             // Insert new row with LAST_UPDATE timestamp
+             row['LAST_UPDATE'] = nowIso;
+             await DatabaseService.insert('ppmpkmbo', row);
+             successCount++;
+           }
       } catch (e) {
         print('[DEBUG] Error importing row $i: $e');
         errors.add('Baris ${i + 1}: ${e.toString()}');
@@ -719,9 +726,9 @@ class CsvImportService {
       }
     }
 
-    print('[DEBUG] PKPM/PPM import finished: success=$successCount, error=$errorCount');
+    print('[DEBUG] PKPM/PPM import finished: inserted=$successCount, updated=$updateCount, error=$errorCount');
     return ImportResult.success(
-      message: '$successCount data berhasil diimport, $errorCount error',
+      message: '$successCount data baru, $updateCount data diperbarui, $errorCount error',
       successCount: successCount,
       errorCount: errorCount,
       errors: errors,

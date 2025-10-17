@@ -5,7 +5,7 @@ import 'package:path/path.dart' as path;
 import '../data/services/auth_service.dart';
 import '../data/services/settings_service.dart';
 import '../shared/widgets/app_logo.dart';
-import 'dashboard_page.dart';
+import 'dashboard_page2.dart';
 import 'database_config_dialog.dart';
 
 /// Login page for user authentication

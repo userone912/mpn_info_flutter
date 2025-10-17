@@ -309,7 +309,7 @@ KANWIL;KPP;NAMA
 250;726;KPP Pratama Penajam
 250;727;KPP Pratama Tanjung Redeb
 250;728;KPP Pratama Tenggarong
-260;000;"Kanwil DJP Sulawesi Selatan, Barat, dan Tenggara"
+260;000;Kanwil DJP Sulawesi Selatan Barat dan Tenggara
 260;801;KPP Pratama Makassar Utara
 260;802;KPP Pratama Parepare
 260;803;KPP Pratama Palopo
@@ -325,7 +325,7 @@ KANWIL;KPP;NAMA
 260;814;KPP Pratama Mamuju
 260;815;KPP Pratama Kolaka
 260;816;KPP Pratama Baubau
-270;000;"Kanwil DJP Sulawesi Utara, Tengah, Gorontalo, dan Maluku Utara"
+270;000;Kanwil DJP Sulawesi Utara Tengah Gorontalo dan Maluku Utara
 270;821;KPP Pratama Manado
 270;822;KPP Pratama Gorontalo
 270;823;KPP Pratama Bitung
@@ -358,7 +358,7 @@ KANWIL;KPP;NAMA
 290;924;KPP Pratama Ruteng
 290;925;KPP Pratama Atambua
 290;926;KPP Pratama Waingapu
-300;000;Kanwil DJP Papua, Papua Barat, dan Maluku
+300;000;Kanwil DJP Papua Papua Barat dan Maluku
 300;941;KPP Pratama Ambon
 300;951;KPP Pratama Sorong
 300;952;KPP Pratama Jayapura
@@ -396,4 +396,3 @@ KANWIL;KPP;NAMA
 330;448;KPP Pratama Depok Sawangan
 330;449;KPP Madya Bogor
 330;458;KPP Madya Kota Bekasi
-

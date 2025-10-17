@@ -217,128 +217,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const AppLogo.small(fallbackIconColor: Colors.white),
-            const SizedBox(width: 12),
-            Text(AppConstants.appName),
-          ],
-        ),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        actions: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Use 600 as breakpoint for mobile/desktop
-              if (constraints.maxWidth < 600) {
-                // Mobile: show hamburger menu
-                return IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () {
-                    Scaffold.of(context).openEndDrawer();
-                  },
-                );
-              } else {
-                // Desktop/tablet: show menu bar and profile
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildDynamicMenuBar(context, menuConfig),
-                      const SizedBox(width: 16),
-                      PopupMenuButton<String>(
-                        onSelected: (value) {
-                          switch (value) {
-                            case 'profile':
-                              if (authState.user != null) {
-                                _showProfile(context, authState.user!);
-                              }
-                              break;
-                            case 'logout':
-                              _handleLogout(context, ref);
-                              break;
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'profile',
-                            child: Row(
-                              children: [
-                                Icon(Icons.person, color: Colors.grey.shade700),
-                                const SizedBox(width: 8),
-                                const Text('Profile'),
-                              ],
-                            ),
-                          ),
-                          const PopupMenuDivider(),
-                          PopupMenuItem(
-                            value: 'logout',
-                            child: Row(
-                              children: [
-                                Icon(Icons.logout, color: Colors.red.shade700),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Logout',
-                                  style: TextStyle(color: Colors.red.shade700),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.white,
-                                radius: 16,
-                                child: Text(
-                                  authState.user?.fullname
-                                          .substring(0, 1)
-                                          .toUpperCase() ??
-                                      'U',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    authState.user?.fullname ?? 'User',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Text(
-                                    authState.user?.userGroup.displayName ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Icon(Icons.arrow_drop_down, size: 16),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
-          ),
-        ],
+      appBar: DashboardAppBar(
+        menuConfig: menuConfig,
+        authState: authState,
+        onShowProfile: (user) => _showProfile(context, user),
+        onLogout: () => _handleLogout(context, ref),
+        buildDynamicMenuBar: (ctx, config) => _buildDynamicMenuBar(ctx, config),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -694,8 +578,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                           _selectedDataset),
                                 dashboardData: _selectedDataset == 'PKPM'
                                     ? _dashboardDataService.monthlyFlagPkpmData
-                                    : _dashboardDataService
-                                          .monthlyVoluntaryData,
+                                    : _dashboardDataService                                       .monthlyVoluntaryData,
                                 monthlyRenpenData:
                                     _dashboardDataService.monthlyRenpenData,
                                 selectedBusinessOwner: _selectedBusinessOwner,
@@ -1633,5 +1516,153 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         _showComingSoon(context, actionString ?? 'Unknown Action');
         break;
     }
+  }
+}
+
+// --- Custom AppBar Widget for Dashboard ---
+class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final dynamic menuConfig;
+  final dynamic authState;
+  final void Function(dynamic user) onShowProfile;
+  final VoidCallback onLogout;
+  final Widget Function(BuildContext, dynamic) buildDynamicMenuBar;
+
+  const DashboardAppBar({
+    Key? key,
+    required this.menuConfig,
+    required this.authState,
+    required this.onShowProfile,
+    required this.onLogout,
+    required this.buildDynamicMenuBar,
+  }) : super(key: key);
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Row(
+        children: [
+          const AppLogo.small(fallbackIconColor: Colors.white),
+          const SizedBox(width: 12),
+          Text(AppConstants.appName),
+        ],
+      ),
+      backgroundColor: Colors.blue.shade700,
+      foregroundColor: Colors.white,
+      actions: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Use 600 as breakpoint for mobile/desktop
+            if (constraints.maxWidth < 600) {
+              // Mobile: show hamburger menu
+              return IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+              );
+            } else {
+              // Desktop/tablet: show menu bar and profile
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    buildDynamicMenuBar(context, menuConfig),
+                    const SizedBox(width: 16),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'profile':
+                            if (authState.user != null) {
+                              onShowProfile(authState.user);
+                            }
+                            break;
+                          case 'logout':
+                            onLogout();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'profile',
+                          child: Row(
+                            children: [
+                              Icon(Icons.person, color: Colors.grey.shade700),
+                              const SizedBox(width: 8),
+                              const Text('Profile'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'logout',
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout, color: Colors.red.shade700),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Logout',
+                                style: TextStyle(color: Colors.red.shade700),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              radius: 16,
+                              child: Text(
+                                authState.user?.fullname
+                                        .substring(0, 1)
+                                        .toUpperCase() ??
+                                    'U',
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  authState.user?.fullname ?? 'User',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  authState.user?.userGroup.displayName ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Icon(Icons.arrow_drop_down, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+      ],
+    );
   }
 }
